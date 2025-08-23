@@ -1,0 +1,29 @@
+[
+  {
+    "id": "tour-001",
+    "title": "Tbilisi Old Town Walking Tour",
+    "shortDescription": "2.5-hour guided walk through Tbilisi's historic streets and hidden spots.",
+    "priceUSD": 25,
+    "durationHours": 2.5,
+    "guideId": "guide-1",
+    "guideName": "Nino"
+  },
+  {
+    "id": "tour-002",
+    "title": "Kakheti Wine Day Trip",
+    "shortDescription": "Full-day tour to the wine region with tastings and a traditional lunch.",
+    "priceUSD": 80,
+    "durationHours": 8,
+    "guideId": "guide-2",
+    "guideName": "Levan"
+  },
+  {
+    "id": "tour-003",
+    "title": "Kazbegi Mountain Scenic Drive",
+    "shortDescription": "Day trip to the Greater Caucasus peaks with breathtaking viewpoints.",
+    "priceUSD": 70,
+    "durationHours": 10,
+    "guideId": "guide-3",
+    "guideName": "Tamar"
+  }
+]

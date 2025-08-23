@@ -1,0 +1,4 @@
+src/pages/Dashboard/GuideProfile.tsx
+src/pages/GuidePage.tsx
+src/utils/supabaseStorage.ts
+migrations/2025-08-23-add-guide-fields.sql
