@@ -1,184 +1,106 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Box,
-  Flex,
   Image,
+  Stack,
   Heading,
   Text,
   Badge,
-  Stack,
+  Button,
+  Flex,
+  Icon,
+  useColorModeValue,
   HStack,
-  Skeleton,
 } from '@chakra-ui/react';
-import { StarIcon } from '@chakra-ui/icons';
-import { supabase, DEFAULT_AVATAR_URL, Profile } from '../lib/supabaseClient';
-
-interface Language {
-  name: string;
-  code: string;
-}
+import { MdLocationOn, MdStar } from 'react-icons/md';
+import { Link as RouterLink } from 'react-router-dom';
+import { Profile, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 
 interface GuideCardProps {
   guide: Profile;
 }
 
-// Supabase nested select can return either a single object or an array.
-// Normalize both shapes safely.
-type LanguageJoin =
-  | { languages?: { name?: unknown; code?: unknown } | Array<{ name?: unknown; code?: unknown }> }
-  | Record<string, unknown>;
-
 const GuideCard = ({ guide }: GuideCardProps) => {
-  const [languages, setLanguages] = useState<Language[]>([]);
-  const [averagePrice, setAveragePrice] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Placeholder for ratings - stubbed
-  const rating = 4.5;
-
-  useEffect(() => {
-    const fetchGuideDetails = async () => {
-      setIsLoading(true);
-
-      try {
-        // Fetch languages this guide offers
-        const { data: languageData, error: languageError } = await supabase
-          .from('guide_languages')
-          .select(`
-            languages (
-              name,
-              code
-            )
-          `)
-          .eq('guide_id', guide.id);
-
-        if (languageError) throw languageError;
-
-        // Normalize nested response: object or array -> Language[]
-        const normalizedLanguages: Language[] = (languageData as LanguageJoin[] | null | undefined)?.flatMap(
-          (item) => {
-            const nested = (item as LanguageJoin).languages as
-              | { name?: unknown; code?: unknown }
-              | Array<{ name?: unknown; code?: unknown }>
-              | undefined;
-
-            if (!nested) return [];
-
-            if (Array.isArray(nested)) {
-              return nested
-                .filter((l) => l && typeof l === 'object')
-                .map((l) => ({
-                  name: String(l.name ?? ''),
-                  code: String(l.code ?? ''),
-                }))
-                .filter((l) => l.name && l.code);
-            }
-
-            if (typeof nested === 'object') {
-              const obj = nested as { name?: unknown; code?: unknown };
-              const name = String(obj.name ?? '');
-              const code = String(obj.code ?? '');
-              return name && code ? [{ name, code }] : [];
-            }
-
-            return [];
-          }
-        ) ?? [];
-
-        setLanguages(normalizedLanguages);
-
-        // Calculate average price from guide's tours
-        const { data: tourData, error: tourError } = await supabase
-          .from('tours')
-          .select('average_price')
-          .eq('creator_id', guide.id)
-          .eq('creator_role', 'guide')
-          .eq('is_active', true);
-
-        if (tourError) throw tourError;
-
-        if (tourData && tourData.length > 0) {
-          const total = tourData.reduce((sum, t: any) => sum + Number(t?.average_price ?? 0), 0);
-          const avg = total / tourData.length;
-          setAveragePrice(Number.isFinite(avg) ? Math.round(avg) : null);
-        } else {
-          setAveragePrice(null);
-        }
-      } catch (error) {
-        console.error('Error fetching guide details:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGuideDetails();
-  }, [guide.id]);
-
+  const cardBg = useColorModeValue('white', 'gray.700');
+  
   return (
     <Box
       borderWidth="1px"
       borderRadius="lg"
       overflow="hidden"
       boxShadow="md"
-      bg="white"
-      transition="transform 0.3s, box-shadow 0.3s"
+      bg={cardBg}
+      transition="transform 0.2s"
       _hover={{ transform: 'translateY(-5px)', boxShadow: 'lg' }}
     >
-      <Link to={`/guides/${guide.id}`}>
-        <Box position="relative" height="200px" overflow="hidden">
-          <Image
-            src={(guide as any).avatar_url || DEFAULT_AVATAR_URL}
-            alt={(guide as any).full_name}
-            objectFit="cover"
-            width="100%"
-            height="100%"
-            fallback={<Skeleton height="200px" width="100%" />}
-          />
-        </Box>
-
-        <Box p={4}>
-          <Flex justify="space-between" align="center">
-            <Heading as="h3" size="md" noOfLines={1}>
-              {(guide as any).full_name}
-            </Heading>
-
-            <HStack spacing={1}>
-              <StarIcon color="yellow.400" />
-              <Text fontWeight="bold">{rating}</Text>
-            </HStack>
-          </Flex>
-
-          <Text color="gray.600" fontSize="sm" mt={1} noOfLines={2}>
-            {(guide as any).bio || 'No bio available'}
-          </Text>
-
-          <Stack mt={3}>
-            {isLoading ? (
-              <Skeleton height="24px" width="70%" />
-            ) : (
-              <HStack flexWrap="wrap">
-                {languages.slice(0, 3).map((lang, index) => (
-                  <Badge key={`${lang.code}-${index}`} colorScheme="blue" mr={1} mb={1}>
-                    {lang.name}
-                  </Badge>
-                ))}
-                {languages.length > 3 && (
-                  <Badge colorScheme="gray">+{languages.length - 3} more</Badge>
-                )}
-              </HStack>
-            )}
-          </Stack>
-
-          {isLoading ? (
-            <Skeleton height="24px" width="40%" mt={2} />
-          ) : (
-            <Text mt={2} fontWeight="bold" color="primary.600">
-              {averagePrice ? `Avg. $${averagePrice}/tour` : 'Price not available'}
-            </Text>
+      <Box position="relative" height="200px" overflow="hidden">
+        <Image
+          src={guide.avatar_url || DEFAULT_AVATAR_URL}
+          alt={guide.full_name}
+          objectFit="cover"
+          width="100%"
+          height="100%"
+        />
+        
+        <Box
+          position="absolute"
+          bottom="0"
+          left="0"
+          right="0"
+          bg="rgba(0,0,0,0.6)"
+          p={3}
+          color="white"
+        >
+          <Heading size="md" noOfLines={1}>{guide.full_name}</Heading>
+          
+          {guide.years_experience && (
+            <Flex align="center" mt={1}>
+              <Icon as={MdStar} color="yellow.400" mr={1} />
+              <Text fontSize="sm">{guide.years_experience} years experience</Text>
+            </Flex>
           )}
         </Box>
-      </Link>
+      </Box>
+      
+      <Box p={4}>
+        <Stack spacing={3}>
+          {guide.bio && (
+            <Text fontSize="sm" noOfLines={2} color="gray.600">
+              {guide.bio}
+            </Text>
+          )}
+          
+          <HStack flexWrap="wrap" spacing={2}>
+            {guide.languages && guide.languages.map((lang: string, index: number) => (
+              <Badge key={index} colorScheme="primary" fontSize="xs">
+                {lang}
+              </Badge>
+            ))}
+          </HStack>
+          
+          {guide.location && (
+            <Flex align="center">
+              <Icon as={MdLocationOn} color="gray.500" mr={1} />
+              <Text fontSize="sm" color="gray.500">{guide.location}</Text>
+            </Flex>
+          )}
+          
+          {guide.specialties && (
+            <Text fontSize="xs" color="gray.500">
+              <strong>Specialties:</strong> {guide.specialties}
+            </Text>
+          )}
+          
+          <Button
+            as={RouterLink}
+            to={`/guides/${guide.id}`}
+            colorScheme="primary"
+            size="sm"
+            width="100%"
+          >
+            View Profile
+          </Button>
+        </Stack>
+      </Box>
     </Box>
   );
 };

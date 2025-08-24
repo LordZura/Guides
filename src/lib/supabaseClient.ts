@@ -29,6 +29,10 @@ export interface Profile {
   updated_at: string;
   bio?: string;           // Added for guide/tourist profiles
   interests?: string;     // Added for tourist profiles
+  location?: string;      // Location where the guide/tourist is based
+  languages?: string[];   // Languages spoken
+  years_experience?: number; // For guides
+  specialties?: string;   // Guide specialties
 }
 
 export interface Language {

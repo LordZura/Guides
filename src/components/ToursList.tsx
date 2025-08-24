@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import {
   Box,
+  Heading,
   Text,
   Stack,
-  Heading,
   Badge,
-  HStack,
+  Button,
+  Flex,
+  SimpleGrid,
   IconButton,
   Menu,
   MenuButton,
   MenuList,
   MenuItem,
-  Button,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -20,222 +21,176 @@ import {
   ModalBody,
   ModalFooter,
   ModalCloseButton,
+  Skeleton,
   useToast,
-  Flex,
-  Icon,
+  Card,
+  CardBody,
+  CardHeader,
+  CardFooter,
+  HStack,
   Divider,
-  Link,
 } from '@chakra-ui/react';
-import { ChevronDownIcon, DeleteIcon, EditIcon, ExternalLinkIcon } from '@chakra-ui/icons';
-import { MdLocationOn, MdAttachMoney, MdDateRange, MdLanguage } from 'react-icons/md';
-import { Link as RouterLink } from 'react-router-dom';
-import { TourWithLanguages, useTours } from '../contexts/ToursContext';
+import { 
+  DeleteIcon, 
+  EditIcon, 
+  ViewIcon, 
+  ChevronDownIcon, 
+  CheckIcon, 
+  WarningIcon 
+} from '@chakra-ui/icons';
+import { useTours, Tour } from '../contexts/ToursContext';
+import { useAuth } from '../contexts/AuthProvider';
 import TourForm from './TourForm';
 
-const getDayName = (dayNum: number) => {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return days[dayNum];
-};
-
 const ToursList = () => {
-  const { userTours, isLoading, error, deleteTour, refreshTours } = useTours();
-  const [selectedTour, setSelectedTour] = useState<TourWithLanguages | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
-  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const { tours, isLoading, error, refreshTours, deleteTour, updateTourStatus } = useTours();
+  const { profile } = useAuth();
   const toast = useToast();
+  const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
+  const { 
+    isOpen: isDeleteOpen, 
+    onOpen: onDeleteOpen, 
+    onClose: onDeleteClose 
+  } = useDisclosure();
+  const { 
+    isOpen: isEditOpen, 
+    onOpen: onEditOpen, 
+    onClose: onEditClose 
+  } = useDisclosure();
 
-  const handleEditClick = (tour: TourWithLanguages) => {
+  const handleEditClick = (tour: Tour) => {
     setSelectedTour(tour);
     onEditOpen();
   };
 
-  const handleDeleteClick = (id: string) => {
-    setDeleteId(id);
+  const handleDeleteClick = (tour: Tour) => {
+    setSelectedTour(tour);
     onDeleteOpen();
   };
 
+  const handleStatusToggle = async (tour: Tour) => {
+    await updateTourStatus(tour.id, !tour.is_active);
+  };
+
   const confirmDelete = async () => {
-    if (!deleteId) return;
-    
-    try {
-      const result = await deleteTour(deleteId);
-      
-      if (result.success) {
-        toast({
-          title: 'Tour deleted',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Error deleting tour',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
+    if (selectedTour) {
+      await deleteTour(selectedTour.id);
       onDeleteClose();
-      setDeleteId(null);
     }
   };
 
   const handleEditSuccess = () => {
     onEditClose();
-    setSelectedTour(null);
     refreshTours();
   };
 
   if (isLoading) {
     return (
-      <Box p={4} textAlign="center">
-        <Text>Loading your tours...</Text>
-      </Box>
+      <Stack spacing={4}>
+        {[1, 2, 3].map(i => (
+          <Card key={i}>
+            <CardBody>
+              <Skeleton height="24px" width="50%" mb={2} />
+              <Skeleton height="16px" width="100%" mb={1} />
+              <Skeleton height="16px" width="90%" mb={1} />
+              <Skeleton height="16px" width="60%" mb={2} />
+              <Flex justify="space-between">
+                <Skeleton height="20px" width="100px" />
+                <Skeleton height="32px" width="80px" />
+              </Flex>
+            </CardBody>
+          </Card>
+        ))}
+      </Stack>
     );
   }
 
   if (error) {
     return (
       <Box p={4} bg="red.50" borderRadius="md">
-        <Text color="red.500">Error loading tours: {error}</Text>
+        <Text color="red.500">{error}</Text>
+        <Button mt={4} onClick={refreshTours} size="sm">
+          Try Again
+        </Button>
       </Box>
     );
   }
 
-  if (userTours.length === 0) {
+  if (tours.length === 0) {
     return (
-      <Box p={6} textAlign="center" bg="gray.50" borderRadius="md">
-        <Text mb={4}>You haven't created any tours yet.</Text>
+      <Box p={8} textAlign="center" bg="gray.50" borderRadius="md">
+        <Text mb={4}>You haven't created any {profile?.role === 'guide' ? 'tours' : 'tour requests'} yet.</Text>
+        <Text mb={4}>Click the "{profile?.role === 'guide' ? 'Create Tour' : 'Post Tour Request'}" button above to get started.</Text>
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Stack spacing={4}>
-        {userTours.map(tour => (
-          <Box 
-            key={tour.id} 
-            p={4} 
-            borderWidth="1px" 
-            borderRadius="lg" 
-            bg="white"
-            boxShadow="sm"
-            _hover={{ boxShadow: 'md' }}
-          >
-            <Flex justify="space-between" mb={2}>
-              <Heading as="h3" size="md" noOfLines={1}>
-                {tour.title}
-              </Heading>
-              
+    <Stack spacing={4}>
+      {tours.map(tour => (
+        <Card key={tour.id} variant="outline" borderColor={tour.is_active ? 'green.200' : 'gray.200'}>
+          <CardHeader pb={0}>
+            <Flex justify="space-between" align="flex-start">
+              <Heading as="h3" size="md">{tour.title}</Heading>
               <Menu>
-                <MenuButton 
+                <MenuButton
                   as={IconButton}
-                  aria-label="Options"
                   icon={<ChevronDownIcon />}
                   variant="ghost"
                   size="sm"
+                  aria-label="Actions"
                 />
                 <MenuList>
+                  <MenuItem icon={<ViewIcon />} onClick={() => toast({ 
+                    title: "View details", 
+                    description: "This feature will be available soon",
+                    status: "info",
+                    duration: 3000
+                  })}>
+                    View Details
+                  </MenuItem>
                   <MenuItem icon={<EditIcon />} onClick={() => handleEditClick(tour)}>
                     Edit
                   </MenuItem>
-                  <MenuItem icon={<DeleteIcon />} onClick={() => handleDeleteClick(tour.id)}>
-                    Delete
+                  <MenuItem icon={tour.is_active ? <WarningIcon /> : <CheckIcon />} onClick={() => handleStatusToggle(tour)}>
+                    {tour.is_active ? 'Deactivate' : 'Activate'}
                   </MenuItem>
-                  <MenuItem icon={<ExternalLinkIcon />} as={RouterLink} to={`/tours/${tour.id}`}>
-                    View Details
+                  <MenuItem icon={<DeleteIcon />} color="red.500" onClick={() => handleDeleteClick(tour)}>
+                    Delete
                   </MenuItem>
                 </MenuList>
               </Menu>
             </Flex>
+          </CardHeader>
+          
+          <CardBody>
+            <HStack mb={2} wrap="wrap">
+              <Badge colorScheme={tour.is_active ? 'green' : 'gray'}>
+                {tour.is_active ? 'Active' : 'Inactive'}
+              </Badge>
+              <Badge colorScheme="blue">{tour.location}</Badge>
+              <Badge colorScheme="purple">${tour.price}</Badge>
+              <Badge colorScheme="orange">{tour.duration}h</Badge>
+            </HStack>
             
-            <Text color="gray.600" noOfLines={2} mb={3}>
-              {tour.description}
+            <Text noOfLines={2} mb={2}>{tour.description}</Text>
+            
+            <Text fontSize="sm" color="gray.500">
+              Created: {new Date(tour.created_at).toLocaleDateString()}
             </Text>
-            
-            <Divider mb={3} />
-            
-            <Stack spacing={2}>
-              <HStack>
-                <Icon as={MdLocationOn} color="primary.500" />
-                <Text fontSize="sm" color="gray.700">{tour.location}</Text>
-              </HStack>
-              
-              <HStack>
-                <Icon as={MdAttachMoney} color="primary.500" />
-                <Text fontSize="sm" color="gray.700">${tour.average_price} average</Text>
-                {tour.capacity && (
-                  <Badge ml={2} colorScheme="green">Capacity: {tour.capacity}</Badge>
-                )}
-              </HStack>
-              
-              {tour.available_days && tour.available_days.length > 0 && (
-                <HStack alignItems="flex-start">
-                  <Icon as={MdDateRange} color="primary.500" mt={1} />
-                  <Box>
-                    <Text fontSize="sm" color="gray.700" fontWeight="medium">Available on:</Text>
-                    <HStack flexWrap="wrap" mt={1}>
-                      {tour.available_days.map((day, index) => (
-                        <Badge key={index} colorScheme="primary" variant="outline" fontSize="xs">
-                          {getDayName(day)}
-                        </Badge>
-                      ))}
-                    </HStack>
-                  </Box>
-                </HStack>
-              )}
-              
-              {tour.languages && tour.languages.length > 0 && (
-                <HStack alignItems="flex-start">
-                  <Icon as={MdLanguage} color="primary.500" mt={1} />
-                  <Box>
-                    <Text fontSize="sm" color="gray.700" fontWeight="medium">Languages:</Text>
-                    <HStack flexWrap="wrap" mt={1}>
-                      {tour.languages.map((lang, index) => (
-                        <Badge key={index} colorScheme="primary" variant="solid" fontSize="xs">
-                          {lang}
-                        </Badge>
-                      ))}
-                    </HStack>
-                  </Box>
-                </HStack>
-              )}
-            </Stack>
-          </Box>
-        ))}
-      </Stack>
-      
-      {/* Edit Tour Modal */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <ModalBody pt={10} pb={6}>
-            {selectedTour && (
-              <TourForm 
-                tour={selectedTour} 
-                onSuccess={handleEditSuccess} 
-                onCancel={onEditClose} 
-              />
-            )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-      
+          </CardBody>
+        </Card>
+      ))}
+
       {/* Delete Confirmation Modal */}
       <Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Confirm Deletion</ModalHeader>
+          <ModalHeader>Delete Tour</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            Are you sure you want to delete this tour? This action cannot be undone.
+            <Text>Are you sure you want to delete "{selectedTour?.title}"?</Text>
+            <Text mt={2} color="red.500" fontWeight="bold">This action cannot be undone.</Text>
           </ModalBody>
           <ModalFooter>
             <Button variant="outline" mr={3} onClick={onDeleteClose}>
@@ -247,7 +202,24 @@ const ToursList = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Box>
+
+      {/* Edit Tour Modal */}
+      <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody pt={10} pb={6}>
+            {selectedTour && (
+              <TourForm 
+                tourId={selectedTour.id} 
+                onSuccess={handleEditSuccess} 
+                onCancel={onEditClose} 
+              />
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </Stack>
   );
 };
 

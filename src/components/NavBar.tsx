@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -13,21 +12,17 @@ import {
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthProvider';
-import AuthModal from './AuthModal';
+import { useModal } from '../contexts/ModalContext';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const { openAuthModal } = useModal();
   const navigate = useNavigate();
   const { isOpen, onToggle } = useDisclosure();
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/explore');
-  };
-
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
   };
 
   return (
@@ -92,7 +87,7 @@ const Navbar = () => {
           ) : (
             <Button
               ml={4}
-              onClick={toggleModal}
+              onClick={openAuthModal}
               colorScheme="primary"
               size="md"
             >
@@ -147,7 +142,7 @@ const Navbar = () => {
               </>
             ) : (
               <Button
-                onClick={toggleModal}
+                onClick={openAuthModal}
                 variant="ghost"
                 justifyContent="flex-start"
                 w="full"
@@ -161,9 +156,6 @@ const Navbar = () => {
           </Stack>
         </Box>
       </Collapse>
-
-      {/* Auth Modal */}
-      {isModalOpen && <AuthModal onClose={toggleModal} />}
     </Box>
   );
 };

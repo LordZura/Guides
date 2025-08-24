@@ -1,24 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Box,
   Heading,
   Text,
   Badge,
-  Stack,
-  HStack,
+  Button,
   Flex,
   Icon,
   Skeleton,
+  useColorModeValue,
+  HStack,
+  VStack,
+  useToast,
 } from '@chakra-ui/react';
-import { MdLocationOn, MdDateRange, MdAttachMoney, MdLanguage } from 'react-icons/md';
+import { MdAccessTime, MdAttachMoney, MdCalendarToday, MdGroup, MdLanguage, MdLocationOn } from 'react-icons/md';
+import { Link as RouterLink } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-
-// Helper function to convert day number to name
-const getDayName = (dayNum: number) => {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return days[dayNum];
-};
 
 interface TourCardProps {
   tourId: string;
@@ -28,223 +25,179 @@ interface Tour {
   id: string;
   title: string;
   description: string;
-  average_price: number;
   location: string;
+  duration: number;
+  price: number;
+  capacity: number;
+  languages: string[];
+  days_available: boolean[];
+  is_private: boolean;
   creator_id: string;
-  creator_role: 'guide' | 'tourist';
-  capacity: number | null;
-  is_active: boolean;
+  creator_role: string;
+  created_at: string;
+  creator_name?: string;
 }
 
-interface Language {
-  name: string;
-  code: string;
-}
-
-// See GuideCard note: Supabase nested select shape can be object or array
-type LanguageJoin =
-  | { languages?: { name?: unknown; code?: unknown } | Array<{ name?: unknown; code?: unknown }> }
-  | Record<string, unknown>;
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const TourCard = ({ tourId }: TourCardProps) => {
   const [tour, setTour] = useState<Tour | null>(null);
-  const [languages, setLanguages] = useState<Language[]>([]);
-  const [availableDays, setAvailableDays] = useState<string[]>([]);
-  const [creatorName, setCreatorName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const toast = useToast();
+  
   useEffect(() => {
-    const fetchTourDetails = async () => {
-      setIsLoading(true);
-
+    const fetchTour = async () => {
       try {
-        // Fetch tour details
+        setIsLoading(true);
+        
+        // First fetch the tour
         const { data: tourData, error: tourError } = await supabase
           .from('tours')
           .select('*')
           .eq('id', tourId)
           .single();
-
+        
         if (tourError) throw tourError;
-        setTour(tourData as unknown as Tour);
-
-        // Fetch tour languages
-        const { data: languageData, error: languageError } = await supabase
-          .from('tour_languages')
-          .select(`
-            languages (
-              name,
-              code
-            )
-          `)
-          .eq('tour_id', tourId);
-
-        if (languageError) throw languageError;
-
-        // Normalize nested response: object or array -> Language[]
-        const tourLanguages: Language[] = (languageData as LanguageJoin[] | null | undefined)?.flatMap(
-          (item) => {
-            const nested = (item as LanguageJoin).languages as
-              | { name?: unknown; code?: unknown }
-              | Array<{ name?: unknown; code?: unknown }>
-              | undefined;
-
-            if (!nested) return [];
-
-            if (Array.isArray(nested)) {
-              return nested
-                .filter((l) => l && typeof l === 'object')
-                .map((l) => ({
-                  name: String(l.name ?? ''),
-                  code: String(l.code ?? ''),
-                }))
-                .filter((l) => l.name && l.code);
-            }
-
-            if (typeof nested === 'object') {
-              const obj = nested as { name?: unknown; code?: unknown };
-              const name = String(obj.name ?? '');
-              const code = String(obj.code ?? '');
-              return name && code ? [{ name, code }] : [];
-            }
-
-            return [];
-          }
-        ) ?? [];
-
-        setLanguages(tourLanguages);
-
-        // Fetch available days
-        const { data: daysData, error: daysError } = await supabase
-          .from('tour_available_days')
-          .select('day_of_week')
-          .eq('tour_id', tourId);
-
-        if (daysError) throw daysError;
-
-        const days = (daysData ?? []).map((item: any) => getDayName(Number(item.day_of_week)));
-        setAvailableDays(days);
-
-        // Fetch creator name
-        if (tourData) {
-          const { data: creatorData, error: creatorError } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', (tourData as any).creator_id)
-            .single();
-
-          if (creatorError) throw creatorError;
-          setCreatorName((creatorData as any)?.full_name || 'Unknown');
+        
+        // Then fetch the creator's name
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', tourData.creator_id)
+          .single();
+        
+        if (profileError && profileError.code !== 'PGRST116') {
+          // PGRST116 is "not found" error, which we can handle gracefully
+          throw profileError;
         }
-      } catch (error) {
-        console.error('Error fetching tour details:', error);
+        
+        // Combine the data
+        setTour({
+          ...tourData,
+          creator_name: profileData?.full_name || 'Unknown Guide'
+        });
+      } catch (err) {
+        console.error('Error fetching tour:', err);
+        toast({
+          title: 'Error loading tour',
+          description: 'Could not load tour details',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setIsLoading(false);
       }
     };
-
-    fetchTourDetails();
-  }, [tourId]);
-
+    
+    fetchTour();
+  }, [tourId, toast]);
+  
   if (isLoading) {
     return (
-      <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4} boxShadow="md" bg="white">
-        <Skeleton height="32px" width="70%" mb={2} />
-        <Skeleton height="20px" width="40%" mb={2} />
-        <Skeleton height="100px" mb={3} />
-        <Stack spacing={2}>
-          <Skeleton height="20px" width="60%" />
-          <Skeleton height="20px" width="80%" />
-          <Skeleton height="20px" width="50%" />
-        </Stack>
+      <Box borderWidth="1px" borderRadius="lg" overflow="hidden" boxShadow="md" bg={cardBg} p={4}>
+        <Skeleton height="24px" width="60%" mb={2} />
+        <Skeleton height="16px" width="40%" mb={4} />
+        <Skeleton height="16px" width="100%" mb={2} />
+        <Skeleton height="16px" width="90%" mb={4} />
+        <Flex justify="space-between">
+          <Skeleton height="20px" width="30%" />
+          <Skeleton height="36px" width="30%" />
+        </Flex>
       </Box>
     );
   }
-
+  
   if (!tour) {
     return (
-      <Box p={4} borderWidth="1px" borderRadius="lg" bg="red.50">
-        <Text>Tour not found or unavailable.</Text>
+      <Box borderWidth="1px" borderRadius="lg" overflow="hidden" boxShadow="md" bg={cardBg} p={4}>
+        <Text>Tour not found or no longer available</Text>
       </Box>
     );
   }
-
+  
+  // Format available days
+  const availableDays = tour.days_available
+    ? DAYS_OF_WEEK.filter((_, index) => tour.days_available[index]).join(', ')
+    : 'Not specified';
+  
   return (
     <Box
       borderWidth="1px"
       borderRadius="lg"
       overflow="hidden"
       boxShadow="md"
-      bg="white"
-      transition="transform 0.3s, box-shadow 0.3s"
+      bg={cardBg}
+      transition="transform 0.2s"
       _hover={{ transform: 'translateY(-5px)', boxShadow: 'lg' }}
     >
-      <Link to={`/tours/${tour.id}`}>
-        <Box p={4}>
-          <Flex justify="space-between">
-            <Heading as="h3" size="md" noOfLines={1}>
-              {tour.title}
-            </Heading>
-            <Badge colorScheme={tour.creator_role === 'guide' ? 'green' : 'blue'}>
-              {tour.creator_role === 'guide' ? 'By Guide' : 'By Tourist'}
-            </Badge>
+      <Box p={5}>
+        <Heading as="h3" size="md" mb={2} noOfLines={1}>
+          {tour.title}
+        </Heading>
+        
+        <Text fontSize="sm" mb={3} color="gray.500">
+          By {tour.creator_name} • {new Date(tour.created_at).toLocaleDateString()}
+        </Text>
+        
+        <Text fontSize="md" mb={4} noOfLines={3}>
+          {tour.description}
+        </Text>
+        
+        <VStack spacing={2} align="start" mb={4}>
+          <Flex align="center">
+            <Icon as={MdLocationOn} color="gray.500" mr={2} />
+            <Text fontSize="sm">{tour.location}</Text>
           </Flex>
-
-          <Text color="gray.500" fontSize="sm" mb={2}>
-            by {creatorName}
-          </Text>
-
-          <Text color="gray.600" noOfLines={3} mb={3}>
-            {tour.description}
-          </Text>
-
-          <Stack spacing={2}>
-            <HStack>
-              <Icon as={MdLocationOn} color="primary.500" />
-              <Text fontSize="sm" color="gray.700">{tour.location}</Text>
-            </HStack>
-
-            <HStack>
-              <Icon as={MdAttachMoney} color="primary.500" />
-              <Text fontSize="sm" color="gray.700">${tour.average_price} average</Text>
-            </HStack>
-
-            <HStack alignItems="flex-start">
-              <Icon as={MdDateRange} color="primary.500" mt={1} />
-              <Box>
-                <Text fontSize="sm" color="gray.700" fontWeight="medium">Available on:</Text>
-                <HStack flexWrap="wrap" mt={1}>
-                  {availableDays.map((day, index) => (
-                    <Badge key={index} colorScheme="primary" variant="outline" fontSize="xs">
-                      {day}
-                    </Badge>
-                  ))}
-                  {availableDays.length === 0 && (
-                    <Text fontSize="xs" color="gray.500">No specific days available</Text>
-                  )}
-                </HStack>
-              </Box>
-            </HStack>
-
-            <HStack alignItems="flex-start">
-              <Icon as={MdLanguage} color="primary.500" mt={1} />
-              <Box>
-                <Text fontSize="sm" color="gray.700" fontWeight="medium">Languages:</Text>
-                <HStack flexWrap="wrap" mt={1}>
-                  {languages.map((lang, index) => (
-                    <Badge key={`${lang.code}-${index}`} colorScheme="primary" variant="solid" fontSize="xs">
-                      {lang.name}
-                    </Badge>
-                  ))}
-                  {languages.length === 0 && (
-                    <Text fontSize="xs" color="gray.500">No specific languages</Text>
-                  )}
-                </HStack>
-              </Box>
-            </HStack>
-          </Stack>
+          
+          <Flex align="center">
+            <Icon as={MdAccessTime} color="gray.500" mr={2} />
+            <Text fontSize="sm">{tour.duration} hour{tour.duration !== 1 ? 's' : ''}</Text>
+          </Flex>
+          
+          <Flex align="center">
+            <Icon as={MdAttachMoney} color="gray.500" mr={2} />
+            <Text fontSize="sm">${tour.price} per person</Text>
+          </Flex>
+          
+          <Flex align="center">
+            <Icon as={MdGroup} color="gray.500" mr={2} />
+            <Text fontSize="sm">Up to {tour.capacity} people</Text>
+          </Flex>
+          
+          <Flex align="center">
+            <Icon as={MdCalendarToday} color="gray.500" mr={2} />
+            <Text fontSize="sm" noOfLines={1}>Available: {availableDays}</Text>
+          </Flex>
+        </VStack>
+        
+        <Box mb={4}>
+          <Text fontSize="sm" fontWeight="medium" mb={1}>Languages:</Text>
+          <HStack spacing={2} flexWrap="wrap">
+            {tour.languages && tour.languages.map((lang, index) => (
+              <Badge key={index} colorScheme="primary" fontSize="xs">
+                {lang}
+              </Badge>
+            ))}
+          </HStack>
         </Box>
-      </Link>
+        
+        <Flex justify="space-between" align="center">
+          <Badge colorScheme={tour.is_private ? 'purple' : 'green'}>
+            {tour.is_private ? 'Private' : 'Public'}
+          </Badge>
+          
+          <Button
+            as={RouterLink}
+            to={`/tours/${tour.id}`}
+            colorScheme="primary"
+            size="sm"
+          >
+            View Details
+          </Button>
+        </Flex>
+      </Box>
     </Box>
   );
 };

@@ -28,13 +28,14 @@ import {
   useColorModeValue,
   Icon,
   Link,
+  useToast,
 } from '@chakra-ui/react';
 import { AddIcon, EditIcon } from '@chakra-ui/icons';
 import { MdLanguage, MdLocationOn, MdPerson } from 'react-icons/md';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthProvider';
 import { ToursProvider } from '../contexts/ToursContext';
-import { DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
+import { DEFAULT_AVATAR_URL, Profile } from '../lib/supabaseClient';
 import ProfileEditor from '../components/ProfileEditor';
 import TourForm from '../components/TourForm';
 import ToursList from '../components/ToursList';
@@ -43,8 +44,8 @@ const Dashboard = () => {
   const { profile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
-  const bgColor = useColorModeValue('gray.50', 'gray.800');
   const cardBg = useColorModeValue('white', 'gray.700');
+  const toast = useToast();
 
   if (!profile) {
     return (
@@ -60,15 +61,25 @@ const Dashboard = () => {
     setIsEditing(true);
   };
 
-  const handleEditComplete = () => {
+  const handleEditComplete = (updatedProfile: Profile) => {
     setIsEditing(false);
-    // Force reload the page to update profile data
-    window.location.reload();
+    // Instead of forcing a page reload, we just show a success toast
+    toast({
+      title: "Profile updated",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   const handleCreateSuccess = () => {
     onCreateClose();
-    // Reset form
+    toast({
+      title: `${profile.role === 'guide' ? 'Tour' : 'Tour request'} created`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   return (
@@ -121,10 +132,32 @@ const Dashboard = () => {
                     </Flex>
                   )}
                   
+                  {profile.location && (
+                    <Flex align="center">
+                      <Icon as={MdLocationOn} color="primary.500" mr={2} />
+                      <Text fontSize="sm">{profile.location}</Text>
+                    </Flex>
+                  )}
+                  
+                  {profile.languages && profile.languages.length > 0 && (
+                    <Flex align="center">
+                      <Icon as={MdLanguage} color="primary.500" mr={2} />
+                      <Text fontSize="sm">{profile.languages.join(', ')}</Text>
+                    </Flex>
+                  )}
+                  
                   {profile.bio && (
                     <Box>
                       <Text fontWeight="medium" mb={1}>Bio</Text>
                       <Text fontSize="sm">{profile.bio}</Text>
+                    </Box>
+                  )}
+                  
+                  {/* Guide-specific fields */}
+                  {profile.role === 'guide' && profile.specialties && (
+                    <Box>
+                      <Text fontWeight="medium" mb={1}>Specialties</Text>
+                      <Text fontSize="sm">{profile.specialties}</Text>
                     </Box>
                   )}
                   

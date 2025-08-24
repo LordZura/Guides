@@ -4,356 +4,463 @@ import {
   Button,
   FormControl,
   FormLabel,
+  FormErrorMessage,
   Input,
   Textarea,
+  Select,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
   Stack,
-  Checkbox,
-  CheckboxGroup,
-  HStack,
-  Text,
-  useToast,
-  Select,
-  Flex,
-  FormHelperText,
   Heading,
-  Code,
+  Flex,
+  Text,
+  Badge,
+  useToast,
+  VStack,
+  Divider,
+  HStack,
+  Checkbox,
 } from '@chakra-ui/react';
-import { useAuth } from '../contexts/AuthProvider';
-import { useTours, TourWithLanguages } from '../contexts/ToursContext';
 import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/AuthProvider';
 
 interface TourFormProps {
-  tour?: TourWithLanguages;
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  onSuccess: () => void;
+  onCancel: () => void;
+  tourId?: string; // For editing existing tours
 }
 
-const TourForm = ({ tour, onSuccess, onCancel }: TourFormProps) => {
+interface FormData {
+  title: string;
+  description: string;
+  location: string;
+  duration: number; // In hours
+  price: number;
+  capacity: number;
+  languages: string[];
+  days_available: boolean[];
+  is_private: boolean;
+}
+
+interface FormErrors {
+  title?: string;
+  description?: string;
+  location?: string;
+  duration?: string;
+  price?: string;
+  capacity?: string;
+  languages?: string;
+}
+
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
   const { profile } = useAuth();
-  const { createTour, updateTour } = useTours();
   const toast = useToast();
+  const [availableLanguages, setAvailableLanguages] = useState<{name: string, code: string}[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!tourId);
   
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState<number>(50);
-  const [location, setLocation] = useState('');
-  const [capacity, setCapacity] = useState<number | null>(null);
-  const [selectedDays, setSelectedDays] = useState<number[]>([]);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-  const [availableLanguages, setAvailableLanguages] = useState<Array<{ id: number; name: string; code: string }>>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const initialFormData: FormData = {
+    title: '',
+    description: '',
+    location: '',
+    duration: 2,
+    price: 50,
+    capacity: 10,
+    languages: [],
+    days_available: [false, false, false, false, false, false, false],
+    is_private: false,
+  };
   
-  const isEditMode = !!tour;
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [errors, setErrors] = useState<FormErrors>({});
   
+  // Load available languages
   useEffect(() => {
-    // If editing, populate form with tour data
-    if (tour) {
-      setTitle(tour.title);
-      setDescription(tour.description);
-      setPrice(tour.average_price);
-      setLocation(tour.location);
-      setCapacity(tour.capacity);
-      setSelectedDays(tour.available_days || []);
-      setSelectedLanguages(tour.languages || []);
-      
-      console.log("Editing tour:", tour);
-    }
-    
-    // Fetch available languages
     const fetchLanguages = async () => {
       try {
         const { data, error } = await supabase
           .from('languages')
-          .select('*')
+          .select('name, code')
           .order('name');
-          
+        
         if (error) throw error;
         
-        console.log("Available languages:", data);
         setAvailableLanguages(data || []);
-      } catch (error) {
-        console.error('Error fetching languages:', error);
+      } catch (err) {
+        console.error('Error fetching languages:', err);
+        toast({
+          title: 'Error loading languages',
+          description: 'Could not load available languages. Please try again.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
       }
     };
     
     fetchLanguages();
-  }, [tour]);
+  }, [toast]);
   
-  const daysOfWeek = [
-    { value: 0, label: 'Sunday' },
-    { value: 1, label: 'Monday' },
-    { value: 2, label: 'Tuesday' },
-    { value: 3, label: 'Wednesday' },
-    { value: 4, label: 'Thursday' },
-    { value: 5, label: 'Friday' },
-    { value: 6, label: 'Saturday' },
-  ];
+  // Load existing tour data if editing
+  useEffect(() => {
+    const fetchTourData = async () => {
+      if (!tourId) return;
+      
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('tours')
+          .select('*')
+          .eq('id', tourId)
+          .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setFormData({
+            title: data.title || '',
+            description: data.description || '',
+            location: data.location || '',
+            duration: data.duration || 2,
+            price: data.price || 50,
+            capacity: data.capacity || 10,
+            languages: data.languages || [],
+            days_available: data.days_available || [false, false, false, false, false, false, false],
+            is_private: data.is_private || false,
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching tour data:', err);
+        toast({
+          title: 'Error loading tour',
+          description: 'Could not load the tour information. Please try again.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTourData();
+  }, [tourId, toast]);
   
-  const handleDayChange = (values: number[]) => {
-    setSelectedDays(values.map(v => parseInt(v.toString())));
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    } else if (formData.title.length < 5) {
+      newErrors.title = 'Title must be at least 5 characters';
+    }
+    
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required';
+    } else if (formData.description.length < 20) {
+      newErrors.description = 'Description must be at least 20 characters';
+    }
+    
+    if (!formData.location.trim()) {
+      newErrors.location = 'Location is required';
+    }
+    
+    if (formData.duration <= 0) {
+      newErrors.duration = 'Duration must be greater than 0';
+    }
+    
+    if (formData.price < 0) {
+      newErrors.price = 'Price cannot be negative';
+    }
+    
+    if (formData.capacity <= 0) {
+      newErrors.capacity = 'Capacity must be greater than 0';
+    }
+    
+    if (formData.languages.length === 0) {
+      newErrors.languages = 'At least one language is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
   
-  const handleLanguageChange = (values: string[]) => {
-    setSelectedLanguages(values);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
   
-  const handleSubmit = async () => {
-    if (!title || !description || !location) {
+  const handleNumberInputChange = (name: string, value: number) => {
+    setFormData({ ...formData, [name]: value });
+  };
+  
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Handle multi-select for languages
+    const options = Array.from(e.target.selectedOptions, option => option.value);
+    setFormData({ ...formData, languages: options });
+  };
+  
+  const handleDayToggle = (index: number) => {
+    const newDaysAvailable = [...formData.days_available];
+    newDaysAvailable[index] = !newDaysAvailable[index];
+    setFormData({ ...formData, days_available: newDaysAvailable });
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
       toast({
-        title: 'Please fill in all required fields',
+        title: 'Form contains errors',
+        description: 'Please fix the errors before submitting.',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
       return;
     }
     
-    setIsLoading(true);
-    setDebugInfo(null);
+    if (!profile) {
+      toast({
+        title: 'Authentication error',
+        description: 'You must be logged in to create a tour.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
     
     try {
-      console.log("Starting tour submission with data:", {
-        title,
-        description,
-        price,
-        location,
-        capacity,
-        selectedDays,
-        selectedLanguages
-      });
+      setIsSubmitting(true);
       
       const tourData = {
-        title,
-        description,
-        average_price: price,
-        location,
-        capacity: capacity,
-        available_days: selectedDays,
-        languages: selectedLanguages,
+        ...formData,
+        creator_id: profile.id,
+        creator_role: profile.role,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
       
-      let result;
-      
-      if (isEditMode && tour) {
-        console.log(`Updating tour ${tour.id}`);
-        result = await updateTour(tour.id, tourData);
-      } else {
-        console.log("Creating new tour");
-        result = await createTour(tourData);
-      }
-      
-      console.log("Tour operation result:", result);
-      
-      if (result.success) {
+      if (tourId) {
+        // Update existing tour
+        const { error } = await supabase
+          .from('tours')
+          .update({
+            ...tourData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', tourId);
+        
+        if (error) throw error;
+        
         toast({
-          title: isEditMode ? 'Tour updated' : 'Tour created',
+          title: 'Tour updated',
+          description: 'Your tour has been successfully updated.',
           status: 'success',
-          duration: 3000,
+          duration: 5000,
           isClosable: true,
         });
-        
-        if (onSuccess) onSuccess();
       } else {
-        throw new Error(result.error || "Unknown error occurred");
+        // Create new tour
+        const { error } = await supabase
+          .from('tours')
+          .insert([tourData]);
+        
+        if (error) throw error;
+        
+        toast({
+          title: 'Tour created',
+          description: 'Your tour has been successfully created.',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
       }
-    } catch (error: any) {
-      console.error('Tour operation error:', error);
       
-      // Set debug info
-      setDebugInfo(JSON.stringify(error, null, 2));
-      
+      onSuccess();
+    } catch (err: any) {
+      console.error('Error saving tour:', err);
       toast({
-        title: isEditMode ? 'Error updating tour' : 'Error creating tour',
-        description: error.message || "An unexpected error occurred",
+        title: 'Error saving tour',
+        description: err.message || 'An unexpected error occurred. Please try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
   
+  if (isLoading) {
+    return (
+      <Box textAlign="center" py={10}>
+        <Text>Loading tour information...</Text>
+      </Box>
+    );
+  }
+  
   return (
-    <Box bg="white" borderRadius="lg" p={6} boxShadow="md">
-      <Heading as="h2" size="md" mb={6}>
-        {isEditMode ? 'Edit Tour' : `Create a New ${profile?.role === 'guide' ? 'Tour' : 'Tour Request'}`}
+    <Box>
+      <Heading size="md" mb={6}>
+        {tourId ? 'Edit Tour' : profile?.role === 'guide' ? 'Create Tour' : 'Post Tour Request'}
       </Heading>
       
-      <Stack spacing={4}>
-        <FormControl isRequired>
-          <FormLabel>Title</FormLabel>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={profile?.role === 'guide' 
-              ? "e.g., Historic City Center Walking Tour" 
-              : "e.g., Looking for Food Tour in Rome"}
-          />
-        </FormControl>
-        
-        <FormControl isRequired>
-          <FormLabel>Description</FormLabel>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={profile?.role === 'guide'
-              ? "Describe what visitors will experience on your tour..."
-              : "Describe what kind of experience you're looking for..."}
-            rows={5}
-          />
-        </FormControl>
-        
-        <HStack spacing={4} align="flex-start">
-          <FormControl isRequired>
-            <FormLabel>Average Price (USD)</FormLabel>
-            <NumberInput
-              value={price}
-              onChange={(_, value) => setPrice(value)}
-              min={0}
-              max={10000}
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-            <FormHelperText>
-              {profile?.role === 'guide' 
-                ? "The average price per person" 
-                : "Your expected budget per person"}
-            </FormHelperText>
+      <form onSubmit={handleSubmit}>
+        <VStack spacing={6} align="stretch">
+          <FormControl isRequired isInvalid={!!errors.title}>
+            <FormLabel>Title</FormLabel>
+            <Input 
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              placeholder="Enter a catchy title for your tour"
+            />
+            <FormErrorMessage>{errors.title}</FormErrorMessage>
           </FormControl>
           
-          <FormControl>
-            <FormLabel>Capacity</FormLabel>
-            <NumberInput
-              value={capacity || ''}
-              onChange={(_, value) => setCapacity(value || null)}
-              min={1}
-              max={100}
-            >
-              <NumberInputField placeholder="Optional" />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-            <FormHelperText>
-              {profile?.role === 'guide'
-                ? "Maximum number of people" 
-                : "Preferred group size"}
-            </FormHelperText>
+          <FormControl isRequired isInvalid={!!errors.description}>
+            <FormLabel>Description</FormLabel>
+            <Textarea 
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Describe what makes your tour special"
+              rows={5}
+            />
+            <FormErrorMessage>{errors.description}</FormErrorMessage>
           </FormControl>
-        </HStack>
-        
-        <FormControl isRequired>
-          <FormLabel>Location</FormLabel>
-          <Input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="City, Country, or Region"
-          />
-        </FormControl>
-        
-        <FormControl>
-          <FormLabel>Available Days</FormLabel>
-          <CheckboxGroup colorScheme="primary" value={selectedDays} onChange={handleDayChange}>
-            <Flex wrap="wrap">
-              {daysOfWeek.map(day => (
-                <Box key={day.value} width={{ base: '50%', md: '33%' }} p={1}>
-                  <Checkbox value={day.value}>
-                    {day.label}
-                  </Checkbox>
-                </Box>
-              ))}
-            </Flex>
-          </CheckboxGroup>
-        </FormControl>
-        
-        <FormControl>
-          <FormLabel>Languages</FormLabel>
-          <Select 
-            placeholder="Select languages"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value && !selectedLanguages.includes(value)) {
-                setSelectedLanguages([...selectedLanguages, value]);
-              }
-            }}
-          >
-            {availableLanguages
-              .filter(lang => !selectedLanguages.includes(lang.name))
-              .map(lang => (
-                <option key={lang.id} value={lang.name}>
+          
+          <FormControl isRequired isInvalid={!!errors.location}>
+            <FormLabel>Location</FormLabel>
+            <Input 
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              placeholder="Where will this tour take place?"
+            />
+            <FormErrorMessage>{errors.location}</FormErrorMessage>
+          </FormControl>
+          
+          <Flex gap={4} direction={{ base: 'column', md: 'row' }}>
+            <FormControl isRequired isInvalid={!!errors.duration}>
+              <FormLabel>Duration (hours)</FormLabel>
+              <NumberInput 
+                min={1} 
+                max={24}
+                value={formData.duration}
+                onChange={(_, value) => handleNumberInputChange('duration', value)}
+              >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+              <FormErrorMessage>{errors.duration}</FormErrorMessage>
+            </FormControl>
+            
+            <FormControl isRequired isInvalid={!!errors.price}>
+              <FormLabel>Price ($)</FormLabel>
+              <NumberInput 
+                min={0} 
+                max={10000}
+                value={formData.price}
+                onChange={(_, value) => handleNumberInputChange('price', value)}
+              >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+              <FormErrorMessage>{errors.price}</FormErrorMessage>
+            </FormControl>
+            
+            <FormControl isRequired isInvalid={!!errors.capacity}>
+              <FormLabel>Capacity</FormLabel>
+              <NumberInput 
+                min={1} 
+                max={100}
+                value={formData.capacity}
+                onChange={(_, value) => handleNumberInputChange('capacity', value)}
+              >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+              <FormErrorMessage>{errors.capacity}</FormErrorMessage>
+            </FormControl>
+          </Flex>
+          
+          <FormControl isRequired isInvalid={!!errors.languages}>
+            <FormLabel>Languages</FormLabel>
+            <Select 
+              multiple
+              size="md"
+              height="100px"
+              name="languages"
+              value={formData.languages}
+              onChange={handleLanguageChange}
+            >
+              {availableLanguages.map(lang => (
+                <option key={lang.code} value={lang.name}>
                   {lang.name}
                 </option>
               ))}
-          </Select>
+            </Select>
+            <FormErrorMessage>{errors.languages}</FormErrorMessage>
+          </FormControl>
           
-          {selectedLanguages.length > 0 && (
-            <Box mt={2}>
-              <Text fontWeight="medium" mb={1}>Selected languages:</Text>
-              <Flex wrap="wrap" gap={2}>
-                {selectedLanguages.map(lang => (
-                  <Box 
-                    key={lang}
-                    bg="primary.100" 
-                    color="primary.700" 
-                    px={2} 
-                    py={1} 
-                    borderRadius="md"
-                    display="flex"
-                    alignItems="center"
-                  >
-                    {lang}
-                    <Button
-                      size="xs"
-                      variant="unstyled"
-                      ml={1}
-                      fontWeight="bold"
-                      onClick={() => setSelectedLanguages(selectedLanguages.filter(l => l !== lang))}
-                    >
-                      ×
-                    </Button>
-                  </Box>
-                ))}
-              </Flex>
-            </Box>
-          )}
-        </FormControl>
-        
-        {/* Debug information */}
-        {debugInfo && (
-          <Box mt={4} p={3} bg="red.50" borderRadius="md">
-            <Text fontWeight="bold" mb={2}>Debug Information:</Text>
-            <Code colorScheme="red" p={2} borderRadius="md" width="100%" overflowX="auto">
-              {debugInfo}
-            </Code>
-          </Box>
-        )}
-        
-        <HStack spacing={4} justifyContent="flex-end" pt={4}>
-          <Button variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button 
-            colorScheme="primary" 
-            onClick={handleSubmit}
-            isLoading={isLoading}
-            loadingText={isEditMode ? "Updating" : "Creating"}
-          >
-            {isEditMode ? 'Update Tour' : 'Create Tour'}
-          </Button>
-        </HStack>
-      </Stack>
+          <FormControl>
+            <FormLabel>Days Available</FormLabel>
+            <HStack wrap="wrap" spacing={3}>
+              {DAYS_OF_WEEK.map((day, index) => (
+                <Checkbox 
+                  key={day} 
+                  isChecked={formData.days_available[index]}
+                  onChange={() => handleDayToggle(index)}
+                >
+                  {day}
+                </Checkbox>
+              ))}
+            </HStack>
+          </FormControl>
+          
+          <FormControl>
+            <Checkbox 
+              isChecked={formData.is_private}
+              onChange={(e) => setFormData({...formData, is_private: e.target.checked})}
+            >
+              Private tour (by invitation only)
+            </Checkbox>
+          </FormControl>
+          
+          <Divider />
+          
+          <Flex justify="flex-end" gap={3}>
+            <Button variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              colorScheme="primary"
+              isLoading={isSubmitting}
+            >
+              {tourId ? 'Update Tour' : 'Create Tour'}
+            </Button>
+          </Flex>
+        </VStack>
+      </form>
     </Box>
   );
 };

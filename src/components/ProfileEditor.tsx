@@ -4,406 +4,457 @@ import {
   Button,
   FormControl,
   FormLabel,
+  FormErrorMessage,
   Input,
   Textarea,
-  Stack,
-  Avatar,
-  AvatarBadge,
-  IconButton,
-  useToast,
-  Text,
-  VStack,
-  HStack,
   Select,
-  Checkbox,
-  CheckboxGroup,
+  Heading,
   Flex,
-  Code,
+  Text,
+  Avatar,
+  useToast,
+  VStack,
+  Divider,
+  FormHelperText,
+  IconButton,
 } from '@chakra-ui/react';
-import { EditIcon, CloseIcon } from '@chakra-ui/icons';
+import { CheckIcon, CloseIcon, EditIcon } from '@chakra-ui/icons';
+import { supabase, Profile, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
-import { supabase, DEFAULT_AVATAR_URL, Profile } from '../lib/supabaseClient';
 
 interface ProfileEditorProps {
-  onSave?: () => void;
+  onSave: (updatedProfile: Profile) => void;
+}
+
+interface FormData {
+  full_name: string;
+  phone: string;
+  bio: string;
+  location: string;
+  languages: string[];
+  interests: string; // For tourists
+  years_experience: number; // For guides
+  specialties: string; // For guides
+}
+
+interface FormErrors {
+  full_name?: string;
+  phone?: string;
+  bio?: string;
+  location?: string;
 }
 
 const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
-  const { user, profile } = useAuth();
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [bio, setBio] = useState('');
-  const [interests, setInterests] = useState('');
-  const [avatar, setAvatar] = useState<File | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [availableLanguages, setAvailableLanguages] = useState<Array<{ id: number; name: string; code: string }>>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { profile: currentProfile, user } = useAuth();
   const toast = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [availableLanguages, setAvailableLanguages] = useState<{name: string, code: string}[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   
+  const initialFormData: FormData = {
+    full_name: currentProfile?.full_name || '',
+    phone: currentProfile?.phone || '',
+    bio: currentProfile?.bio || '',
+    location: currentProfile?.location || '',
+    languages: currentProfile?.languages || [],
+    interests: currentProfile?.interests || '',
+    years_experience: currentProfile?.years_experience || 0,
+    specialties: currentProfile?.specialties || '',
+  };
+  
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [errors, setErrors] = useState<FormErrors>({});
+  
+  // Load available languages
   useEffect(() => {
-    if (profile) {
-      setFullName(profile.full_name || '');
-      setPhone(profile.phone || '');
-      setBio(profile.bio || '');
-      setInterests(profile.interests || '');
-      setAvatarUrl(profile.avatar_url || '');
-      
-      console.log("Current profile:", profile);
-    }
-
-    // Fetch user's languages
-    const fetchUserLanguages = async () => {
-      if (user && profile?.role === 'guide') {
-        try {
-          const { data, error } = await supabase
-            .from('guide_languages')
-            .select('languages(id, name, code)')
-            .eq('guide_id', user.id);
-
-          if (error) throw error;
-          
-          console.log("Guide languages data:", data);
-
-          const userLangs = data?.map(item => {
-            const lang = item.languages as any;
-            return lang?.name;
-          }).filter(Boolean) || [];
-          
-          setLanguages(userLangs);
-        } catch (error) {
-          console.error('Error fetching user languages:', error);
-        }
-      }
-    };
-
-    // Fetch available languages
-    const fetchAvailableLanguages = async () => {
+    const fetchLanguages = async () => {
       try {
         const { data, error } = await supabase
           .from('languages')
-          .select('*')
+          .select('name, code')
           .order('name');
-
+        
         if (error) throw error;
         
-        console.log("Available languages:", data);
         setAvailableLanguages(data || []);
-      } catch (error) {
-        console.error('Error fetching languages:', error);
+      } catch (err) {
+        console.error('Error fetching languages:', err);
+        toast({
+          title: 'Error loading languages',
+          description: 'Could not load available languages. Please try again.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
       }
     };
-
-    fetchUserLanguages();
-    fetchAvailableLanguages();
-  }, [user, profile]);
-
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
+    
+    fetchLanguages();
+  }, [toast]);
+  
+  // Set initial avatar
+  useEffect(() => {
+    if (currentProfile?.avatar_url) {
+      setAvatarUrl(currentProfile.avatar_url);
+    }
+  }, [currentProfile]);
+  
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = 'Full name is required';
+    }
+    
+    if (formData.phone) {
+      const phoneRegex = /^\+?[0-9]{10,15}$/;
+      if (!phoneRegex.test(formData.phone)) {
+        newErrors.phone = 'Please enter a valid phone number';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      setAvatar(files[0]);
-      // Create a preview URL
-      setAvatarUrl(URL.createObjectURL(files[0]));
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+  
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Handle multi-select for languages
+    const options = Array.from(e.target.selectedOptions, option => option.value);
+    setFormData({ ...formData, languages: options });
+  };
+  
+  const handleAvatarClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
-
-  const uploadAvatar = async () => {
-    if (!avatar || !user) return null;
-    
-    const fileExt = avatar.name.split('.').pop();
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: 'Maximum file size is 2MB',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
+      
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload an image file',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
+      
+      setAvatarFile(file);
+      
+      // Create a preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const uploadAvatar = async (): Promise<string | null> => {
+    if (!avatarFile || !user) return currentProfile?.avatar_url || null;
     
     try {
-      console.log("Starting avatar upload:", fileName);
+      setIsUploading(true);
       
-      const { error: uploadError, data } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, avatar);
+      // Create a unique filename
+      const fileExt = avatarFile.name.split('.').pop();
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+      
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, avatarFile);
       
       if (uploadError) throw uploadError;
       
-      console.log("Upload successful, data:", data);
+      // Get the public URL
+      const { data } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(filePath);
       
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-      
-      console.log("Public URL:", urlData.publicUrl);
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      return null;
+      return data.publicUrl;
+    } catch (err) {
+      console.error('Error uploading avatar:', err);
+      toast({
+        title: 'Upload failed',
+        description: 'Could not upload avatar. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return currentProfile?.avatar_url || null;
+    } finally {
+      setIsUploading(false);
     }
   };
-
-  const handleLanguageChange = (values: string[]) => {
-    setLanguages(values);
-  };
-
-  const saveProfile = async () => {
-    if (!user) {
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
       toast({
-        title: "Error",
-        description: "You must be logged in to update your profile",
-        status: "error",
-        duration: 3000,
+        title: 'Form contains errors',
+        description: 'Please fix the errors before submitting.',
+        status: 'error',
+        duration: 5000,
         isClosable: true,
       });
       return;
     }
     
-    setIsLoading(true);
-    setDebugInfo(null);
+    if (!currentProfile || !user) {
+      toast({
+        title: 'Authentication error',
+        description: 'You must be logged in to update your profile.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
     
     try {
-      console.log("Starting profile update for user:", user.id);
+      setIsSubmitting(true);
       
-      // Upload avatar if changed
-      let avatarUrlToSave = profile?.avatar_url || null;
-      if (avatar) {
-        const newAvatarUrl = await uploadAvatar();
-        if (newAvatarUrl) {
-          avatarUrlToSave = newAvatarUrl;
-        }
-      }
+      // First upload avatar if changed
+      const newAvatarUrl = await uploadAvatar();
       
-      // Update profile
-      const updates = {
-        full_name: fullName,
-        phone: phone || null,
-        bio: bio || null,
-        interests: interests || null,
-        avatar_url: avatarUrlToSave,
+      const updatedProfileData = {
+        ...formData,
+        avatar_url: newAvatarUrl,
         updated_at: new Date().toISOString(),
       };
       
-      console.log("Updating profile with data:", updates);
-      
+      // Update profile in database
       const { data, error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(updatedProfileData)
         .eq('id', user.id)
-        .select();
+        .select()
+        .single();
       
-      if (error) {
-        console.error("Error updating profile:", error);
-        throw error;
-      }
-      
-      console.log("Profile updated successfully:", data);
-      
-      // Update languages for guides
-      if (profile?.role === 'guide') {
-        // First, delete existing language associations
-        console.log("Deleting existing guide languages");
-        const { error: deleteError } = await supabase
-          .from('guide_languages')
-          .delete()
-          .eq('guide_id', user.id);
-        
-        if (deleteError) {
-          console.error("Error deleting guide languages:", deleteError);
-          throw deleteError;
-        }
-        
-        // Then, add the selected languages
-        if (languages.length > 0) {
-          // Find language IDs
-          console.log("Selected languages:", languages);
-          console.log("Available languages:", availableLanguages);
-          
-          const languageIds = availableLanguages
-            .filter(lang => languages.includes(lang.name))
-            .map(lang => ({
-              guide_id: user.id,
-              language_id: lang.id
-            }));
-          
-          console.log("Language IDs to insert:", languageIds);
-          
-          if (languageIds.length > 0) {
-            const { data: insertData, error: insertError } = await supabase
-              .from('guide_languages')
-              .insert(languageIds)
-              .select();
-            
-            if (insertError) {
-              console.error("Error inserting guide languages:", insertError);
-              throw insertError;
-            }
-            
-            console.log("Guide languages inserted:", insertData);
-          }
-        }
-      }
+      if (error) throw error;
       
       toast({
         title: 'Profile updated',
+        description: 'Your profile has been successfully updated.',
         status: 'success',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
       
-      // Force reload profile through context
-      if (onSave) onSave();
-      
-    } catch (error: any) {
-      console.error("Profile update error:", error);
-      
-      // Set debug info for troubleshooting
-      setDebugInfo(JSON.stringify(error, null, 2));
-      
+      // Return the updated profile to parent component
+      onSave(data as Profile);
+    } catch (err: any) {
+      console.error('Error saving profile:', err);
       toast({
-        title: 'Error updating profile',
-        description: error.message || "An unexpected error occurred",
+        title: 'Error saving profile',
+        description: err.message || 'An unexpected error occurred. Please try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
-
-  if (!profile) return null;
-
+  
+  if (!currentProfile) {
+    return <Text>Loading profile information...</Text>;
+  }
+  
   return (
-    <Box bg="white" borderRadius="lg" p={6} boxShadow="md">
-      <VStack spacing={6} align="stretch">
-        <Text fontSize="xl" fontWeight="bold">Edit Profile</Text>
-        
-        {/* Avatar */}
-        <Box textAlign="center">
-          <Avatar 
-            size="xl" 
-            src={avatarUrl || DEFAULT_AVATAR_URL} 
-            name={fullName} 
-            mb={4}
-            cursor="pointer"
-            onClick={handleAvatarClick}
-          >
-            <AvatarBadge
-              as={IconButton}
-              size="sm"
-              rounded="full"
-              top="-10px"
-              colorScheme="primary"
-              aria-label="Edit avatar"
-              icon={<EditIcon />}
+    <Box bg="white" p={6} borderRadius="lg" boxShadow="md">
+      <Heading size="lg" mb={6}>Edit Profile</Heading>
+      
+      <form onSubmit={handleSubmit}>
+        <VStack spacing={6} align="stretch">
+          {/* Avatar upload */}
+          <Box textAlign="center">
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
             />
-          </Avatar>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-            accept="image/*"
-          />
-          <Text fontSize="sm" color="gray.500">Click avatar to change profile picture</Text>
-        </Box>
-        
-        <Stack spacing={4}>
-          {/* Basic Information */}
-          <FormControl isRequired>
+            
+            <Flex direction="column" align="center">
+              <Box position="relative" cursor="pointer" onClick={handleAvatarClick}>
+                <Avatar 
+                  size="2xl" 
+                  src={avatarUrl || DEFAULT_AVATAR_URL}
+                  name={formData.full_name}
+                  mb={2}
+                />
+                <IconButton
+                  aria-label="Edit avatar"
+                  icon={<EditIcon />}
+                  size="sm"
+                  colorScheme="primary"
+                  position="absolute"
+                  bottom="10px"
+                  right="0"
+                  borderRadius="full"
+                />
+              </Box>
+              <Text fontSize="sm" color="gray.500" mt={2}>
+                Click to change profile picture
+              </Text>
+            </Flex>
+          </Box>
+          
+          <FormControl isRequired isInvalid={!!errors.full_name}>
             <FormLabel>Full Name</FormLabel>
-            <Input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Your full name"
+            <Input 
+              name="full_name"
+              value={formData.full_name}
+              onChange={handleInputChange}
             />
+            <FormErrorMessage>{errors.full_name}</FormErrorMessage>
           </FormControl>
           
-          <FormControl>
+          <FormControl isInvalid={!!errors.phone}>
             <FormLabel>Phone Number</FormLabel>
-            <Input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Your phone number (optional)"
+            <Input 
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              placeholder="e.g. +1234567890"
             />
+            <FormHelperText>Include country code (optional)</FormHelperText>
+            <FormErrorMessage>{errors.phone}</FormErrorMessage>
           </FormControl>
           
-          {/* Bio - Different for guides and tourists */}
           <FormControl>
             <FormLabel>Bio</FormLabel>
-            <Textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder={profile.role === 'guide' 
-                ? "Tell tourists about your experience and expertise..."
-                : "Share a bit about yourself as a traveler..."}
+            <Textarea 
+              name="bio"
+              value={formData.bio}
+              onChange={handleInputChange}
+              placeholder="Tell us about yourself"
               rows={4}
             />
           </FormControl>
           
-          {/* Interests - Only for tourists */}
-          {profile.role === 'tourist' && (
+          <FormControl>
+            <FormLabel>Location</FormLabel>
+            <Input 
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              placeholder="Where are you based?"
+            />
+          </FormControl>
+          
+          <FormControl>
+            <FormLabel>Languages</FormLabel>
+            <Select 
+              multiple
+              size="md"
+              height="100px"
+              name="languages"
+              value={formData.languages}
+              onChange={handleLanguageChange}
+            >
+              {availableLanguages.map(lang => (
+                <option key={lang.code} value={lang.name}>
+                  {lang.name}
+                </option>
+              ))}
+            </Select>
+          </FormControl>
+          
+          {/* Guide-specific fields */}
+          {currentProfile.role === 'guide' && (
+            <>
+              <FormControl>
+                <FormLabel>Years of Experience</FormLabel>
+                <Input 
+                  type="number"
+                  name="years_experience"
+                  value={formData.years_experience}
+                  onChange={handleInputChange}
+                  min={0}
+                />
+              </FormControl>
+              
+              <FormControl>
+                <FormLabel>Specialties</FormLabel>
+                <Textarea 
+                  name="specialties"
+                  value={formData.specialties}
+                  onChange={handleInputChange}
+                  placeholder="What are your specialties as a guide?"
+                  rows={3}
+                />
+              </FormControl>
+            </>
+          )}
+          
+          {/* Tourist-specific fields */}
+          {currentProfile.role === 'tourist' && (
             <FormControl>
-              <FormLabel>Travel Interests</FormLabel>
-              <Textarea
-                value={interests}
-                onChange={(e) => setInterests(e.target.value)}
-                placeholder="What types of places or activities interest you?"
+              <FormLabel>Interests</FormLabel>
+              <Textarea 
+                name="interests"
+                value={formData.interests}
+                onChange={handleInputChange}
+                placeholder="What are you interested in exploring?"
                 rows={3}
               />
             </FormControl>
           )}
           
-          {/* Languages - Only for guides */}
-          {profile.role === 'guide' && (
-            <FormControl>
-              <FormLabel>Languages You Speak</FormLabel>
-              <Box maxH="200px" overflowY="auto" p={2} borderWidth="1px" borderRadius="md">
-                <CheckboxGroup colorScheme="primary" value={languages} onChange={handleLanguageChange}>
-                  <Flex wrap="wrap">
-                    {availableLanguages.map(lang => (
-                      <Box key={lang.id} width="50%" p={1}>
-                        <Checkbox value={lang.name}>
-                          {lang.name}
-                        </Checkbox>
-                      </Box>
-                    ))}
-                  </Flex>
-                </CheckboxGroup>
-              </Box>
-              <Text fontSize="sm" color="gray.500" mt={1}>
-                Select all languages you can communicate in
-              </Text>
-            </FormControl>
-          )}
-        </Stack>
-        
-        {/* Debug information */}
-        {debugInfo && (
-          <Box mt={4} p={3} bg="red.50" borderRadius="md">
-            <Text fontWeight="bold" mb={2}>Debug Information:</Text>
-            <Code colorScheme="red" p={2} borderRadius="md" width="100%" overflowX="auto">
-              {debugInfo}
-            </Code>
-          </Box>
-        )}
-        
-        <HStack spacing={4} justifyContent="flex-end">
-          <Button variant="outline" onClick={() => window.history.back()}>
-            Cancel
-          </Button>
-          <Button 
-            colorScheme="primary" 
-            onClick={saveProfile}
-            isLoading={isLoading}
-            loadingText="Saving"
-          >
-            Save Changes
-          </Button>
-        </HStack>
-      </VStack>
+          <Divider />
+          
+          <Flex justify="flex-end" gap={3}>
+            <Button 
+              leftIcon={<CloseIcon />}
+              variant="outline" 
+              onClick={() => onSave(currentProfile)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              leftIcon={<CheckIcon />}
+              type="submit" 
+              colorScheme="primary"
+              isLoading={isSubmitting || isUploading}
+            >
+              Save Changes
+            </Button>
+          </Flex>
+        </VStack>
+      </form>
     </Box>
   );
 };
