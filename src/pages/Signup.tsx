@@ -15,61 +15,31 @@ export default function Signup() {
     setLoading(true)
 
     try {
-      // 1) Sign up with Supabase Auth (v2)
-      const { data: signData, error: signError } = await supabase.auth.signUp({
+      // STEP 1: ONLY create auth user - don't try to insert profile yet
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // add basic metadata to auth.user if you'd like
-          data: { display_name: displayName }
+          data: { 
+            display_name: displayName,
+            pending_role: role // Store role preference in metadata
+          }
         }
       })
-      if (signError) throw signError
-
-      // user id from the auth system
-      const userId = signData?.user?.id
-      if (!userId) {
-        // In some Supabase configurations email confirmations are required
-        // and user object might not be available immediately — we still try
-        // to continue if user id is present; otherwise surface a friendly message.
-        throw new Error('Could not obtain user id after sign up. Please check your email for confirmation link and then login.')
-      }
-
-      // 2) Insert into public.users table your app-level user profile
-      const { error: insertUserError } = await supabase
-        .from('users')
-        .insert([{ id: userId, email, display_name: displayName, role }])
-
-      if (insertUserError) throw insertUserError
-
-      // 3) Create corresponding row in guides or tourists table
-      if (role === 'guide') {
-        const { error: gerr } = await supabase
-          .from('guides')
-          .insert([{ user_id: userId, bio: '', languages: [], photos: [] }])
-        if (gerr) throw gerr
-      } else {
-        const { error: terr } = await supabase
-          .from('tourists')
-          .insert([{ user_id: userId, bio: '', languages: [], photos: [] }])
-        if (terr) throw terr
-      }
-
-      // 4) Optionally sign the user in automatically or redirect to dashboard
-      // If email confirmation is required, the user will need to verify email first.
-      // We'll try to sign in automatically (may or may not succeed depending on confirmation settings).
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      
+      if (error) throw error
+      
+      // STEP 2: Store signup details in localStorage for retrieval on first login
+      localStorage.setItem('pendingSignup', JSON.stringify({
         email,
-        password
-      })
-      if (signInError) {
-        // Not fatal — user may need to confirm email. Let them know and redirect to login.
-        alert('Signup successful. Please confirm your email if required, then log in.')
-        navigate('/login')
-      } else {
-        // Successful sign-in; redirect to dashboard
-        navigate('/dashboard')
-      }
+        display_name: displayName,
+        role
+      }))
+      
+      // STEP 3: Inform user of next steps
+      alert('Account created! Please check your email for confirmation (if required), then log in to complete your profile setup.')
+      navigate('/login')
+      
     } catch (err: any) {
       console.error('Signup error:', err)
       alert(err.message || 'Signup failed')

@@ -14,3 +14,27 @@
 ```bash
 cp .env.example .env
 # Fill in the values in .env (use public anon key for dev)
+```
+
+2. Install & run:
+```bash
+npm install
+npm run dev
+```
+
+3. Build for production:
+```bash
+npm run build
+```
+
+## Project structure
+
+- `src/App.tsx`: Main routes and layout
+- `src/components/`: UI components
+- `src/pages/`: Page components (route targets)
+- `src/data/tours.json`: Simple JSON tour seed
+
+---
+
+- Supabase is not required to boot dev server, but you must provide valid env vars for API features.
+- To add more features, connect Supabase tables and follow the modular structure.

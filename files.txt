@@ -1,4 +1,10 @@
-src/pages/Dashboard/GuideProfile.tsx
-src/pages/GuidePage.tsx
-src/utils/supabaseStorage.ts
-migrations/2025-08-23-add-guide-fields.sql
+migrations/003_create_requests_messaging.sql
+src/components/TourRequestForm.tsx
+src/components/RequestsList.tsx
+src/components/RequestCard.tsx
+src/components/ConversationList.tsx
+src/components/ConversationView.tsx
+src/utils/messaging.ts
+src/pages/Dashboard/TourRequests.tsx
+src/pages/Dashboard/Messages.tsx
+src/pages/Dashboard.tsx

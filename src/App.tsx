@@ -18,7 +18,10 @@ export default function App() {
       <NavBar />
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
-          {/* other routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/tour/:id" element={<TourPage />} />
+          <Route path="/guides/:id" element={<GuidePage />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
