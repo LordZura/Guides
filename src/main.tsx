@@ -1,9 +1,11 @@
+// In main.tsx - make sure to add ToursProvider
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import App from './App';
 import { AuthProvider } from './contexts/AuthProvider';
+import { ToursProvider } from './contexts/ToursContext';
 import './index.css';
 
 // Define theme with primary colors
@@ -30,7 +32,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ChakraProvider theme={theme}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <ToursProvider>
+            <App />
+          </ToursProvider>
         </AuthProvider>
       </BrowserRouter>
     </ChakraProvider>

@@ -27,6 +27,13 @@ export interface Profile {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
+  bio?: string;           // Added for guide/tourist profiles
+  interests?: string;     // Added for tourist profiles
+}
+
+export interface Language {
+  name: string;
+  code: string;
 }
 
 export const DEFAULT_AVATAR_URL =

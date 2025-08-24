@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Box, 
   Container, 
@@ -6,13 +7,44 @@ import {
   Flex, 
   Stack, 
   Avatar,
-  Badge
+  Badge,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
+  Button,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalBody,
+  ModalCloseButton,
+  Grid,
+  GridItem,
+  Card,
+  CardHeader,
+  CardBody,
+  useColorModeValue,
+  Icon,
+  Link,
 } from '@chakra-ui/react';
+import { AddIcon, EditIcon } from '@chakra-ui/icons';
+import { MdLanguage, MdLocationOn, MdPerson } from 'react-icons/md';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthProvider';
+import { ToursProvider } from '../contexts/ToursContext';
 import { DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
+import ProfileEditor from '../components/ProfileEditor';
+import TourForm from '../components/TourForm';
+import ToursList from '../components/ToursList';
 
 const Dashboard = () => {
   const { profile } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
+  const bgColor = useColorModeValue('gray.50', 'gray.800');
+  const cardBg = useColorModeValue('white', 'gray.700');
 
   if (!profile) {
     return (
@@ -24,43 +56,154 @@ const Dashboard = () => {
     );
   }
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleEditComplete = () => {
+    setIsEditing(false);
+    // Force reload the page to update profile data
+    window.location.reload();
+  };
+
+  const handleCreateSuccess = () => {
+    onCreateClose();
+    // Reset form
+  };
+
   return (
-    <Container maxW="container.xl" p={4}>
-      <Box bg="white" boxShadow="md" borderRadius="lg" p={6}>
-        <Heading size="lg" mb={4}>Dashboard</Heading>
-        
-        <Flex direction={{ base: 'column', md: 'row' }} gap={6}>
-          <Box flexShrink={0}>
-            <Avatar 
-              src={profile.avatar_url || DEFAULT_AVATAR_URL} 
-              name={profile.full_name}
-              size="xl"
-            />
-          </Box>
+    <ToursProvider>
+      <Container maxW="container.xl" p={4}>
+        <Grid 
+          templateColumns={{ base: "1fr", lg: "300px 1fr" }}
+          gap={6}
+        >
+          {/* Profile Sidebar */}
+          <GridItem>
+            <Card bg={cardBg} boxShadow="md" borderRadius="lg">
+              <CardHeader>
+                <Flex direction="column" align="center" textAlign="center">
+                  <Avatar 
+                    src={profile.avatar_url || DEFAULT_AVATAR_URL} 
+                    name={profile.full_name}
+                    size="xl"
+                    mb={4}
+                  />
+                  
+                  <Heading size="md">{profile.full_name}</Heading>
+                  
+                  <Badge 
+                    colorScheme={profile.role === 'guide' ? 'green' : 'blue'} 
+                    mt={2}
+                  >
+                    {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
+                  </Badge>
+                  
+                  <Button 
+                    leftIcon={<EditIcon />} 
+                    size="sm" 
+                    variant="outline" 
+                    colorScheme="primary"
+                    mt={4}
+                    onClick={handleEditClick}
+                  >
+                    Edit Profile
+                  </Button>
+                </Flex>
+              </CardHeader>
+              
+              <CardBody>
+                <Stack spacing={4}>
+                  {profile.phone && (
+                    <Flex align="center">
+                      <Icon as={MdPerson} color="primary.500" mr={2} />
+                      <Text fontSize="sm">{profile.phone}</Text>
+                    </Flex>
+                  )}
+                  
+                  {profile.bio && (
+                    <Box>
+                      <Text fontWeight="medium" mb={1}>Bio</Text>
+                      <Text fontSize="sm">{profile.bio}</Text>
+                    </Box>
+                  )}
+                  
+                  {/* Tourist-specific fields */}
+                  {profile.role === 'tourist' && profile.interests && (
+                    <Box>
+                      <Text fontWeight="medium" mb={1}>Interests</Text>
+                      <Text fontSize="sm">{profile.interests}</Text>
+                    </Box>
+                  )}
+                  
+                  <Box>
+                    <Link as={RouterLink} to="/explore" color="primary.500">
+                      Browse {profile.role === 'guide' ? 'Tour Requests' : 'Tours'}
+                    </Link>
+                  </Box>
+                </Stack>
+              </CardBody>
+            </Card>
+          </GridItem>
           
-          <Stack spacing={3}>
-            <Heading size="md">{profile.full_name}</Heading>
-            <Badge colorScheme={profile.role === 'guide' ? 'green' : 'blue'} alignSelf="flex-start">
-              {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
-            </Badge>
-            
-            {profile.phone && (
-              <Text color="gray.600">
-                <Text as="span" fontWeight="semibold">Phone:</Text> {profile.phone}
-              </Text>
+          {/* Main Content Area */}
+          <GridItem>
+            {isEditing ? (
+              <ProfileEditor onSave={handleEditComplete} />
+            ) : (
+              <Box>
+                <Flex justify="space-between" align="center" mb={6}>
+                  <Heading size="lg">
+                    {profile.role === 'guide' ? 'Guide Dashboard' : 'Tourist Dashboard'}
+                  </Heading>
+                  
+                  <Button 
+                    leftIcon={<AddIcon />} 
+                    colorScheme="primary"
+                    onClick={onCreateOpen}
+                  >
+                    {profile.role === 'guide' ? 'Create Tour' : 'Post Tour Request'}
+                  </Button>
+                </Flex>
+                
+                <Tabs colorScheme="primary" variant="enclosed">
+                  <TabList>
+                    <Tab>My {profile.role === 'guide' ? 'Tours' : 'Tour Requests'}</Tab>
+                    {profile.role === 'guide' && <Tab>My Bookings</Tab>}
+                    {profile.role === 'tourist' && <Tab>My Bookings</Tab>}
+                  </TabList>
+                  
+                  <TabPanels>
+                    {/* Tours/Tour Requests Panel */}
+                    <TabPanel px={0}>
+                      <ToursList />
+                    </TabPanel>
+                    
+                    {/* Bookings Panel - Placeholder for future implementation */}
+                    <TabPanel>
+                      <Box p={6} textAlign="center" bg="gray.50" borderRadius="md">
+                        <Text>Bookings feature will be implemented in a future update.</Text>
+                      </Box>
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
+              </Box>
             )}
-            
-            <Box mt={2}>
-              <Heading size="sm" mb={2}>Welcome to TourGuideHub!</Heading>
-              <Text color="gray.700">
-                This is your dashboard where you'll see your activity, bookings, and recommendations.
-                More features will be implemented in upcoming phases.
-              </Text>
-            </Box>
-          </Stack>
-        </Flex>
-      </Box>
-    </Container>
+          </GridItem>
+        </Grid>
+      </Container>
+      
+      {/* Create Tour Modal */}
+      <Modal isOpen={isCreateOpen} onClose={onCreateClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody pt={10} pb={6}>
+            <TourForm onSuccess={handleCreateSuccess} onCancel={onCreateClose} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </ToursProvider>
   );
 };
 

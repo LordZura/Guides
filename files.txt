@@ -1,11 +1,4 @@
-package.json
-src/main.tsx
-src/App.tsx
-src/lib/supabaseClient.ts
-src/contexts/AuthProvider.tsx
-src/components/Navbar.tsx
-src/components/AuthModal.tsx
-src/pages/Dashboard.tsx
-src/pages/Explore.tsx
-src/db/migrations/001_create_profiles.sql
-README_SUBTASK1.md
+/src/pages/Guides.tsx
+/src/components/GuideCard.tsx
+/src/components/TourCard.tsx
+/src/components/Filters.tsx
