@@ -62,30 +62,35 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     e.preventDefault();
     
     if (!validateForm()) {
-      return;
+        return;
     }
     
     if (!user || !profile) {
-      toast({
+        toast({
         title: 'Authentication required',
         description: 'Please sign in to submit a review',
         status: 'error',
         duration: 3000,
         isClosable: true,
-      });
-      return;
+        });
+        return;
     }
     
-    await addReview({
-      reviewer_id: user.id,
-      reviewer_name: profile.full_name,
-      reviewer_avatar: profile.avatar_url || undefined,
-      target_id: targetId,
-      target_type: targetType,
-      rating,
-      content,
-      tour_id: tourId,
-    });
+    // Prepare review data using 'comment' instead of 'content'
+    const reviewData = {
+        reviewer_id: user.id,
+        target_id: targetId,
+        target_type: targetType,
+        rating,
+        comment: content, // Map 'content' from form to 'comment' for database
+    };
+    
+    // Only add tour_id if it exists and is not undefined
+    if (tourId) {
+        (reviewData as any).tour_id = tourId;
+    }
+    
+    await addReview(reviewData);
     
     // Reset form
     setRating(0);
@@ -93,9 +98,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     
     // Call success callback if provided
     if (onSuccess) {
-      onSuccess();
+        onSuccess();
     }
-  };
+    };
   
   return (
     <Box as="form" onSubmit={handleSubmit}>

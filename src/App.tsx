@@ -6,11 +6,11 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Explore from './pages/Explore';
 import AuthModal from './components/AuthModal';
+import TourDetail from './pages/TourDetails';
+import ProfilePage from './pages/Profile/[id]';
 
 // Placeholder components for routes not implemented in Subtask 1
 const About = () => <Box p={4} maxW="container.xl" mx="auto"><Box as="h1" fontSize="2xl" fontWeight="bold">About TourGuideHub</Box></Box>;
-const Profile = () => <Box p={4} maxW="container.xl" mx="auto"><Box as="h1" fontSize="2xl" fontWeight="bold">Profile</Box></Box>;
-const Chats = () => <Box p={4} maxW="container.xl" mx="auto"><Box as="h1" fontSize="2xl" fontWeight="bold">Chats</Box></Box>;
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -45,16 +45,10 @@ function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } />
-          <Route path="/chats" element={
-            <ProtectedRoute>
-              <Chats />
-            </ProtectedRoute>
-          } />
+          {/* Add route for tour details */}
+          <Route path="/tours/:id" element={<TourDetail />} />
+          {/* Add route for guide profiles */}
+          <Route path="/profile/:id" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/explore" replace />} />
         </Routes>
       </Box>

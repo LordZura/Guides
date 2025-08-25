@@ -16,17 +16,18 @@ export interface ReviewItemProps {
   reviewer_name: string;
   reviewer_avatar?: string;
   rating: number;
-  content: string;
+  comment: string; // Changed from 'content' to 'comment'
   created_at: string;
   tour_name?: string;
   showTour?: boolean;
 }
 
+
 const ReviewItem: React.FC<ReviewItemProps> = ({
   reviewer_name,
   reviewer_avatar,
   rating,
-  content,
+  comment, // Changed from 'content' to 'comment'
   created_at,
   tour_name,
   showTour = false,
@@ -66,7 +67,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
           </Box>
         </Flex>
         
-        <Text fontSize="md">{content}</Text>
+        <Text fontSize="md">{comment}</Text> {/* Changed from 'content' to 'comment' */}
         
         <Text fontSize="xs" color="gray.500" alignSelf="flex-end">
           {formatDistanceToNow(new Date(created_at), { addSuffix: true })}

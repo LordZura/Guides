@@ -276,17 +276,17 @@ const ProfilePage = () => {
                 ) : (
                   <VStack spacing={4} align="stretch">
                     {reviews.map(review => (
-                      <ReviewItem 
+                    <ReviewItem 
                         key={review.id} 
                         id={review.id}
                         reviewer_name={review.reviewer_name}
                         reviewer_avatar={review.reviewer_avatar}
                         rating={review.rating}
-                        content={review.content}
+                        comment={review.comment} // Changed from 'content' to 'comment'
                         created_at={review.created_at}
                         tour_name={review.tour_name}
                         showTour={true}
-                      />
+                    />
                     ))}
                   </VStack>
                 )}

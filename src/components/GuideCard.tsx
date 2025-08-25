@@ -92,7 +92,7 @@ const GuideCard = ({ guide }: GuideCardProps) => {
           
           <Button
             as={RouterLink}
-            to={`/guides/${guide.id}`}
+            to={`/profile/${guide.id}`}
             colorScheme="primary"
             size="sm"
             width="100%"

@@ -10,11 +10,27 @@ export interface Review {
   target_id: string;
   target_type: 'guide' | 'tour';
   rating: number;
-  content: string;
+  comment: string; // Changed from 'content' to 'comment'
   created_at: string;
   tour_id?: string;
   tour_name?: string;
 }
+
+
+// Define what fields are actually in the database table
+
+interface ReviewData {
+  id?: string;
+  reviewer_id: string;
+  target_id: string;
+  target_type: 'guide' | 'tour';
+  rating: number;
+  comment: string; // Changed from 'content' to 'comment'
+  created_at?: string;
+  tour_id?: string;
+}
+
+
 
 interface ReviewsContextType {
   reviews: Review[];
@@ -26,7 +42,7 @@ interface ReviewsContextType {
   hasMoreReviews: boolean;
   loadReviews: (id: string, type: 'guide' | 'tour', page?: number) => Promise<void>;
   loadMoreReviews: () => Promise<void>;
-  addReview: (review: Omit<Review, 'id' | 'created_at'>) => Promise<void>;
+  addReview: (review: ReviewData) => Promise<void>;
   deleteReview: (reviewId: string) => Promise<void>;
 }
 
@@ -65,43 +81,79 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       setError(null);
       
-      // Fetch reviews
-      let query = supabase
+      // First fetch the basic review data without joins
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
-        .select(`
-          *,
-          reviewers:profiles(full_name, avatar_url),
-          tours:tours(title)
-        `)
+        .select('*')
         .eq('target_id', id)
         .eq('target_type', type)
         .order('created_at', { ascending: false })
         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
       
-      const { data, error } = await query;
+      if (reviewsError) throw reviewsError;
       
-      if (error) throw error;
-      
-      // Fetch the summary statistics in a separate call
+      // Fetch the summary statistics
       const { data: summaryData, error: summaryError } = await supabase
         .rpc('get_review_summary', { target_id_param: id, target_type_param: type });
       
       if (summaryError) throw summaryError;
       
-      // Transform data to match Review interface
-      const transformedReviews = data.map((item: any): Review => ({
+      // Get all reviewer IDs to fetch their profiles
+      const reviewerIds = reviewsData.map(review => review.reviewer_id);
+      
+      // Fetch reviewer profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', reviewerIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Create a map of reviewer profiles
+      const profileMap = new Map();
+      profilesData.forEach(profile => {
+        profileMap.set(profile.id, profile);
+      });
+      
+      // Get all tour IDs to fetch tour names
+      const tourIds = reviewsData
+        .filter(review => review.tour_id)
+        .map(review => review.tour_id);
+      
+      // If there are tour IDs, fetch tour names
+      let tourMap = new Map();
+      if (tourIds.length > 0) {
+        const { data: toursData, error: toursError } = await supabase
+          .from('tours')
+          .select('id, title')
+          .in('id', tourIds);
+        
+        if (toursError) throw toursError;
+        
+        toursData.forEach(tour => {
+          tourMap.set(tour.id, tour);
+        });
+      }
+      
+      // Transform review data with profiles and tour info
+      const transformedReviews = reviewsData.map((item): Review => {
+        const reviewer = profileMap.get(item.reviewer_id);
+        const tour = item.tour_id ? tourMap.get(item.tour_id) : null;
+        
+        return {
         id: item.id,
         reviewer_id: item.reviewer_id,
-        reviewer_name: item.reviewers?.full_name || 'Anonymous',
-        reviewer_avatar: item.reviewers?.avatar_url || undefined,
+        reviewer_name: reviewer ? reviewer.full_name : 'Anonymous',
+        reviewer_avatar: reviewer ? reviewer.avatar_url : undefined,
         target_id: item.target_id,
         target_type: item.target_type,
         rating: item.rating,
-        content: item.content,
+        comment: item.comment, // Changed from 'content' to 'comment'
         created_at: item.created_at,
         tour_id: item.tour_id,
-        tour_name: item.tours?.title,
-      }));
+        tour_name: tour ? tour.title : undefined,
+        };
+    });
       
       // Update state
       if (page === 0) {
@@ -133,44 +185,62 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
     await loadReviews(targetId, targetType, currentPage + 1);
   };
   
-  // Add a new review
-  const addReview = async (review: Omit<Review, 'id' | 'created_at'>) => {
-    try {
-      setIsLoading(true);
-      
-      const { error } = await supabase
-        .from('reviews')
-        .insert([review])
-        .select();
-      
-      if (error) throw error;
-      
-      // Refresh reviews
-      if (targetId && targetType) {
-        await loadReviews(targetId, targetType, 0);
-      }
-      
-      toast({
-        title: 'Review submitted',
-        description: 'Thank you for your feedback!',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (err: any) {
-      console.error('Error adding review:', err);
-      toast({
-        title: 'Failed to submit review',
-        description: err.message || 'An unexpected error occurred',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
+  // Add a new review - only send fields that exist in the database
+  const addReview = async (reviewData: ReviewData) => {
+  try {
+    setIsLoading(true);
+    
+    // Create a clean data object for insertion
+    const dataToInsert = {
+      reviewer_id: reviewData.reviewer_id,
+      target_id: reviewData.target_id,
+      target_type: reviewData.target_type,
+      rating: reviewData.rating,
+      comment: reviewData.comment, // Changed from 'content' to 'comment'
+    };
+    
+    // Only add tour_id if it exists
+    if (reviewData.tour_id) {
+      (dataToInsert as any).tour_id = reviewData.tour_id;
     }
-  };
-  
+    
+    console.log('Inserting review data:', dataToInsert);
+    
+    // Insert the review
+    const { error } = await supabase
+      .from('reviews')
+      .insert([dataToInsert]);
+    
+    if (error) {
+      console.error('Supabase insert error:', error);
+      throw error;
+    }
+    
+    // Refresh reviews
+    if (targetId && targetType) {
+      await loadReviews(targetId, targetType, 0);
+    }
+    
+    toast({
+      title: 'Review submitted',
+      description: 'Thank you for your feedback!',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  } catch (err: any) {
+    console.error('Error adding review:', err);
+    toast({
+      title: 'Failed to submit review',
+      description: err.message || 'An unexpected error occurred',
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
   // Delete a review
   const deleteReview = async (reviewId: string) => {
     try {

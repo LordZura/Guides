@@ -36,7 +36,7 @@ export interface Review {
   target_id: string;
   target_type: 'guide' | 'tour';
   rating: number;
-  content: string;
+  comment: string; // Changed from 'content' to 'comment'
   created_at: string;
   tour_id?: string;
   tour_name?: string;
