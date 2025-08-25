@@ -5,7 +5,6 @@ import {
   Container,
   Heading,
   Text,
-  Image,
   SimpleGrid,
   VStack,
   HStack,
@@ -112,6 +111,7 @@ const ProfilePage = () => {
   
   // Check if current user is the guide
   const isOwnProfile = currentUserProfile?.id === guideProfile.id;
+  const canRequestTour = currentUserProfile && currentUserProfile.role === 'tourist' && !isOwnProfile;
   
   return (
     <Container maxW="container.lg" py={8}>
@@ -131,11 +131,11 @@ const ProfilePage = () => {
                 {guideProfile.role.charAt(0).toUpperCase() + guideProfile.role.slice(1)}
               </Badge>
               
-              <StarRating 
-                rating={guideProfile.average_rating} 
-                reviewCount={guideProfile.reviews_count} 
-                size="md"
-              />
+              <StarRating rating={guideProfile.average_rating} size={24} />
+              
+              <Text fontSize="sm" color="gray.600">
+                {guideProfile.reviews_count} {guideProfile.reviews_count === 1 ? 'review' : 'reviews'}
+              </Text>
               
               {guideProfile.completed_tours_count > 0 && (
                 <Text fontSize="sm" color="gray.600">
@@ -186,16 +186,16 @@ const ProfilePage = () => {
               </VStack>
             )}
             
-            {!isOwnProfile && currentUserProfile?.role === 'tourist' && (
+            {canRequestTour && (
               <Button 
                 colorScheme="primary" 
                 size="md" 
                 width="full"
-                leftIcon={<MdEvent />}
+                leftIcon={<Icon as={MdEvent} />}
                 onClick={() => {
                   toast({
                     title: "Coming soon!",
-                    description: "Booking functionality will be implemented in Subtask 3",
+                    description: "Tour request functionality will be implemented in Subtask 3",
                     status: "info",
                     duration: 3000,
                     isClosable: true,
@@ -276,7 +276,17 @@ const ProfilePage = () => {
                 ) : (
                   <VStack spacing={4} align="stretch">
                     {reviews.map(review => (
-                      <ReviewItem key={review.id} review={review} />
+                      <ReviewItem 
+                        key={review.id} 
+                        id={review.id}
+                        reviewer_name={review.reviewer_name}
+                        reviewer_avatar={review.reviewer_avatar}
+                        rating={review.rating}
+                        content={review.content}
+                        created_at={review.created_at}
+                        tour_name={review.tour_name}
+                        showTour={true}
+                      />
                     ))}
                   </VStack>
                 )}

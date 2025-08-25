@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '@chakra-ui/react';
 
@@ -24,6 +24,7 @@ interface ReviewsContextType {
   isLoading: boolean;
   error: string | null;
   hasMoreReviews: boolean;
+  loadReviews: (id: string, type: 'guide' | 'tour', page?: number) => Promise<void>;
   loadMoreReviews: () => Promise<void>;
   addReview: (review: Omit<Review, 'id' | 'created_at'>) => Promise<void>;
   deleteReview: (reviewId: string) => Promise<void>;
@@ -137,7 +138,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('reviews')
         .insert([review])
         .select();
@@ -225,6 +226,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
     error,
     hasMoreReviews,
+    loadReviews,
     loadMoreReviews,
     addReview,
     deleteReview,
@@ -246,7 +248,7 @@ export const useReviews = (id?: string, type?: 'guide' | 'tour') => {
     if (id && type) {
       context.loadReviews(id, type);
     }
-  }, [id, type]);
+  }, [id, type, context.loadReviews]);
   
   return context;
 };
