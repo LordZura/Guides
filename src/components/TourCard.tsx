@@ -14,7 +14,7 @@ import {
   useToast,
   Avatar,
 } from '@chakra-ui/react';
-import { MdAccessTime, MdAttachMoney, MdCalendarToday, MdGroup, MdLanguage, MdLocationOn, MdPerson } from 'react-icons/md';
+import { MdAccessTime, MdAttachMoney, MdCalendarToday, MdGroup, MdLocationOn } from 'react-icons/md';
 import { Link as RouterLink } from 'react-router-dom';
 import { supabase, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import StarRating from './StarRating';
@@ -147,82 +147,98 @@ const TourCard = ({ tourId }: TourCardProps) => {
   return (
     <Box
       borderWidth="1px"
-      borderRadius="lg"
+      borderRadius="xl"
       overflow="hidden"
-      boxShadow="md"
+      boxShadow="lg"
       bg={cardBg}
-      transition="transform 0.2s"
-      _hover={{ transform: 'translateY(-5px)', boxShadow: 'lg' }}
+      transition="all 0.3s ease"
+      _hover={{ 
+        transform: 'translateY(-8px)', 
+        boxShadow: '2xl',
+        borderColor: 'primary.200'
+      }}
+      borderColor="gray.200"
+      position="relative"
     >
-      <Box p={5}>
-        <Heading as="h3" size="md" mb={2} noOfLines={1}>
+      <Box p={6}>
+        <Heading as="h3" size="md" mb={3} noOfLines={2} color="gray.800" lineHeight="1.3">
           {tour.title}
         </Heading>
         
-        <Flex align="center" mb={3}>
+        <Flex align="center" mb={4}>
           <Avatar 
             size="sm" 
             src={tour.creator_avatar || DEFAULT_AVATAR_URL} 
             name={tour.creator_name} 
-            mr={2} 
+            mr={3}
+            border="2px"
+            borderColor="primary.100"
           />
           <Box>
-            <Text fontSize="sm">{tour.creator_name}</Text>
+            <Text fontSize="sm" fontWeight="semibold" color="gray.700">{tour.creator_name}</Text>
             {isGuide && (
-              <Flex align="center">
-                <StarRating rating={averageRating} size={12} />
-                <Text fontSize="xs" ml={1} color="gray.500">
-                  ({reviewCount})
+              <Flex align="center" mt={1}>
+                <StarRating rating={averageRating} size={14} />
+                <Text fontSize="xs" ml={2} color="gray.500" fontWeight="medium">
+                  ({reviewCount} reviews)
                 </Text>
               </Flex>
             )}
           </Box>
         </Flex>
         
-        <Text fontSize="md" mb={4} noOfLines={3}>
+        <Text fontSize="sm" mb={6} noOfLines={3} color="gray.600" lineHeight="1.5">
           {tour.description}
         </Text>
         
-        <VStack spacing={2} align="start" mb={4}>
+        <VStack spacing={3} align="start" mb={6}>
           <Flex align="center">
-            <Icon as={MdLocationOn} color="gray.500" mr={2} />
-            <Text fontSize="sm">{tour.location}</Text>
+            <Icon as={MdLocationOn} color="primary.500" mr={3} boxSize="4" />
+            <Text fontSize="sm" fontWeight="medium" color="gray.700">{tour.location}</Text>
           </Flex>
           
           <Flex align="center">
-            <Icon as={MdAccessTime} color="gray.500" mr={2} />
-            <Text fontSize="sm">{tour.duration} hour{tour.duration !== 1 ? 's' : ''}</Text>
+            <Icon as={MdAccessTime} color="primary.500" mr={3} boxSize="4" />
+            <Text fontSize="sm" fontWeight="medium" color="gray.700">{tour.duration} hour{tour.duration !== 1 ? 's' : ''}</Text>
           </Flex>
           
           <Flex align="center">
-            <Icon as={MdAttachMoney} color="gray.500" mr={2} />
-            <Text fontSize="sm">${tour.price} per person</Text>
+            <Icon as={MdAttachMoney} color="green.500" mr={3} boxSize="4" />
+            <Text fontSize="sm" fontWeight="bold" color="green.600">${tour.price} per person</Text>
           </Flex>
           
           <Flex align="center">
-            <Icon as={MdGroup} color="gray.500" mr={2} />
-            <Text fontSize="sm">Up to {tour.capacity} people</Text>
+            <Icon as={MdGroup} color="primary.500" mr={3} boxSize="4" />
+            <Text fontSize="sm" fontWeight="medium" color="gray.700">Up to {tour.capacity} people</Text>
           </Flex>
           
           <Flex align="center">
-            <Icon as={MdCalendarToday} color="gray.500" mr={2} />
-            <Text fontSize="sm" noOfLines={1}>Available: {availableDays}</Text>
+            <Icon as={MdCalendarToday} color="primary.500" mr={3} boxSize="4" />
+            <Text fontSize="sm" noOfLines={1} fontWeight="medium" color="gray.700">Available: {availableDays}</Text>
           </Flex>
         </VStack>
         
-        <Box mb={4}>
-          <Text fontSize="sm" fontWeight="medium" mb={1}>Languages:</Text>
-          <HStack spacing={2} flexWrap="wrap">
-            {tour.languages && tour.languages.map((lang, index) => (
-              <Badge key={index} colorScheme="primary" fontSize="xs">
-                {lang}
-              </Badge>
-            ))}
-          </HStack>
-        </Box>
+        {tour.languages && tour.languages.length > 0 && (
+          <Box mb={6}>
+            <Text fontSize="sm" fontWeight="semibold" mb={2} color="gray.700">Languages:</Text>
+            <HStack spacing={2} flexWrap="wrap">
+              {tour.languages.map((lang, index) => (
+                <Badge key={index} colorScheme="primary" fontSize="xs" borderRadius="full" px={3} py={1}>
+                  {lang}
+                </Badge>
+              ))}
+            </HStack>
+          </Box>
+        )}
         
-        <Flex justify="space-between" align="center">
-          <Badge colorScheme={tour.is_private ? 'purple' : 'green'}>
+        <Flex justify="space-between" align="center" pt={2} borderTop="1px" borderColor="gray.100">
+          <Badge 
+            colorScheme={tour.is_private ? 'purple' : 'green'} 
+            fontSize="xs" 
+            borderRadius="full"
+            px={3}
+            py={1}
+          >
             {tour.is_private ? 'Private' : 'Public'}
           </Badge>
           
@@ -231,6 +247,11 @@ const TourCard = ({ tourId }: TourCardProps) => {
             to={`/tours/${tour.id}`}
             colorScheme="primary"
             size="sm"
+            borderRadius="full"
+            px={6}
+            fontWeight="semibold"
+            _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
+            transition="all 0.2s"
           >
             View Details
           </Button>

@@ -1,11 +1,47 @@
-/* Tailwind removed — minimal global reset and base styles */
+/* Enhanced global reset and base styles */
 
-* { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
-body {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-  background-color: #f9fafb; /* gray-50 */
-  color: #111827; /* gray-900 */
+* { 
+  box-sizing: border-box; 
 }
 
-/* Feel free to add small global styles below as needed */
+html { 
+  scroll-behavior: smooth;
+}
+
+html, body, #root { 
+  height: 100%; 
+  margin: 0; 
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); /* subtle gradient background */
+  color: #111827; /* gray-900 */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enhanced global styles for better UX */
+*:focus {
+  outline: 2px solid #3182ce;
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}

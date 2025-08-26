@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box, Text } from '@chakra-ui/react';
 import { useAuth } from './contexts/AuthProvider';
 import { useModal } from './contexts/ModalContext';
-import Navbar from './components/Navbar';
+import Navbar from './components/NavBar';
 import Dashboard from './pages/Dashboard';
 import Explore from './pages/Explore';
 import AuthModal from './components/AuthModal';
@@ -27,15 +27,15 @@ function App() {
   const { isAuthModalOpen, closeAuthModal } = useModal();
   
   return (
-    <Box minH="100vh" bg="gray.50">
-      {/* Debug banner */}
-      <Box bg="yellow.300" p={2} textAlign="center">
-        <Text fontWeight="bold">DEBUG: If you see this, rendering is working</Text>
+    <Box minH="100vh" bg="transparent">
+      {/* Debug banner - remove for production */}
+      <Box bg="yellow.300" p={2} textAlign="center" fontSize="sm">
+        <Text fontWeight="medium">DEBUG: If you see this, rendering is working</Text>
       </Box>
       
       <Navbar />
       
-      <Box as="main" pt="16">
+      <Box as="main" pt="20" minH="calc(100vh - 80px)">
         <Routes>
           <Route path="/" element={<Navigate to="/explore" replace />} />
           <Route path="/explore" element={<Explore />} />

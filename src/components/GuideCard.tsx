@@ -55,20 +55,28 @@ const GuideCard = ({ guide }: GuideCardProps) => {
   return (
     <Box
       borderWidth="1px"
-      borderRadius="lg"
+      borderRadius="xl"
       overflow="hidden"
-      boxShadow="md"
+      boxShadow="lg"
       bg={cardBg}
-      transition="transform 0.2s"
-      _hover={{ transform: 'translateY(-5px)', boxShadow: 'lg' }}
+      transition="all 0.3s ease"
+      _hover={{ 
+        transform: 'translateY(-8px)', 
+        boxShadow: '2xl',
+        borderColor: 'primary.200'
+      }}
+      borderColor="gray.200"
+      position="relative"
     >
-      <Box position="relative" height="200px" overflow="hidden">
+      <Box position="relative" height="240px" overflow="hidden">
         <Image
           src={guide.avatar_url || DEFAULT_AVATAR_URL}
           alt={guide.full_name}
           objectFit="cover"
           width="100%"
           height="100%"
+          transition="transform 0.3s ease"
+          _hover={{ transform: 'scale(1.05)' }}
         />
         
         <Box
@@ -76,64 +84,72 @@ const GuideCard = ({ guide }: GuideCardProps) => {
           bottom="0"
           left="0"
           right="0"
-          bg="rgba(0,0,0,0.6)"
-          p={3}
+          bgGradient="linear(to-t, blackAlpha.800, transparent)"
+          p={4}
           color="white"
         >
-          <Heading size="md" noOfLines={1}>{guide.full_name}</Heading>
+          <Heading size="md" noOfLines={1} fontWeight="bold">{guide.full_name}</Heading>
           
           {guide.years_experience && (
-            <Flex align="center" mt={1}>
-              <Icon as={MdStar} color="yellow.400" mr={1} />
-              <Text fontSize="sm">{guide.years_experience} years experience</Text>
+            <Flex align="center" mt={2}>
+              <Icon as={MdStar} color="yellow.400" mr={2} boxSize="4" />
+              <Text fontSize="sm" fontWeight="medium">{guide.years_experience} years experience</Text>
             </Flex>
           )}
         </Box>
       </Box>
       
-      <Box p={4}>
-        <Stack spacing={3}>
+      <Box p={6}>
+        <Stack spacing={4}>
           {/* Rating display */}
           <Flex align="center" justify="space-between">
-            <StarRating rating={averageRating} size={16} />
-            <Text fontSize="sm" color="gray.500">
+            <StarRating rating={averageRating} size={18} />
+            <Text fontSize="sm" color="gray.500" fontWeight="medium">
               {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
             </Text>
           </Flex>
           
           {guide.bio && (
-            <Text fontSize="sm" noOfLines={2} color="gray.600">
+            <Text fontSize="sm" noOfLines={2} color="gray.600" lineHeight="1.5">
               {guide.bio}
             </Text>
           )}
           
-          <HStack flexWrap="wrap" spacing={2}>
-            {guide.languages && guide.languages.map((lang: string, index: number) => (
-              <Badge key={index} colorScheme="primary" fontSize="xs">
-                {lang}
-              </Badge>
-            ))}
-          </HStack>
+          {guide.languages && guide.languages.length > 0 && (
+            <HStack flexWrap="wrap" spacing={2}>
+              {guide.languages.map((lang: string, index: number) => (
+                <Badge key={index} colorScheme="primary" fontSize="xs" borderRadius="full" px={3} py={1}>
+                  {lang}
+                </Badge>
+              ))}
+            </HStack>
+          )}
           
           {guide.location && (
             <Flex align="center">
-              <Icon as={MdLocationOn} color="gray.500" mr={1} />
-              <Text fontSize="sm" color="gray.500">{guide.location}</Text>
+              <Icon as={MdLocationOn} color="primary.500" mr={2} boxSize="4" />
+              <Text fontSize="sm" color="gray.700" fontWeight="medium">{guide.location}</Text>
             </Flex>
           )}
           
           {guide.specialties && (
-            <Text fontSize="xs" color="gray.500">
-              <strong>Specialties:</strong> {guide.specialties}
-            </Text>
+            <Box>
+              <Text fontSize="sm" color="gray.700" fontWeight="semibold" mb={1}>Specialties:</Text>
+              <Text fontSize="sm" color="gray.600">{guide.specialties}</Text>
+            </Box>
           )}
           
           <Button
             as={RouterLink}
             to={`/profile/${guide.id}`}
             colorScheme="primary"
-            size="sm"
+            size="md"
             width="100%"
+            borderRadius="full"
+            fontWeight="semibold"
+            _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
+            transition="all 0.2s"
+            mt={2}
           >
             View Profile
           </Button>
