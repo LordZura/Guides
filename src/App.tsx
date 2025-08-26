@@ -27,15 +27,15 @@ function App() {
   const { isAuthModalOpen, closeAuthModal } = useModal();
   
   return (
-    <Box minH="100vh" bg="gray.50">
-      {/* Debug banner */}
-      <Box bg="yellow.300" p={2} textAlign="center">
-        <Text fontWeight="bold">DEBUG: If you see this, rendering is working</Text>
+    <Box minH="100vh" bg="transparent">
+      {/* Debug banner - remove for production */}
+      <Box bg="yellow.300" p={2} textAlign="center" fontSize="sm">
+        <Text fontWeight="medium">DEBUG: If you see this, rendering is working</Text>
       </Box>
       
       <Navbar />
       
-      <Box as="main" pt="20">
+      <Box as="main" pt="20" minH="calc(100vh - 80px)">
         <Routes>
           <Route path="/" element={<Navigate to="/explore" replace />} />
           <Route path="/explore" element={<Explore />} />

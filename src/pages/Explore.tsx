@@ -255,38 +255,50 @@ const Explore = () => {
   };
   
   return (
-    <Container maxW="container.xl" px={4} py={8}>
-      <Box bg="white" borderRadius="lg" overflow="hidden" boxShadow="md">
-        <Box p={6} bgGradient="linear(to-r, primary.600, primary.700)" color="white">
-          <Heading as="h1" size="lg" mb={2}>Explore TourGuideHub</Heading>
-          <Text color="primary.100">Discover amazing guides, tours and travel stories</Text>
-          
-          {isMobile && (
-            <Button 
-              leftIcon={<FaFilter />} 
-              variant="outline" 
-              colorScheme="whiteAlpha"
-              mt={4}
-              onClick={onOpen}
-            >
-              Filters
-            </Button>
-          )}
+    <Container maxW="container.xl" px={6} py={8}>
+      <Box bg="white" borderRadius="xl" overflow="hidden" boxShadow="xl" border="1px" borderColor="gray.100">
+        <Box p={8} bgGradient="linear(135deg, primary.500, primary.700)" color="white" position="relative">
+          <Box position="absolute" top="0" left="0" w="full" h="full" bgGradient="linear(135deg, primary.500, transparent)" opacity="0.1" />
+          <Box position="relative" zIndex="1">
+            <Heading as="h1" size="xl" mb={3} fontWeight="black">Explore TourGuideHub</Heading>
+            <Text color="primary.50" fontSize="lg" maxW="md">Discover amazing guides, tours and travel stories from local experts</Text>
+            
+            {isMobile && (
+              <Button 
+                leftIcon={<FaFilter />} 
+                variant="outline" 
+                colorScheme="whiteAlpha"
+                mt={6}
+                onClick={onOpen}
+                borderRadius="full"
+                px={6}
+                _hover={{ bg: 'whiteAlpha.200', transform: 'translateY(-1px)' }}
+                transition="all 0.2s"
+              >
+                Filters & Search
+              </Button>
+            )}
+          </Box>
         </Box>
         
         <Flex>
           {/* Filters - desktop */}
           {!isMobile && (
-            <Box width="250px" p={4} borderRightWidth="1px">
-              <Heading size="md" mb={4}>Filters</Heading>
+            <Box width="280px" p={6} borderRightWidth="1px" borderColor="gray.100" bg="gray.50">
+              <Heading size="sm" mb={6} color="gray.700">Search & Filters</Heading>
               
-              <Stack spacing={4}>
+              <Stack spacing={6}>
                 <FormControl>
-                  <FormLabel>Language</FormLabel>
+                  <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Language</FormLabel>
                   <Select 
                     placeholder="Any language"
                     value={selectedLanguage}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
+                    borderRadius="lg"
+                    border="2px"
+                    borderColor="gray.200"
+                    _hover={{ borderColor: 'primary.300' }}
+                    _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
                   >
                     {languages.map(lang => (
                       <option key={lang} value={lang}>{lang}</option>
@@ -295,11 +307,16 @@ const Explore = () => {
                 </FormControl>
                 
                 <FormControl>
-                  <FormLabel>Location</FormLabel>
+                  <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Location</FormLabel>
                   <Select 
                     placeholder="Any location"
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
+                    borderRadius="lg"
+                    border="2px"
+                    borderColor="gray.200"
+                    _hover={{ borderColor: 'primary.300' }}
+                    _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
                   >
                     {locations.map(loc => (
                       <option key={loc} value={loc}>{loc}</option>
@@ -308,32 +325,37 @@ const Explore = () => {
                 </FormControl>
                 
                 <FormControl>
-                  <FormLabel>Price Range</FormLabel>
+                  <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Price Range</FormLabel>
                   <RangeSlider 
                     min={0} 
                     max={1000} 
                     step={50}
                     value={priceRange}
                     onChange={(val) => setPriceRange(val as [number, number])}
+                    colorScheme="primary"
                   >
-                    <RangeSliderTrack>
-                      <RangeSliderFilledTrack />
+                    <RangeSliderTrack bg="gray.200" borderRadius="full">
+                      <RangeSliderFilledTrack bg="primary.500" />
                     </RangeSliderTrack>
-                    <RangeSliderThumb index={0} />
-                    <RangeSliderThumb index={1} />
+                    <RangeSliderThumb index={0} boxSize="5" bg="primary.500" />
+                    <RangeSliderThumb index={1} boxSize="5" bg="primary.500" />
                   </RangeSlider>
-                  <Flex justify="space-between" mt={1}>
-                    <Text fontSize="sm">${priceRange[0]}</Text>
-                    <Text fontSize="sm">${priceRange[1]}</Text>
+                  <Flex justify="space-between" mt={2}>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.600">${priceRange[0]}</Text>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.600">${priceRange[1]}</Text>
                   </Flex>
                 </FormControl>
                 
-                <Flex gap={2}>
+                <Flex gap={3}>
                   <Button 
                     colorScheme="primary" 
                     flex="1"
                     onClick={applyFilters}
                     isLoading={isFiltering}
+                    borderRadius="lg"
+                    fontWeight="semibold"
+                    _hover={{ transform: 'translateY(-1px)', boxShadow: 'lg' }}
+                    transition="all 0.2s"
                   >
                     Apply
                   </Button>
@@ -341,6 +363,10 @@ const Explore = () => {
                     variant="outline" 
                     colorScheme="primary"
                     onClick={clearFilters}
+                    borderRadius="lg"
+                    fontWeight="semibold"
+                    _hover={{ bg: 'primary.50', transform: 'translateY(-1px)' }}
+                    transition="all 0.2s"
                   >
                     Clear
                   </Button>
@@ -350,54 +376,54 @@ const Explore = () => {
           )}
           
           {/* Main content */}
-          <Box flex="1">
-            <Tabs colorScheme="primary" onChange={setTabIndex} index={tabIndex}>
-              <TabList>
-                <Tab fontWeight="medium" py={4} px={6}>Guides</Tab>
-                <Tab fontWeight="medium" py={4} px={6}>Tours</Tab>
-                <Tab fontWeight="medium" py={4} px={6}>Posts</Tab>
+          <Box flex="1" bg="white">
+            <Tabs colorScheme="primary" onChange={setTabIndex} index={tabIndex} variant="enclosed">
+              <TabList borderBottomColor="gray.200">
+                <Tab fontWeight="semibold" py={6} px={8} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }}>Guides</Tab>
+                <Tab fontWeight="semibold" py={6} px={8} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }}>Tours</Tab>
+                <Tab fontWeight="semibold" py={6} px={8} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }}>Posts</Tab>
               </TabList>
               
               <TabPanels>
                 {/* Guides Tab */}
-                <TabPanel p={6}>
-                  <Text color="gray.600" mb={6}>
+                <TabPanel p={8}>
+                  <Text color="gray.600" mb={8} fontSize="lg">
                     Find expert local guides to enhance your travel experience.
                   </Text>
                   
                   {isLoadingGuides ? (
-                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
                       {[1, 2, 3].map(i => (
-                        <Box key={i} borderWidth="1px" borderRadius="lg" overflow="hidden" boxShadow="md">
-                          <Skeleton height="200px" />
-                          <Box p={4}>
-                            <Skeleton height="20px" width="70%" mb={2} />
-                            <Skeleton height="15px" mb={3} />
-                            <Skeleton height="15px" width="90%" mb={1} />
-                            <Skeleton height="15px" width="60%" mb={3} />
-                            <Skeleton height="30px" width="50%" />
+                        <Box key={i} borderWidth="1px" borderRadius="xl" overflow="hidden" boxShadow="lg" borderColor="gray.200">
+                          <Skeleton height="240px" />
+                          <Box p={6}>
+                            <Skeleton height="24px" width="70%" mb={3} borderRadius="lg" />
+                            <Skeleton height="16px" mb={2} borderRadius="lg" />
+                            <Skeleton height="16px" width="90%" mb={2} borderRadius="lg" />
+                            <Skeleton height="16px" width="60%" mb={4} borderRadius="lg" />
+                            <Skeleton height="36px" width="50%" borderRadius="full" />
                           </Box>
                         </Box>
                       ))}
                     </SimpleGrid>
                   ) : error ? (
-                    <Box p={4} bg="red.50" borderRadius="md">
-                      <Text color="red.500">{error}</Text>
+                    <Box p={6} bg="red.50" borderRadius="xl" border="1px" borderColor="red.200">
+                      <Text color="red.600" fontWeight="medium">{error}</Text>
                     </Box>
                   ) : guides.length === 0 ? (
-                    <Center bg="gray.50" border="1px" borderColor="gray.100" borderRadius="lg" p={8}>
+                    <Center bg="gray.50" border="2px" borderColor="gray.200" borderStyle="dashed" borderRadius="xl" p={12}>
                       <Box textAlign="center">
-                        <Icon as={SearchIcon} w={12} h={12} color="gray.400" mb={4} />
-                        <Text color="gray.500" fontWeight="medium">
+                        <Icon as={SearchIcon} w={16} h={16} color="gray.400" mb={6} />
+                        <Text color="gray.600" fontWeight="semibold" fontSize="lg" mb={2}>
                           No guides available yet.
                         </Text>
-                        <Text color="gray.400" fontSize="sm" mt={2}>
+                        <Text color="gray.500" fontSize="md" maxW="sm" mx="auto">
                           Check back later or try different search criteria.
                         </Text>
                       </Box>
                     </Center>
                   ) : (
-                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
                       {guides.map(guide => (
                         <GuideCard key={guide.id} guide={guide} />
                       ))}
@@ -406,22 +432,22 @@ const Explore = () => {
                 </TabPanel>
                 
                 {/* Tours Tab */}
-                <TabPanel p={6}>
-                  <Text color="gray.600" mb={6}>
+                <TabPanel p={8}>
+                  <Text color="gray.600" mb={8} fontSize="lg">
                     {profile?.role === 'tourist' 
                       ? "Discover amazing tours curated by our expert guides."
                       : "Browse tour requests from tourists looking for guides."}
                   </Text>
                   
                   {isLoadingTours ? (
-                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
                       {[1, 2, 3, 4].map(i => (
-                        <Box key={i} borderWidth="1px" borderRadius="lg" overflow="hidden" boxShadow="md">
-                          <Box p={4}>
-                            <Skeleton height="20px" width="70%" mb={2} />
-                            <Skeleton height="15px" width="40%" mb={3} />
-                            <Skeleton height="15px" mb={1} />
-                            <Skeleton height="15px" mb={1} />
+                        <Box key={i} borderWidth="1px" borderRadius="xl" overflow="hidden" boxShadow="lg" borderColor="gray.200">
+                          <Box p={6}>
+                            <Skeleton height="24px" width="70%" mb={3} borderRadius="lg" />
+                            <Skeleton height="16px" width="40%" mb={4} borderRadius="lg" />
+                            <Skeleton height="16px" mb={2} borderRadius="lg" />
+                            <Skeleton height="16px" mb={2} borderRadius="lg" />
                             <Skeleton height="15px" width="90%" mb={3} />
                             <Skeleton height="10px" width="60%" mb={1} />
                             <Skeleton height="10px" width="70%" mb={1} />
