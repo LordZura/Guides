@@ -147,7 +147,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      console.log('Creating booking with data:', bookingData);
+      console.debug('Creating booking with data:', bookingData);
       
       // Make sure we have the current timestamp for created_at and updated_at
       const timestamp = new Date().toISOString();
@@ -168,7 +168,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
-      console.log('Booking created successfully:', data);
+      console.debug('Booking created successfully:', data);
       
       // Update local state
       setOutgoingBookings(prev => [data as Booking, ...prev]);
