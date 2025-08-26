@@ -7,7 +7,6 @@ import {
   Button,
   Avatar,
   HStack,
-  VStack,
   Divider,
   Icon,
   useColorModeValue,

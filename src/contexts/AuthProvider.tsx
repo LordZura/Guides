@@ -1,7 +1,6 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { Session, User, AuthError } from '@supabase/supabase-js';
-import { PostgrestError } from '@supabase/supabase-js';
-import { supabase, Profile, UserRole, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
+import { supabase, Profile, UserRole } from '../lib/supabaseClient';
 
 interface AuthContextType {
   session: Session | null;
@@ -180,7 +179,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });

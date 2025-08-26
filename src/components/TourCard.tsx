@@ -14,7 +14,7 @@ import {
   useToast,
   Avatar,
 } from '@chakra-ui/react';
-import { MdAccessTime, MdAttachMoney, MdCalendarToday, MdGroup, MdLanguage, MdLocationOn, MdPerson } from 'react-icons/md';
+import { MdAccessTime, MdAttachMoney, MdCalendarToday, MdGroup, MdLocationOn } from 'react-icons/md';
 import { Link as RouterLink } from 'react-router-dom';
 import { supabase, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import StarRating from './StarRating';
