@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -19,14 +19,16 @@ import {
   useToast,
   Alert,
   AlertIcon,
+  Avatar,
 } from '@chakra-ui/react';
 import { MdAccessTime, MdCalendarToday, MdGroup, MdLanguage, MdLocationOn } from 'react-icons/md';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import { ReviewsProvider } from '../contexts/ReviewsContext';
 import ReviewsList from '../components/ReviewsList';
 import ReviewForm from '../components/ReviewForm';
 import ReviewsSummary from '../components/ReviewsSummary';
+import StarRating from '../components/StarRating';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -37,6 +39,11 @@ const TourDetail = () => {
   const [guide, setGuide] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviewSummary, setReviewSummary] = useState({
+    averageRating: 0,
+    totalReviews: 0,
+    ratingCounts: {}
+  });
   const toast = useToast();
   
   useEffect(() => {
@@ -71,6 +78,21 @@ const TourDetail = () => {
           }
           
           setGuide(guideData || null);
+          
+          // Fetch guide rating summary
+          const { data: summaryData, error: summaryError } = await supabase
+            .rpc('get_review_summary', { 
+              target_id_param: tourData.creator_id, 
+              target_type_param: 'guide' 
+            });
+          
+          if (!summaryError && summaryData) {
+            setReviewSummary({
+              averageRating: summaryData.average_rating || 0,
+              totalReviews: summaryData.total_reviews || 0,
+              ratingCounts: summaryData.rating_counts || {}
+            });
+          }
         }
       } catch (err: any) {
         console.error('Error fetching tour details:', err);
@@ -130,6 +152,8 @@ const TourDetail = () => {
   const availableDays = tour.days_available
     ? DAYS_OF_WEEK.filter((_, index) => tour.days_available[index]).join(', ')
     : 'Not specified';
+  
+  const isGuide = tour.creator_role === 'guide';
   
   return (
     <Container maxW="container.xl" py={8}>
@@ -198,35 +222,39 @@ const TourDetail = () => {
               </VStack>
             </Box>
             
-            {/* Reviews section */}
-            <Box mt={8}>
-              <Heading as="h2" size="lg" mb={4}>Reviews</Heading>
-              
-              <ReviewsProvider>
-                <ReviewsSummary 
-                  averageRating={0} 
-                  totalReviews={0} 
-                  ratingCounts={{}}
-                />
+            {/* Only show guide reviews section if this is a guide's tour */}
+            {isGuide && guide && (
+              <Box mt={8}>
+                <Heading as="h2" size="lg" mb={4}>Guide Reviews</Heading>
                 
-                {user && (
-                  <Box mt={6} mb={8}>
-                    <ReviewForm 
-                      targetId={id || ''} 
-                      targetType="tour"
-                      tourId={id || ''}
+                <ReviewsProvider>
+                  <ReviewsSummary 
+                    averageRating={reviewSummary.averageRating} 
+                    totalReviews={reviewSummary.totalReviews} 
+                    ratingCounts={reviewSummary.ratingCounts}
+                  />
+                  
+                  {user && (
+                    <Box mt={6} mb={8}>
+                      <Heading size="md" mb={3}>Rate This Guide</Heading>
+                      <ReviewForm 
+                        targetId={tour.creator_id || ''}
+                        targetType="guide"
+                        tourId={id || ''}
+                      />
+                    </Box>
+                  )}
+                  
+                  <Box mt={6}>
+                    <ReviewsList 
+                      targetId={tour.creator_id || ''}
+                      targetType="guide"
+                      showTourInfo={true}
                     />
                   </Box>
-                )}
-                
-                <Box mt={6}>
-                  <ReviewsList 
-                    targetId={id || ''} 
-                    targetType="tour"
-                  />
-                </Box>
-              </ReviewsProvider>
-            </Box>
+                </ReviewsProvider>
+              </Box>
+            )}
           </GridItem>
           
           <GridItem>
@@ -240,27 +268,46 @@ const TourDetail = () => {
               position="sticky"
               top="100px"
             >
-              {tour.creator_role === 'guide' && guide ? (
+              {isGuide && guide ? (
                 <VStack align="start" spacing={4}>
                   <Heading size="md">About Your Guide</Heading>
                   
-                  <HStack spacing={4} w="100%">
-                    <Image
-                      borderRadius="full"
-                      boxSize="80px"
-                      src={guide.avatar_url || 'https://via.placeholder.com/80'}
-                      alt={guide.full_name}
+                  <Flex direction="column" align="center" w="100%">
+                    <Avatar
+                      size="xl"
+                      src={guide.avatar_url || DEFAULT_AVATAR_URL}
+                      name={guide.full_name}
+                      mb={2}
                     />
-                    <Box>
-                      <Text fontWeight="bold">{guide.full_name}</Text>
-                      {guide.years_experience && (
-                        <Text fontSize="sm">{guide.years_experience} years experience</Text>
-                      )}
-                    </Box>
-                  </HStack>
+                    <Text fontWeight="bold">{guide.full_name}</Text>
+                    
+                    <HStack mt={1}>
+                      <StarRating rating={reviewSummary.averageRating} size={16} />
+                      <Text fontSize="sm" color="gray.500">
+                        ({reviewSummary.totalReviews})
+                      </Text>
+                    </HStack>
+                    
+                    {guide.years_experience && (
+                      <Text fontSize="sm" mt={1}>{guide.years_experience} years experience</Text>
+                    )}
+                    
+                    <Button
+                      as={RouterLink}
+                      to={`/profile/${guide.id}`}
+                      size="sm"
+                      colorScheme="primary"
+                      variant="outline"
+                      mt={2}
+                    >
+                      View Full Profile
+                    </Button>
+                  </Flex>
                   
                   {guide.bio && (
-                    <Text fontSize="sm">{guide.bio}</Text>
+                    <Box w="100%">
+                      <Text fontSize="sm" mt={2}>{guide.bio}</Text>
+                    </Box>
                   )}
                   
                   <Divider />

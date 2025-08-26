@@ -1,3 +1,5 @@
+// Make sure the component uses 'comment' consistently
+
 import React from 'react';
 import {
   Box,
@@ -16,18 +18,17 @@ export interface ReviewItemProps {
   reviewer_name: string;
   reviewer_avatar?: string;
   rating: number;
-  comment: string; // Changed from 'content' to 'comment'
+  comment: string;
   created_at: string;
   tour_name?: string;
   showTour?: boolean;
 }
 
-
 const ReviewItem: React.FC<ReviewItemProps> = ({
   reviewer_name,
   reviewer_avatar,
   rating,
-  comment, // Changed from 'content' to 'comment'
+  comment,
   created_at,
   tour_name,
   showTour = false,
@@ -67,7 +68,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
           </Box>
         </Flex>
         
-        <Text fontSize="md">{comment}</Text> {/* Changed from 'content' to 'comment' */}
+        <Text fontSize="md">{comment}</Text>
         
         <Text fontSize="xs" color="gray.500" alignSelf="flex-end">
           {formatDistanceToNow(new Date(created_at), { addSuffix: true })}

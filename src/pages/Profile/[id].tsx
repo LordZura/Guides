@@ -269,28 +269,28 @@ const ProfilePage = () => {
               
               {/* Reviews panel */}
               <TabPanel>
-                {reviews.length === 0 ? (
-                  <Box textAlign="center" py={8}>
-                    <Text color="gray.500">No reviews yet.</Text>
-                  </Box>
-                ) : (
-                  <VStack spacing={4} align="stretch">
-                    {reviews.map(review => (
+              {reviews.length === 0 ? (
+                <Box textAlign="center" py={8}>
+                  <Text color="gray.500">No reviews yet.</Text>
+                </Box>
+              ) : (
+                <VStack spacing={4} align="stretch">
+                  {reviews.map(review => (
                     <ReviewItem 
-                        key={review.id} 
-                        id={review.id}
-                        reviewer_name={review.reviewer_name}
-                        reviewer_avatar={review.reviewer_avatar}
-                        rating={review.rating}
-                        comment={review.comment} // Changed from 'content' to 'comment'
-                        created_at={review.created_at}
-                        tour_name={review.tour_name}
-                        showTour={true}
+                      key={review.id} 
+                      id={review.id}
+                      reviewer_name={review.reviewer_name}
+                      reviewer_avatar={review.reviewer_avatar}
+                      rating={review.rating}
+                      comment={review.comment}
+                      created_at={review.created_at}
+                      tour_name={review.tour_name}
+                      showTour={true}
                     />
-                    ))}
-                  </VStack>
-                )}
-              </TabPanel>
+                  ))}
+                </VStack>
+              )}
+            </TabPanel>
             </TabPanels>
           </Tabs>
         </Box>

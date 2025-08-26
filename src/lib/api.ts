@@ -51,6 +51,9 @@ export const fetchToursByGuideId = async (guideId: string): Promise<Tour[]> => {
 };
 
 // Get guide profile with tours and reviews
+// Update the getGuideProfile function to properly fetch and update guide ratings
+
+// Inside the existing getGuideProfile function:
 export const getGuideProfile = async (guideId: string): Promise<{
   profile: GuideProfile;
   tours: TourWithStatus[];
@@ -77,8 +80,7 @@ export const getGuideProfile = async (guideId: string): Promise<{
     
     if (toursError) throw toursError;
     
-    // Modified: Fetch reviews for this guide without using foreign key relationships
-    // Instead of using foreign key joins, we'll do separate queries
+    // Fetch reviews for this guide without using foreign key relationships
     const { data: reviewsData, error: reviewsError } = await supabase
       .from('reviews')
       .select('*')
@@ -139,7 +141,7 @@ export const getGuideProfile = async (guideId: string): Promise<{
         }
       }
       
-      // Transform reviews data - UPDATED: content to comment
+      // Transform reviews data
       reviews = reviewsData.map((item): Review => {
         const reviewer = reviewerMap.get(item.reviewer_id);
         const tour = item.tour_id ? tourMap.get(item.tour_id) : null;
@@ -152,7 +154,7 @@ export const getGuideProfile = async (guideId: string): Promise<{
           target_id: item.target_id,
           target_type: item.target_type,
           rating: item.rating,
-          comment: item.comment, // Changed from 'content' to 'comment'
+          comment: item.comment,
           created_at: item.created_at,
           tour_id: item.tour_id,
           tour_name: tour ? tour.title : undefined,

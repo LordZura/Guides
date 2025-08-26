@@ -14,6 +14,9 @@ import {
 import { MdLocationOn, MdStar } from 'react-icons/md';
 import { Link as RouterLink } from 'react-router-dom';
 import { Profile, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
+import StarRating from './StarRating';
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 interface GuideCardProps {
   guide: Profile;
@@ -21,6 +24,33 @@ interface GuideCardProps {
 
 const GuideCard = ({ guide }: GuideCardProps) => {
   const cardBg = useColorModeValue('white', 'gray.700');
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [reviewCount, setReviewCount] = useState<number>(0);
+  
+  // Fetch guide's average rating
+  useEffect(() => {
+    const fetchGuideRating = async () => {
+      try {
+        // Use RPC function to get review summary
+        const { data, error } = await supabase
+          .rpc('get_review_summary', { 
+            target_id_param: guide.id, 
+            target_type_param: 'guide' 
+          });
+        
+        if (error) throw error;
+        
+        if (data) {
+          setAverageRating(data.average_rating || 0);
+          setReviewCount(data.total_reviews || 0);
+        }
+      } catch (err) {
+        console.error('Error fetching guide rating:', err);
+      }
+    };
+    
+    fetchGuideRating();
+  }, [guide.id]);
   
   return (
     <Box
@@ -63,6 +93,14 @@ const GuideCard = ({ guide }: GuideCardProps) => {
       
       <Box p={4}>
         <Stack spacing={3}>
+          {/* Rating display */}
+          <Flex align="center" justify="space-between">
+            <StarRating rating={averageRating} size={16} />
+            <Text fontSize="sm" color="gray.500">
+              {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+            </Text>
+          </Flex>
+          
           {guide.bio && (
             <Text fontSize="sm" noOfLines={2} color="gray.600">
               {guide.bio}
