@@ -4,9 +4,7 @@ import {
   Text,
   Stack,
   Button,
-  Badge,
   Flex,
-  Divider,
   Tabs,
   TabList,
   Tab,
@@ -44,7 +42,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
     updateBookingStatus, 
     refreshBookings 
   } = useBookings();
-  const { profile, user } = useAuth();
+  const { profile } = useAuth();
   const toast = useToast();
   const { isOpen: isConfirmOpen, onOpen: onConfirmOpen, onClose: onConfirmClose } = useDisclosure();
   

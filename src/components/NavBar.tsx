@@ -29,22 +29,25 @@ const Navbar = () => {
     <Box
       as="nav"
       bg="white"
-      boxShadow="sm"
+      boxShadow="md"
       position="fixed"
+      top="0"
       w="100%"
-      zIndex={10}
+      zIndex={1000}
+      borderBottom="1px"
+      borderColor="gray.200"
     >
       <Flex
-        h="16"
+        h="20"
         alignItems="center"
         justifyContent="space-between"
         maxW="container.xl"
         mx="auto"
-        px={4}
+        px={6}
       >
         <Flex align="center">
           <Link as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
-            <Text fontSize="xl" fontWeight="extrabold" color="primary.500">
+            <Text fontSize="2xl" fontWeight="black" color="primary.600" letterSpacing="tight">
               TourGuideHub
             </Text>
           </Link>
@@ -53,26 +56,26 @@ const Navbar = () => {
         {/* Desktop nav */}
         <Stack
           direction="row"
-          spacing={1}
+          spacing={2}
           display={{ base: "none", md: "flex" }}
           alignItems="center"
         >
-          <Link as={RouterLink} to="/explore" px={3} py={2} borderRadius="md" fontWeight="medium" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700' }}>
+          <Link as={RouterLink} to="/explore" px={4} py={2} borderRadius="lg" fontWeight="semibold" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} transition="all 0.2s">
             Explore
           </Link>
-          <Link as={RouterLink} to="/guides" px={3} py={2} borderRadius="md" fontWeight="medium" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700' }}>
+          <Link as={RouterLink} to="/guides" px={4} py={2} borderRadius="lg" fontWeight="semibold" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} transition="all 0.2s">
             Guides
           </Link>
-          <Link as={RouterLink} to="/tours" px={3} py={2} borderRadius="md" fontWeight="medium" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700' }}>
+          <Link as={RouterLink} to="/tours" px={4} py={2} borderRadius="lg" fontWeight="semibold" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} transition="all 0.2s">
             Tours
           </Link>
-          <Link as={RouterLink} to="/posts" px={3} py={2} borderRadius="md" fontWeight="medium" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700' }}>
+          <Link as={RouterLink} to="/posts" px={4} py={2} borderRadius="lg" fontWeight="semibold" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} transition="all 0.2s">
             Posts
           </Link>
 
           {user ? (
             <>
-              <Link as={RouterLink} to="/dashboard" px={3} py={2} borderRadius="md" fontWeight="medium" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700' }}>
+              <Link as={RouterLink} to="/dashboard" px={4} py={2} borderRadius="lg" fontWeight="semibold" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} transition="all 0.2s">
                 Dashboard
               </Link>
               <Button
@@ -80,6 +83,10 @@ const Navbar = () => {
                 onClick={handleSignOut}
                 colorScheme="primary"
                 size="md"
+                borderRadius="full"
+                px={6}
+                _hover={{ transform: 'translateY(-1px)', boxShadow: 'lg' }}
+                transition="all 0.2s"
               >
                 Sign Out
               </Button>
@@ -90,6 +97,10 @@ const Navbar = () => {
               onClick={openAuthModal}
               colorScheme="primary"
               size="md"
+              borderRadius="full"
+              px={6}
+              _hover={{ transform: 'translateY(-1px)', boxShadow: 'lg' }}
+              transition="all 0.2s"
             >
               Get Started
             </Button>
@@ -108,24 +119,24 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       <Collapse in={isOpen} animateOpacity>
-        <Box pb={4} display={{ md: 'none' }}>
-          <Stack spacing={4} pt={2}>
-            <Link as={RouterLink} to="/explore" px={4} py={2} _hover={{ bg: 'primary.50' }} display="block" fontWeight="medium">
+        <Box pb={6} px={6} display={{ md: 'none' }} bg="white" borderTop="1px" borderColor="gray.100">
+          <Stack spacing={1} pt={4}>
+            <Link as={RouterLink} to="/explore" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
               Explore
             </Link>
-            <Link as={RouterLink} to="/guides" px={4} py={2} _hover={{ bg: 'primary.50' }} display="block" fontWeight="medium">
+            <Link as={RouterLink} to="/guides" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
               Guides
             </Link>
-            <Link as={RouterLink} to="/tours" px={4} py={2} _hover={{ bg: 'primary.50' }} display="block" fontWeight="medium">
+            <Link as={RouterLink} to="/tours" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
               Tours
             </Link>
-            <Link as={RouterLink} to="/posts" px={4} py={2} _hover={{ bg: 'primary.50' }} display="block" fontWeight="medium">
+            <Link as={RouterLink} to="/posts" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
               Posts
             </Link>
             
             {user ? (
               <>
-                <Link as={RouterLink} to="/dashboard" px={4} py={2} _hover={{ bg: 'primary.50' }} display="block" fontWeight="medium">
+                <Link as={RouterLink} to="/dashboard" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
                   Dashboard
                 </Link>
                 <Button
@@ -134,8 +145,11 @@ const Navbar = () => {
                   justifyContent="flex-start"
                   w="full"
                   px={4}
-                  fontWeight="medium"
+                  py={3}
+                  fontWeight="semibold"
                   color="primary.600"
+                  _hover={{ bg: 'primary.50', borderRadius: 'lg' }}
+                  transition="all 0.2s"
                 >
                   Sign Out
                 </Button>
@@ -147,8 +161,11 @@ const Navbar = () => {
                 justifyContent="flex-start"
                 w="full"
                 px={4}
-                fontWeight="medium"
+                py={3}
+                fontWeight="semibold"
                 color="primary.600"
+                _hover={{ bg: 'primary.50', borderRadius: 'lg' }}
+                transition="all 0.2s"
               >
                 Get Started
               </Button>

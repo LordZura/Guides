@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box, Text } from '@chakra-ui/react';
 import { useAuth } from './contexts/AuthProvider';
 import { useModal } from './contexts/ModalContext';
-import Navbar from './components/Navbar';
+import Navbar from './components/NavBar';
 import Dashboard from './pages/Dashboard';
 import Explore from './pages/Explore';
 import AuthModal from './components/AuthModal';
@@ -35,7 +35,7 @@ function App() {
       
       <Navbar />
       
-      <Box as="main" pt="16">
+      <Box as="main" pt="20">
         <Routes>
           <Route path="/" element={<Navigate to="/explore" replace />} />
           <Route path="/explore" element={<Explore />} />
