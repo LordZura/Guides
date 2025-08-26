@@ -72,7 +72,7 @@ const Explore = () => {
     setError(null);
     
     try {
-      console.log("Fetching guides with role='guide'", filters);
+      console.debug("Fetching guides with role='guide'", filters);
       
       // Build the query
       let query = supabase
@@ -91,7 +91,7 @@ const Explore = () => {
       }
       
       // Add debugging output before executing the query
-      console.log("Supabase query:", query);
+      console.debug("Supabase query:", query);
       
       const { data, error } = await query;
       
@@ -100,11 +100,11 @@ const Explore = () => {
         throw error;
       }
       
-      console.log("Guides fetched:", data?.length, data);
+      console.debug("Guides fetched:", data?.length, data);
       
       // If no guides are found, log a more specific message
       if (!data || data.length === 0) {
-        console.log("No guides found with the current filters.");
+        console.debug("No guides found with the current filters.");
       }
       
       setGuides(data || []);
@@ -135,7 +135,7 @@ const Explore = () => {
       // Tourists see tours from guides, guides see tours from tourists
       const oppositeRole = profile.role === 'guide' ? 'tourist' : 'guide';
       
-      console.log(`Fetching tours with creator_role='${oppositeRole}'`, filters);
+      console.debug(`Fetching tours with creator_role='${oppositeRole}'`, filters);
       
       // Build the query
       let query = supabase
@@ -160,7 +160,7 @@ const Explore = () => {
       
       if (error) throw error;
       
-      console.log("Tours fetched:", data?.length, data);
+      console.debug("Tours fetched:", data?.length, data);
       setTours(data?.map(tour => tour.id) || []);
     } catch (err: any) {
       console.error("Error fetching tours:", err);
@@ -227,7 +227,7 @@ const Explore = () => {
       priceRange: priceRange.every(val => val !== 0) ? priceRange : undefined
     };
     
-    console.log("Applying filters:", filters);
+    console.debug("Applying filters:", filters);
     
     // Apply filters based on current tab
     if (tabIndex === 0) {
