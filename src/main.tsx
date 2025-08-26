@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import App from './App';
 import { AuthProvider } from './contexts/AuthProvider';
-import { ToursProvider } from './contexts/ToursContext';
 import { ModalProvider } from './contexts/ModalContext';
 import { ReviewsProvider } from './contexts/ReviewsContext';
 import './index.css';
@@ -34,11 +33,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <AuthProvider>
           <ModalProvider>
-            <ToursProvider>
-              <ReviewsProvider>
-                <App />
-              </ReviewsProvider>
-            </ToursProvider>
+            <ReviewsProvider>
+              <App />
+            </ReviewsProvider>
           </ModalProvider>
         </AuthProvider>
       </BrowserRouter>
