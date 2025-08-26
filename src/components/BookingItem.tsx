@@ -11,6 +11,7 @@ import {
   Divider,
   Icon,
   useColorModeValue,
+  Tooltip,
 } from '@chakra-ui/react';
 import { 
   MdAccessTime, 
@@ -19,7 +20,8 @@ import {
   MdLocationOn, 
   MdPayment, 
   MdCheckCircle,
-  MdCancel
+  MdCancel,
+  MdInfo
 } from 'react-icons/md';
 import { format } from 'date-fns';
 import { Booking } from '../contexts/BookingContext';
@@ -71,6 +73,28 @@ const BookingItem: React.FC<BookingItemProps> = ({
     }
   };
 
+  // Get status description for tooltip
+  const getStatusDescription = (status: string) => {
+    switch (status) {
+      case 'requested': return 'Your booking request is waiting for guide approval';
+      case 'accepted': return 'The guide has accepted your booking. Payment is required to confirm.';
+      case 'paid': return 'Your booking is confirmed and paid. Enjoy your tour!';
+      case 'completed': return 'This tour has been completed.';
+      case 'declined': return 'The guide has declined this booking request.';
+      case 'cancelled': return 'This booking has been cancelled.';
+      default: return '';
+    }
+  };
+
+  // Safely display tour title and location
+  const tourTitle = typeof booking.tour_title === 'object' 
+    ? (booking.tour_title as any)?.title || 'Unknown Tour'
+    : booking.tour_title || 'Unknown Tour';
+    
+  const tourLocation = typeof booking.tour_location === 'object'
+    ? (booking.tour_location as any)?.location || 'Unknown Location'
+    : booking.tour_location || 'Unknown Location';
+
   // Determine what actions to show based on status and role
   const showAcceptDecline = isGuide && booking.status === 'requested';
   const showCancel = !isGuide && ['requested', 'accepted'].includes(booking.status);
@@ -88,18 +112,21 @@ const BookingItem: React.FC<BookingItemProps> = ({
     >
       <Flex justify="space-between" align="center" mb={3}>
         <HStack>
-          <Badge colorScheme={getStatusColor(booking.status)}>
-            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-          </Badge>
-          <Text fontWeight="medium">{booking.tour_title}</Text>
+          <Tooltip label={getStatusDescription(booking.status)}>
+            <Badge colorScheme={getStatusColor(booking.status)} display="flex" alignItems="center">
+              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+              <Icon as={MdInfo} ml={1} />
+            </Badge>
+          </Tooltip>
+          <Text fontWeight="medium">{tourTitle}</Text>
         </HStack>
         <Text fontWeight="bold">${booking.total_price.toFixed(2)}</Text>
       </Flex>
 
-      <HStack spacing={4} mb={3}>
+      <HStack spacing={4} mb={3} flexWrap="wrap">
         <Flex align="center">
           <Icon as={MdLocationOn} color="gray.500" mr={1} />
-          <Text fontSize="sm">{booking.tour_location}</Text>
+          <Text fontSize="sm">{tourLocation}</Text>
         </Flex>
         <Flex align="center">
           <Icon as={MdCalendarToday} color="gray.500" mr={1} />

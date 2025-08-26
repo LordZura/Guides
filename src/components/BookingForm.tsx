@@ -18,6 +18,7 @@ import {
   Select,
   Alert,
   AlertIcon,
+  Progress,
   useToast,
 } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthProvider';
@@ -63,6 +64,7 @@ const BookingForm = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitProgress, setSubmitProgress] = useState<number>(0);
 
   // Calculate total price
   const totalPrice = partySize * pricePerPerson;
@@ -141,6 +143,7 @@ const BookingForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
+    setSubmitProgress(0);
 
     if (!validateForm()) {
       return;
@@ -173,15 +176,43 @@ const BookingForm = ({
       };
 
       console.log('Submitting booking:', bookingData);
-      const { success, error, booking } = await createBooking(bookingData);
+      
+      // Set up progress simulation
+      const progressInterval = setInterval(() => {
+        setSubmitProgress(prev => {
+          const newProgress = prev + 15;
+          if (newProgress >= 90) {
+            clearInterval(progressInterval);
+            return 90; // Cap at 90% until complete
+          }
+          return newProgress;
+        });
+      }, 300);
+      
+      // Add a timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out. Please try again.')), 15000);
+      });
+      
+      const bookingPromise = createBooking(bookingData);
+      
+      // Race between the booking creation and timeout
+      const result = await Promise.race([bookingPromise, timeoutPromise]) as {
+        success: boolean;
+        error?: string;
+        booking?: any;
+      };
 
-      if (!success) {
-        console.error('Error returned from createBooking:', error);
-        setSubmitError(error || 'Failed to create booking');
-        throw new Error(error);
+      clearInterval(progressInterval);
+      setSubmitProgress(100);
+
+      if (!result.success) {
+        console.error('Error returned from createBooking:', result.error);
+        setSubmitError(result.error || 'Failed to create booking');
+        throw new Error(result.error || 'Failed to create booking');
       }
 
-      console.log('Booking created successfully:', booking);
+      console.log('Booking created successfully:', result.booking);
       toast({
         title: 'Booking request submitted',
         description: 'Your booking request has been sent to the guide',
@@ -292,9 +323,23 @@ const BookingForm = ({
               Payment will be processed after the guide accepts your booking request.
             </Text>
           </Box>
+          
+          {isSubmitting && submitProgress > 0 && (
+            <Box>
+              <Progress 
+                value={submitProgress} 
+                size="xs" 
+                colorScheme="green" 
+                borderRadius="full"
+              />
+              <Text fontSize="xs" textAlign="center" mt={1}>
+                {submitProgress < 100 ? 'Sending booking request...' : 'Request completed!'}
+              </Text>
+            </Box>
+          )}
 
           <HStack justify="flex-end" spacing={3} pt={2}>
-            <Button variant="outline" onClick={onCancel}>
+            <Button variant="outline" onClick={onCancel} isDisabled={isSubmitting}>
               Cancel
             </Button>
             <Button

@@ -77,16 +77,24 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
           .from('bookings')
           .select(`
             *,
-            tour_title:tours(title),
-            tour_location:tours(location),
-            tourist_name:profiles!tourist_id(full_name),
-            tourist_avatar:profiles!tourist_id(avatar_url)
+            tours!tour_id(title, location),
+            profiles!tourist_id(full_name, avatar_url)
           `)
           .eq('guide_id', user.id)
           .order('created_at', { ascending: false });
 
         if (fetchError) throw fetchError;
-        setIncomingBookings(data || []);
+        
+        // Transform the data to match the expected format
+        const transformedData = data?.map(booking => ({
+          ...booking,
+          tour_title: booking.tours?.title || 'Unknown Tour',
+          tour_location: booking.tours?.location || 'Unknown Location',
+          tourist_name: booking.profiles?.full_name || 'Unknown Tourist',
+          tourist_avatar: booking.profiles?.avatar_url || null
+        })) || [];
+        
+        setIncomingBookings(transformedData);
         setOutgoingBookings([]);
       } else {
         // Tourists see bookings they've made
@@ -94,16 +102,24 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
           .from('bookings')
           .select(`
             *,
-            tour_title:tours(title),
-            tour_location:tours(location),
-            guide_name:profiles!guide_id(full_name),
-            guide_avatar:profiles!guide_id(avatar_url)
+            tours!tour_id(title, location),
+            profiles!guide_id(full_name, avatar_url)
           `)
           .eq('tourist_id', user.id)
           .order('created_at', { ascending: false });
 
         if (fetchError) throw fetchError;
-        setOutgoingBookings(data || []);
+        
+        // Transform the data to match the expected format
+        const transformedData = data?.map(booking => ({
+          ...booking,
+          tour_title: booking.tours?.title || 'Unknown Tour',
+          tour_location: booking.tours?.location || 'Unknown Location',
+          guide_name: booking.profiles?.full_name || 'Unknown Guide',
+          guide_avatar: booking.profiles?.avatar_url || null
+        })) || [];
+        
+        setOutgoingBookings(transformedData);
         setIncomingBookings([]);
       }
     } catch (err: any) {
@@ -133,9 +149,17 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Creating booking with data:', bookingData);
       
+      // Make sure we have the current timestamp for created_at and updated_at
+      const timestamp = new Date().toISOString();
+      const finalBookingData = {
+        ...bookingData,
+        created_at: timestamp,
+        updated_at: timestamp
+      };
+      
       const { data, error } = await supabase
         .from('bookings')
-        .insert(bookingData)
+        .insert(finalBookingData)
         .select()
         .single();
 
@@ -180,11 +204,13 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      const timestamp = new Date().toISOString();
+      
       const { error } = await supabase
         .from('bookings')
         .update({ 
           status, 
-          updated_at: new Date().toISOString() 
+          updated_at: timestamp 
         })
         .eq('id', bookingId);
 
@@ -195,7 +221,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         setIncomingBookings(prev => 
           prev.map(booking => 
             booking.id === bookingId 
-              ? { ...booking, status, updated_at: new Date().toISOString() } 
+              ? { ...booking, status, updated_at: timestamp } 
               : booking
           )
         );
@@ -203,7 +229,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         setOutgoingBookings(prev => 
           prev.map(booking => 
             booking.id === bookingId 
-              ? { ...booking, status, updated_at: new Date().toISOString() } 
+              ? { ...booking, status, updated_at: timestamp } 
               : booking
           )
         );
@@ -229,10 +255,12 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const { data, error } = await supabase
-        .rpc('has_completed_tour', { 
-          user_id: user.id, 
-          tour_id_param: tourId 
-        });
+        .from('bookings')
+        .select('id')
+        .eq('tourist_id', user.id)
+        .eq('tour_id', tourId)
+        .eq('status', 'completed')
+        .maybeSingle();
 
       if (error) throw error;
       return !!data;
@@ -248,10 +276,12 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const { data, error } = await supabase
-        .rpc('has_completed_guide_tour', { 
-          user_id: user.id, 
-          guide_id_param: guideId 
-        });
+        .from('bookings')
+        .select('id')
+        .eq('tourist_id', user.id)
+        .eq('guide_id', guideId)
+        .eq('status', 'completed')
+        .maybeSingle();
 
       if (error) throw error;
       return !!data;

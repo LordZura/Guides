@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Text,
@@ -17,6 +17,14 @@ import {
   AlertIcon,
   Heading,
   useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { useBookings, Booking, BookingStatus } from '../contexts/BookingContext';
 import BookingItem from './BookingItem';
@@ -36,12 +44,23 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
     updateBookingStatus, 
     refreshBookings 
   } = useBookings();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const toast = useToast();
-
+  const { isOpen: isConfirmOpen, onOpen: onConfirmOpen, onClose: onConfirmClose } = useDisclosure();
+  
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [actionType, setActionType] = useState<'accept' | 'decline' | 'cancel' | 'complete' | null>(null);
+
+  useEffect(() => {
+    // Refresh bookings every 30 seconds to check for updates
+    const interval = setInterval(() => {
+      refreshBookings();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [refreshBookings]);
 
   if (!profile) {
     return (
@@ -60,107 +79,148 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
   const upcomingBookings = bookings.filter(b => ['accepted', 'paid'].includes(b.status));
   const pastBookings = bookings.filter(b => ['completed', 'declined', 'cancelled'].includes(b.status));
 
-  // Handlers for various booking actions
-  const handleAccept = async (booking: Booking) => {
-    setIsProcessing(true);
-    try {
-      const success = await updateBookingStatus(booking.id, 'accepted');
-      if (success) {
-        toast({
-          title: 'Booking accepted',
-          description: 'You have accepted the booking request',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (err) {
-      console.error('Error accepting booking:', err);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleDecline = async (booking: Booking) => {
-    setIsProcessing(true);
-    try {
-      const success = await updateBookingStatus(booking.id, 'declined');
-      if (success) {
-        toast({
-          title: 'Booking declined',
-          description: 'You have declined the booking request',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (err) {
-      console.error('Error declining booking:', err);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleCancel = async (booking: Booking) => {
-    setIsProcessing(true);
-    try {
-      const success = await updateBookingStatus(booking.id, 'cancelled');
-      if (success) {
-        toast({
-          title: 'Booking cancelled',
-          description: 'You have cancelled the booking',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (err) {
-      console.error('Error cancelling booking:', err);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handlePaymentClick = (booking: Booking) => {
+  // Open confirmation modal for an action
+  const openConfirmationModal = (booking: Booking, type: 'accept' | 'decline' | 'cancel' | 'complete') => {
     setSelectedBooking(booking);
-    setIsPaymentOpen(true);
+    setActionType(type);
+    onConfirmOpen();
   };
 
-  const handlePaymentSuccess = async () => {
-    if (!selectedBooking) return;
+  // Get confirmation message based on action type
+  const getConfirmationMessage = () => {
+    if (!selectedBooking || !actionType) return '';
     
-    setIsPaymentOpen(false);
+    switch (actionType) {
+      case 'accept':
+        return `Are you sure you want to accept the booking request from ${selectedBooking.tourist_name}?`;
+      case 'decline':
+        return `Are you sure you want to decline the booking request from ${selectedBooking.tourist_name}?`;
+      case 'cancel':
+        return 'Are you sure you want to cancel this booking? This action cannot be undone.';
+      case 'complete':
+        return 'Are you sure you want to mark this tour as completed?';
+      default:
+        return '';
+    }
+  };
+
+  // Handle the confirmed action
+  const handleConfirmedAction = async () => {
+    if (!selectedBooking || !actionType) return;
     
-    const success = await updateBookingStatus(selectedBooking.id, 'paid');
-    if (success) {
+    setIsProcessing(true);
+    
+    let success = false;
+    let newStatus: BookingStatus;
+    
+    switch (actionType) {
+      case 'accept':
+        newStatus = 'accepted';
+        success = await updateBookingStatus(selectedBooking.id, newStatus);
+        if (success) {
+          toast({
+            title: 'Booking accepted',
+            description: 'You have accepted the booking request',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+        break;
+      
+      case 'decline':
+        newStatus = 'declined';
+        success = await updateBookingStatus(selectedBooking.id, newStatus);
+        if (success) {
+          toast({
+            title: 'Booking declined',
+            description: 'You have declined the booking request',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+        break;
+      
+      case 'cancel':
+        newStatus = 'cancelled';
+        success = await updateBookingStatus(selectedBooking.id, newStatus);
+        if (success) {
+          toast({
+            title: 'Booking cancelled',
+            description: 'You have cancelled the booking',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+        break;
+      
+      case 'complete':
+        newStatus = 'completed';
+        success = await updateBookingStatus(selectedBooking.id, newStatus);
+        if (success) {
+          toast({
+            title: 'Tour marked as completed',
+            description: 'The tour has been marked as completed',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+        break;
+    }
+    
+    setIsProcessing(false);
+    onConfirmClose();
+    
+    if (!success) {
       toast({
-        title: 'Payment successful',
-        description: 'Your payment has been processed',
-        status: 'success',
+        title: 'Action failed',
+        description: `Failed to ${actionType} the booking. Please try again.`,
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
     }
   };
 
-  const handleCompleteBooking = async (booking: Booking) => {
-    setIsProcessing(true);
-    try {
-      const success = await updateBookingStatus(booking.id, 'completed');
+  // Handler for payment button click
+  const handlePaymentClick = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsPaymentOpen(true);
+  };
+
+  // Handler for successful payment
+  const handlePaymentSuccess = async () => {
+    if (!selectedBooking) return;
+    
+    setIsPaymentOpen(false);
+    
+    // Wait a short delay to give the UI time to update
+    setTimeout(async () => {
+      setIsProcessing(true);
+      const success = await updateBookingStatus(selectedBooking.id, 'paid');
+      setIsProcessing(false);
+      
       if (success) {
         toast({
-          title: 'Tour marked as completed',
-          description: 'The tour has been marked as completed',
+          title: 'Payment successful',
+          description: 'Your payment has been processed and your booking is confirmed',
           status: 'success',
           duration: 3000,
           isClosable: true,
         });
+      } else {
+        toast({
+          title: 'Payment status update failed',
+          description: 'Your payment was processed, but updating the booking status failed',
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        });
       }
-    } catch (err) {
-      console.error('Error completing booking:', err);
-    } finally {
-      setIsProcessing(false);
-    }
+    }, 500);
   };
 
   if (isLoading) {
@@ -234,10 +294,10 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
                     key={booking.id}
                     booking={booking}
                     isGuide={isGuide}
-                    onAccept={() => handleAccept(booking)}
-                    onDecline={() => handleDecline(booking)}
-                    onCancel={() => handleCancel(booking)}
-                    isProcessing={isProcessing}
+                    onAccept={() => openConfirmationModal(booking, 'accept')}
+                    onDecline={() => openConfirmationModal(booking, 'decline')}
+                    onCancel={() => openConfirmationModal(booking, 'cancel')}
+                    isProcessing={isProcessing && selectedBooking?.id === booking.id}
                   />
                 ))}
               </Stack>
@@ -258,9 +318,9 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
                     booking={booking}
                     isGuide={isGuide}
                     onPayment={() => handlePaymentClick(booking)}
-                    onComplete={() => handleCompleteBooking(booking)}
-                    onCancel={() => handleCancel(booking)}
-                    isProcessing={isProcessing}
+                    onComplete={() => openConfirmationModal(booking, 'complete')}
+                    onCancel={() => openConfirmationModal(booking, 'cancel')}
+                    isProcessing={isProcessing && selectedBooking?.id === booking.id}
                   />
                 ))}
               </Stack>
@@ -280,7 +340,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
                     key={booking.id}
                     booking={booking}
                     isGuide={isGuide}
-                    isProcessing={isProcessing}
+                    isProcessing={isProcessing && selectedBooking?.id === booking.id}
                   />
                 ))}
               </Stack>
@@ -298,6 +358,30 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}
+
+      {/* Confirmation Modal */}
+      <Modal isOpen={isConfirmOpen} onClose={onConfirmClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm Action</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>{getConfirmationMessage()}</Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="outline" mr={3} onClick={onConfirmClose} isDisabled={isProcessing}>
+              Cancel
+            </Button>
+            <Button 
+              colorScheme={actionType === 'accept' || actionType === 'complete' ? 'green' : 'red'} 
+              onClick={handleConfirmedAction}
+              isLoading={isProcessing}
+            >
+              Confirm
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
