@@ -110,6 +110,29 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
+  // Set up real-time subscription for notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const subscription = supabase
+      .channel('notifications-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public', 
+        table: 'notifications',
+        filter: `recipient_id=eq.${user.id}`
+      }, (payload) => {
+        console.log('Notification change:', payload);
+        // Refresh notifications when any change occurs
+        refreshNotifications();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [user]);
+
   // Calculate unread count
   const unreadCount = notifications.filter(n => !n.is_read).length;
 

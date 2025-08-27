@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@chakra-ui/react';
+import { useNotifications } from './NotificationContext';
 
 export type BookingStatus = 'requested' | 'accepted' | 'declined' | 'paid' | 'completed' | 'cancelled';
 
@@ -44,6 +45,7 @@ const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
 export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const { user, profile } = useAuth();
+  const { createNotification } = useNotifications();
   const [incomingBookings, setIncomingBookings] = useState<Booking[]>([]);
   const [outgoingBookings, setOutgoingBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -170,6 +172,31 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
       console.log('Booking created successfully:', data);
       
+      // Create notification for the guide
+      if (data && data.guide_id) {
+        try {
+          // Get tour title for notification message
+          const { data: tourData } = await supabase
+            .from('tours')
+            .select('title')
+            .eq('id', data.tour_id)
+            .single();
+          
+          await createNotification({
+            type: 'booking_created',
+            actor_id: user.id,
+            recipient_id: data.guide_id,
+            target_type: 'booking',
+            target_id: data.id,
+            message: `${user.user_metadata?.full_name || 'Someone'} booked '${tourData?.title || 'your tour'}' for ${data.booking_date}`,
+            action_url: '/dashboard/my-bookings'
+          });
+        } catch (notificationError) {
+          // Don't fail booking creation if notification fails
+          console.warn('Failed to create booking notification:', notificationError);
+        }
+      }
+      
       // Update local state
       setOutgoingBookings(prev => [data as Booking, ...prev]);
 
@@ -215,6 +242,33 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', bookingId);
 
       if (error) throw error;
+
+      // Create notifications for status changes
+      if (status === 'paid') {
+        try {
+          // Find the booking to get the guide_id and tourist_id
+          const { data: bookingData } = await supabase
+            .from('bookings')
+            .select('guide_id, tourist_id, total_price')
+            .eq('id', bookingId)
+            .single();
+          
+          if (bookingData) {
+            // Notify guide when tourist pays
+            await createNotification({
+              type: 'booking_paid',
+              actor_id: bookingData.tourist_id,
+              recipient_id: bookingData.guide_id,
+              target_type: 'booking',
+              target_id: bookingId,
+              message: `Payment of $${bookingData.total_price} received for your tour`,
+              action_url: '/dashboard/my-bookings'
+            });
+          }
+        } catch (notificationError) {
+          console.warn('Failed to create payment notification:', notificationError);
+        }
+      }
 
       // Update local state based on user role
       if (profile?.role === 'guide') {
