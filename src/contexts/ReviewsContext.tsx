@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '@chakra-ui/react';
+import { useNotifications } from './NotificationContext';
 
 export interface Review {
   id: string;
@@ -45,6 +46,7 @@ interface ReviewsContextType {
 const ReviewsContext = createContext<ReviewsContextType | undefined>(undefined);
 
 export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
+  const { createNotification } = useNotifications();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [averageRating, setAverageRating] = useState<number>(0);
   const [totalReviews, setTotalReviews] = useState<number>(0);
@@ -239,6 +241,23 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Supabase insert error:', error);
         throw error;
+      }
+      
+      // Create notification for guide when tourist rates a tour
+      if (reviewData.target_type === 'guide') {
+        try {
+          await createNotification({
+            type: 'tour_rated',
+            actor_id: reviewData.reviewer_id,
+            recipient_id: reviewData.target_id,
+            target_type: 'tour',
+            target_id: reviewData.tour_id || reviewData.target_id,
+            message: `Someone rated your tour ${reviewData.rating} stars`,
+            action_url: null // As per requirements, rating notifications should not have jump actions
+          });
+        } catch (notificationError) {
+          console.warn('Failed to create review notification:', notificationError);
+        }
       }
       
       // Refresh reviews
