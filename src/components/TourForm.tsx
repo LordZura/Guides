@@ -205,15 +205,18 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
     }
     
     // Prepare tour data outside try block for error logging
+    // Import sanitization utilities
+    const { sanitizeTextInput, sanitizeNumber, sanitizeStringArray } = await import('../utils/sanitization');
+    
     const tourData = {
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      location: formData.location.trim(),
-      duration: Math.floor(formData.duration), // Ensure integer
-      price: Number(formData.price), // Ensure numeric
-      capacity: Math.floor(formData.capacity), // Ensure integer
-      languages: formData.languages, // Array of strings
-      days_available: formData.days_available, // Array of booleans
+      title: sanitizeTextInput(formData.title),
+      description: sanitizeTextInput(formData.description),
+      location: sanitizeTextInput(formData.location),
+      duration: sanitizeNumber(formData.duration, 0.5, 24), // 0.5 to 24 hours
+      price: sanitizeNumber(formData.price, 0, 10000), // 0 to $10,000
+      capacity: sanitizeNumber(formData.capacity, 1, 100), // 1 to 100 people
+      languages: sanitizeStringArray(formData.languages),
+      days_available: formData.days_available, // Array of booleans is safe
       is_private: Boolean(formData.is_private), // Ensure boolean
       creator_id: profile.id,
       creator_role: profile.role,
@@ -221,11 +224,11 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
       // Remove manual timestamp setting - let database handle with DEFAULT NOW()
     };
     
-    // Additional validation before submission
-    if (isNaN(tourData.duration) || tourData.duration <= 0) {
+    // Additional validation after sanitization
+    if (!tourData.title || tourData.title.length < 3) {
       toast({
-        title: 'Invalid duration',
-        description: 'Duration must be a valid positive number.',
+        title: 'Validation Error',
+        description: 'Title must be at least 3 characters after cleaning.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -233,10 +236,10 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
       return;
     }
     
-    if (isNaN(tourData.price) || tourData.price < 0) {
+    if (!tourData.description || tourData.description.length < 10) {
       toast({
-        title: 'Invalid price',
-        description: 'Price must be a valid non-negative number.',
+        title: 'Validation Error', 
+        description: 'Description must be at least 10 characters after cleaning.',
         status: 'error',
         duration: 5000,
         isClosable: true,
