@@ -24,6 +24,7 @@ import {
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import SearchableLanguageSelector from './SearchableLanguageSelector';
+import { sanitizeTextInput, sanitizeNumber, sanitizeStringArray } from '../utils/sanitization';
 
 interface TourFormProps {
   onSuccess: () => void;
@@ -205,9 +206,6 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
     }
     
     // Prepare tour data outside try block for error logging
-    // Import sanitization utilities
-    const { sanitizeTextInput, sanitizeNumber, sanitizeStringArray } = await import('../utils/sanitization');
-    
     const tourData = {
       title: sanitizeTextInput(formData.title),
       description: sanitizeTextInput(formData.description),
