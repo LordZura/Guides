@@ -6,6 +6,7 @@ import App from './App';
 import { AuthProvider } from './contexts/AuthProvider';
 import { ModalProvider } from './contexts/ModalContext';
 import { ReviewsProvider } from './contexts/ReviewsContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import './index.css';
 
 // Define theme with primary colors
@@ -33,9 +34,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <AuthProvider>
           <ModalProvider>
-            <ReviewsProvider>
-              <App />
-            </ReviewsProvider>
+            <NotificationProvider>
+              <ReviewsProvider>
+                <App />
+              </ReviewsProvider>
+            </NotificationProvider>
           </ModalProvider>
         </AuthProvider>
       </BrowserRouter>
