@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@chakra-ui/react';
@@ -244,16 +244,16 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       // Create notifications for status changes
-      if (status === 'paid') {
-        try {
-          // Find the booking to get the guide_id and tourist_id
-          const { data: bookingData } = await supabase
-            .from('bookings')
-            .select('guide_id, tourist_id, total_price')
-            .eq('id', bookingId)
-            .single();
-          
-          if (bookingData) {
+      try {
+        // Find the booking to get the guide_id, tourist_id and tour info
+        const { data: bookingData } = await supabase
+          .from('bookings')
+          .select('guide_id, tourist_id, total_price, tours(title)')
+          .eq('id', bookingId)
+          .single();
+        
+        if (bookingData) {
+          if (status === 'paid') {
             // Notify guide when tourist pays
             await createNotification({
               type: 'booking_paid',
@@ -264,10 +264,32 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
               message: `Payment of $${bookingData.total_price} received for your tour`,
               action_url: '/dashboard/my-bookings'
             });
+          } else if (status === 'accepted') {
+            // Notify tourist when guide accepts their booking
+            await createNotification({
+              type: 'booking_created', // Reuse existing type since it's about booking status
+              actor_id: bookingData.guide_id,
+              recipient_id: bookingData.tourist_id,
+              target_type: 'booking',
+              target_id: bookingId,
+              message: `Your booking for '${(bookingData as any).tours?.title || 'tour'}' has been accepted`,
+              action_url: '/dashboard/my-bookings'
+            });
+          } else if (status === 'declined') {
+            // Notify tourist when guide declines their booking
+            await createNotification({
+              type: 'booking_created', // Reuse existing type since it's about booking status  
+              actor_id: bookingData.guide_id,
+              recipient_id: bookingData.tourist_id,
+              target_type: 'booking',
+              target_id: bookingId,
+              message: `Your booking for '${(bookingData as any).tours?.title || 'tour'}' has been declined`,
+              action_url: '/dashboard/my-bookings'
+            });
           }
-        } catch (notificationError) {
-          console.warn('Failed to create payment notification:', notificationError);
         }
+      } catch (notificationError) {
+        console.warn('Failed to create status change notification:', notificationError);
       }
 
       // Update local state based on user role
@@ -304,7 +326,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Check if user has completed a specific tour
-  const hasCompletedTour = async (tourId: string): Promise<boolean> => {
+  const hasCompletedTour = useCallback(async (tourId: string): Promise<boolean> => {
     if (!user || !tourId) return false;
 
     try {
@@ -328,10 +350,10 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       console.warn('Error checking tour completion:', err);
       return false;
     }
-  };
+  }, [user]);
 
   // Check if user has completed a tour with a specific guide
-  const hasCompletedGuideBooking = async (guideId: string): Promise<boolean> => {
+  const hasCompletedGuideBooking = useCallback(async (guideId: string): Promise<boolean> => {
     if (!user || !guideId) return false;
 
     try {
@@ -355,7 +377,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       console.warn('Error checking guide tour completion:', err);
       return false;
     }
-  };
+  }, [user]);
 
   const value = {
     incomingBookings,
