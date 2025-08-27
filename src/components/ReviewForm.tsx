@@ -55,6 +55,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         return;
       }
       
+      // Only set checking to true if we're not already checking
       setIsCheckingCompletion(true);
       
       try {
@@ -69,12 +70,19 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         setHasCompletedBooking(completed);
       } catch (error) {
         console.error('Error checking completion status:', error);
+        setHasCompletedBooking(false); // Set to false on error to be safe
       } finally {
         setIsCheckingCompletion(false);
       }
     };
     
-    checkCompletionStatus();
+    // Only check if we have the required parameters
+    if (user && targetId && targetType) {
+      checkCompletionStatus();
+    } else {
+      setHasCompletedBooking(false);
+      setIsCheckingCompletion(false);
+    }
   }, [user, targetId, targetType, tourId]);
   
   const validateForm = () => {

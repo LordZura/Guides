@@ -41,9 +41,11 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
   );
 
   const handleClick = () => {
+    // Mark as read when clicking the notification
     if (!notification.is_read) {
       onMarkAsRead(notification.id);
     }
+    // Navigation will be handled by the RouterLink wrapper
   };
 
   const content = (
