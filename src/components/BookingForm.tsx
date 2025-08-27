@@ -182,21 +182,21 @@ const BookingForm = ({
 
       console.log('Submitting booking:', bookingData);
       
-      // Set up progress simulation
+      // Set up more realistic progress simulation
       const progressInterval = setInterval(() => {
         setSubmitProgress(prev => {
-          const newProgress = prev + 15;
-          if (newProgress >= 90) {
+          const newProgress = prev + 10;
+          if (newProgress >= 80) {
             clearInterval(progressInterval);
-            return 90; // Cap at 90% until complete
+            return 80; // Cap at 80% until complete to be more realistic
           }
           return newProgress;
         });
-      }, 300);
+      }, 500); // Slower progression for better UX
       
-      // Add a timeout to prevent hanging requests
+      // Add a timeout to prevent hanging requests (increased to 30s for better reliability)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out. Please try again.')), 15000);
+        setTimeout(() => reject(new Error('Request timed out. Please try again.')), 30000);
       });
       
       const bookingPromise = createBooking(bookingData);
@@ -230,6 +230,7 @@ const BookingForm = ({
     } catch (err: any) {
       console.error('Error in submit handler:', err);
       setSubmitError(err.message || 'An unexpected error occurred');
+      setSubmitProgress(0); // Reset progress on error
       toast({
         title: 'Error creating booking',
         description: err.message || 'An unexpected error occurred',
@@ -243,19 +244,19 @@ const BookingForm = ({
   };
 
   return (
-    <Box>
+    <Box p={{ base: 3, md: 4 }}>
       <form onSubmit={handleSubmit}>
-        <VStack spacing={4} align="stretch">
-          <Text fontWeight="bold" fontSize="lg">{tourTitle}</Text>
+        <VStack spacing={{ base: 3, md: 4 }} align="stretch">
+          <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }}>{tourTitle}</Text>
           
           {isOffer && (
-            <Text fontSize="sm" color="orange.600" fontStyle="italic">
+            <Text fontSize={{ base: "xs", md: "sm" }} color="orange.600" fontStyle="italic">
               You are offering to provide this tour to the tourist who requested it.
             </Text>
           )}
           
           {availableDayIndexes.length > 0 ? (
-            <Text fontSize="sm">
+            <Text fontSize={{ base: "xs", md: "sm" }}>
               Available on: {availableDayIndexes.map(i => daysOfWeek[i]).join(', ')}
             </Text>
           ) : (
@@ -273,7 +274,7 @@ const BookingForm = ({
           )}
 
           <FormControl isRequired isInvalid={!!errors.bookingDate}>
-            <FormLabel>Date</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Date</FormLabel>
             <Input
               type="date"
               value={bookingDate}
@@ -283,9 +284,9 @@ const BookingForm = ({
               border="2px"
               borderColor="gray.200"
               borderRadius="md"
-              px={4}
-              py={3}
-              fontSize="md"
+              px={{ base: 3, md: 4 }}
+              py={{ base: 2, md: 3 }}
+              fontSize={{ base: "sm", md: "md" }}
               _hover={{
                 borderColor: "primary.300",
                 bg: "gray.50"
@@ -313,11 +314,11 @@ const BookingForm = ({
                 }
               }}
             />
-            <FormErrorMessage>{errors.bookingDate}</FormErrorMessage>
+            <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>{errors.bookingDate}</FormErrorMessage>
           </FormControl>
 
           <FormControl isRequired isInvalid={!!errors.preferredTime}>
-            <FormLabel>Preferred Time</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Preferred Time</FormLabel>
             <Select
               placeholder="Select time"
               value={preferredTime}
@@ -326,9 +327,9 @@ const BookingForm = ({
               border="2px"
               borderColor="gray.200"
               borderRadius="md"
-              px={4}
-              py={3}
-              fontSize="md"
+              px={{ base: 3, md: 4 }}
+              py={{ base: 2, md: 3 }}
+              fontSize={{ base: "sm", md: "md" }}
               _hover={{
                 borderColor: "primary.300",
                 bg: "gray.50"
@@ -347,43 +348,46 @@ const BookingForm = ({
                 <option key={time} value={time}>{time}</option>
               ))}
             </Select>
-            <FormErrorMessage>{errors.preferredTime}</FormErrorMessage>
+            <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>{errors.preferredTime}</FormErrorMessage>
           </FormControl>
 
           <FormControl isRequired isInvalid={!!errors.partySize}>
-            <FormLabel>Number of People</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Number of People</FormLabel>
             <NumberInput
               min={1}
               max={maxCapacity}
               value={partySize}
               onChange={(_, valueAsNumber) => setPartySize(valueAsNumber)}
+              size={{ base: "md", md: "lg" }}
             >
-              <NumberInputField />
+              <NumberInputField fontSize={{ base: "sm", md: "md" }} />
               <NumberInputStepper>
                 <NumberIncrementStepper />
                 <NumberDecrementStepper />
               </NumberInputStepper>
             </NumberInput>
-            <FormErrorMessage>{errors.partySize}</FormErrorMessage>
+            <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>{errors.partySize}</FormErrorMessage>
           </FormControl>
 
           <FormControl>
-            <FormLabel>Special Requests or Notes</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Special Requests or Notes</FormLabel>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any special requests or additional information for the guide..."
               rows={3}
+              fontSize={{ base: "sm", md: "md" }}
+              resize="vertical"
             />
           </FormControl>
 
-          <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
-            <Text fontWeight="medium">Price Summary</Text>
-            <HStack justify="space-between" mt={2}>
-              <Text>${pricePerPerson} × {partySize} {partySize === 1 ? 'person' : 'people'}</Text>
-              <Text>${totalPrice.toFixed(2)}</Text>
+          <Box p={{ base: 3, md: 4 }} borderWidth="1px" borderRadius="md" bg="gray.50">
+            <Text fontWeight="medium" fontSize={{ base: "sm", md: "md" }}>Price Summary</Text>
+            <HStack justify="space-between" mt={2} flexWrap={{ base: "wrap", md: "nowrap" }}>
+              <Text fontSize={{ base: "sm", md: "md" }}>${pricePerPerson} × {partySize} {partySize === 1 ? 'person' : 'people'}</Text>
+              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="semibold">${totalPrice.toFixed(2)}</Text>
             </HStack>
-            <Text fontSize="xs" color="gray.500" mt={2}>
+            <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mt={2}>
               {isOffer 
                 ? 'The tourist will be notified of your offer and can accept or decline.' 
                 : 'Payment will be processed after the guide accepts your booking request.'
@@ -395,18 +399,30 @@ const BookingForm = ({
             <Box>
               <Progress 
                 value={submitProgress} 
-                size="xs" 
+                size={{ base: "sm", md: "xs" }}
                 colorScheme="green" 
                 borderRadius="full"
               />
-              <Text fontSize="xs" textAlign="center" mt={1}>
+              <Text fontSize={{ base: "xs", md: "xs" }} textAlign="center" mt={1}>
                 {submitProgress < 100 ? 'Sending booking request...' : 'Request completed!'}
               </Text>
             </Box>
           )}
 
-          <HStack justify="flex-end" spacing={3} pt={2}>
-            <Button variant="outline" onClick={onCancel} isDisabled={isSubmitting}>
+          <HStack 
+            justify="flex-end" 
+            spacing={{ base: 2, md: 3 }} 
+            pt={2}
+            direction={{ base: "column", sm: "row" }}
+            w="full"
+          >
+            <Button 
+              variant="outline" 
+              onClick={onCancel} 
+              isDisabled={isSubmitting}
+              size={{ base: "md", md: "md" }}
+              w={{ base: "full", sm: "auto" }}
+            >
               Cancel
             </Button>
             <Button
@@ -414,6 +430,8 @@ const BookingForm = ({
               colorScheme="primary"
               isLoading={isSubmitting}
               loadingText={isOffer ? "Sending Offer..." : "Submitting..."}
+              size={{ base: "md", md: "md" }}
+              w={{ base: "full", sm: "auto" }}
             >
               {isOffer ? "Send Offer" : "Submit Request"}
             </Button>
