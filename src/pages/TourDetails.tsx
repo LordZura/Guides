@@ -171,12 +171,12 @@ const TourDetail = () => {
   
   return (
     <BookingProvider>
-      <Container maxW="container.xl" py={8}>
-        <Box bg="white" p={6} borderRadius="lg" boxShadow="md">
-          <Flex direction={{ base: 'column', md: 'row' }} justify="space-between" mb={6}>
+      <Container maxW="container.xl" py={{ base: 4, md: 8 }} px={{ base: 3, md: 4 }}>
+        <Box bg="white" p={{ base: 4, md: 6 }} borderRadius="lg" boxShadow="md">
+          <Flex direction={{ base: 'column', md: 'row' }} justify="space-between" mb={{ base: 4, md: 6 }} gap={{ base: 4, md: 0 }}>
             <Box>
-              <Heading as="h1" size="xl" mb={2}>{tour.title}</Heading>
-              <HStack spacing={3} mb={2}>
+              <Heading as="h1" size={{ base: "lg", md: "xl" }} mb={2}>{tour.title}</Heading>
+              <HStack spacing={3} mb={2} flexWrap="wrap">
                 <Badge colorScheme={tour.is_private ? 'purple' : 'green'}>
                   {tour.is_private ? 'Private Tour' : 'Public Tour'}
                 </Badge>
@@ -189,27 +189,27 @@ const TourDetail = () => {
               </HStack>
             </Box>
             
-            <Box>
-              <Text fontSize="2xl" fontWeight="bold" color="primary.600">
+            <Box textAlign={{ base: "left", md: "right" }}>
+              <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="primary.600">
                 ${tour.price}
-                <Text as="span" fontSize="md" fontWeight="normal" color="gray.500"> per person</Text>
+                <Text as="span" fontSize={{ base: "sm", md: "md" }} fontWeight="normal" color="gray.500"> per person</Text>
               </Text>
             </Box>
           </Flex>
           
-          <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={8}>
+          <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={{ base: 6, md: 8 }}>
             <GridItem>
               {/* Tour details */}
-              <Box mb={8}>
-                <Text fontSize="lg" mb={4}>{tour.description}</Text>
+              <Box mb={{ base: 6, md: 8 }}>
+                <Text fontSize={{ base: "md", md: "lg" }} mb={4}>{tour.description}</Text>
                 
                 <VStack align="start" spacing={3} mt={6}>
-                  <Flex align="center">
+                  <Flex align="center" flexWrap="wrap">
                     <Icon as={MdLocationOn} color="primary.500" mr={2} />
                     <Text fontWeight="medium">
                       {tour.locations && tour.locations.length > 1 ? 'Route:' : 'Location:'}
                     </Text>
-                    <Text ml={2}>
+                    <Text ml={2} wordBreak="break-word">
                       {tour.locations && tour.locations.length > 0 
                         ? getLocationsDisplayString(tour.locations, 60)
                         : tour.location || 'Location not specified'

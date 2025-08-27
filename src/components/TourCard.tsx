@@ -19,6 +19,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { supabase, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import { Tour } from '../lib/types';
 import { getLocationsDisplayString } from '../utils/tourLocations';
+import { retrySupabaseQuery } from '../utils/supabaseRetry';
 import StarRating from './StarRating';
 
 interface TourCardProps {
@@ -54,16 +55,43 @@ const TourCard = ({ tourId }: TourCardProps) => {
         
         if (tourError) throw tourError;
         
-        // Then fetch the creator's profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url')
-          .eq('id', tourData.creator_id)
-          .single();
-        
-        if (profileError && profileError.code !== 'PGRST116') {
-          // PGRST116 is "not found" error, which we can handle gracefully
-          throw profileError;
+        // Then fetch the creator's profile with retry mechanism
+        let profileData = null;
+        try {
+          const profileResult = await retrySupabaseQuery(async () => {
+            return await supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('id', tourData.creator_id)
+              .single();
+          });
+          
+          if (profileResult.error) {
+            // Handle specific error codes gracefully
+            if (profileResult.error.code === 'PGRST116') {
+              // Not found error - use default values
+              console.warn(`Profile not found for creator ${tourData.creator_id}`);
+              profileData = { full_name: 'Unknown Guide', avatar_url: null };
+            } else if (profileResult.error.code === 'PGRST301') {
+              // Multiple rows returned - take first one
+              console.warn(`Multiple profiles found for creator ${tourData.creator_id}, using first one`);
+              const { data: multipleProfiles } = await supabase
+                .from('profiles')
+                .select('full_name, avatar_url')
+                .eq('id', tourData.creator_id)
+                .limit(1);
+              profileData = multipleProfiles?.[0] || { full_name: 'Unknown Guide', avatar_url: null };
+            } else {
+              // Log the error but don't fail completely
+              console.error('Profile fetch error:', profileResult.error);
+              profileData = { full_name: 'Unknown Guide', avatar_url: null };
+            }
+          } else {
+            profileData = profileResult.data;
+          }
+        } catch (profileError) {
+          console.error('Profile fetch exception:', profileError);
+          profileData = { full_name: 'Unknown Guide', avatar_url: null };
         }
         
         // If this is a guide's tour, fetch their rating
@@ -83,8 +111,8 @@ const TourCard = ({ tourId }: TourCardProps) => {
         // Combine the data
         setTour({
           ...tourData,
-          creator_name: profileData?.full_name || 'Unknown Guide',
-          creator_avatar: profileData?.avatar_url || null
+          creator_name: (profileData as any)?.full_name || 'Unknown Guide',
+          creator_avatar: (profileData as any)?.avatar_url || null
         });
       } catch (err) {
         console.error('Error fetching tour:', err);
@@ -105,14 +133,14 @@ const TourCard = ({ tourId }: TourCardProps) => {
   
   if (isLoading) {
     return (
-      <Box borderWidth="1px" borderRadius="lg" overflow="hidden" boxShadow="md" bg={cardBg} p={4}>
+      <Box borderWidth="1px" borderRadius="lg" overflow="hidden" boxShadow="md" bg={cardBg} p={{ base: 3, md: 4 }}>
         <Skeleton height="24px" width="60%" mb={2} />
         <Skeleton height="16px" width="40%" mb={4} />
         <Skeleton height="16px" width="100%" mb={2} />
         <Skeleton height="16px" width="90%" mb={4} />
-        <Flex justify="space-between">
-          <Skeleton height="20px" width="30%" />
-          <Skeleton height="36px" width="30%" />
+        <Flex justify="space-between" direction={{ base: "column", sm: "row" }} gap={{ base: 2, sm: 0 }}>
+          <Skeleton height="20px" width={{ base: "100%", sm: "30%" }} />
+          <Skeleton height="36px" width={{ base: "100%", sm: "30%" }} />
         </Flex>
       </Box>
     );
@@ -120,7 +148,7 @@ const TourCard = ({ tourId }: TourCardProps) => {
   
   if (!tour) {
     return (
-      <Box borderWidth="1px" borderRadius="lg" overflow="hidden" boxShadow="md" bg={cardBg} p={4}>
+      <Box borderWidth="1px" borderRadius="lg" overflow="hidden" boxShadow="md" bg={cardBg} p={{ base: 3, md: 4 }}>
         <Text>Tour not found or no longer available</Text>
       </Box>
     );
@@ -149,8 +177,8 @@ const TourCard = ({ tourId }: TourCardProps) => {
       borderColor="gray.200"
       position="relative"
     >
-      <Box p={6}>
-        <Heading as="h3" size="md" mb={3} noOfLines={2} color="gray.800" lineHeight="1.3">
+      <Box p={{ base: 4, md: 6 }}>
+        <Heading as="h3" size={{ base: "sm", md: "md" }} mb={3} noOfLines={2} color="gray.800" lineHeight="1.3">
           {tour.title}
         </Heading>
         
@@ -225,8 +253,16 @@ const TourCard = ({ tourId }: TourCardProps) => {
           </Box>
         )}
         
-        <Flex justify="space-between" align="center" pt={2} borderTop="1px" borderColor="gray.100">
-          <HStack spacing={2}>
+        <Flex 
+          justify="space-between" 
+          align={{ base: "start", sm: "center" }} 
+          pt={2} 
+          borderTop="1px" 
+          borderColor="gray.100"
+          direction={{ base: "column", sm: "row" }}
+          gap={{ base: 3, sm: 0 }}
+        >
+          <HStack spacing={2} flexWrap="wrap">
             <Badge 
               colorScheme={tour.is_private ? 'purple' : 'green'} 
               fontSize="xs" 
@@ -252,12 +288,13 @@ const TourCard = ({ tourId }: TourCardProps) => {
             as={RouterLink}
             to={`/tours/${tour.id}`}
             colorScheme="primary"
-            size="sm"
+            size={{ base: "sm", md: "sm" }}
             borderRadius="full"
             px={6}
             fontWeight="semibold"
             _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
             transition="all 0.2s"
+            width={{ base: "100%", sm: "auto" }}
           >
             View Details
           </Button>

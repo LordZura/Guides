@@ -15,7 +15,19 @@ if (!supabaseAnonKey) {
   console.error('Supabase anon key is not set. Use VITE_SUPABASE_ANON_KEY (preferred) or VITE_SUPABASE_KEY.');
 }
 
-export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '');
+export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  }
+});
 
 export type UserRole = 'guide' | 'tourist';
 

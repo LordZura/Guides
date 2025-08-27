@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@chakra-ui/react';
+import { retrySupabaseQuery } from '../utils/supabaseRetry';
 
 export type NotificationType = 'booking_created' | 'booking_paid' | 'booking_completed' | 'tour_rated' | 'tour_updated' | 'tour_cancelled';
 
@@ -140,18 +141,22 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       // Get unique actor IDs
       const actorIds = [...new Set(notificationsData?.map(n => n.actor_id).filter(Boolean))];
       
-      // Fetch profile data for all actors
+      // Fetch profile data for all actors with retry mechanism
       let actorProfiles: { [key: string]: any } = {};
       if (actorIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .in('id', actorIds);
+        const profileResult = await retrySupabaseQuery(async () => {
+          return await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', actorIds);
+        });
 
-        if (!profilesError && profilesData) {
-          profilesData.forEach(profile => {
+        if (!profileResult.error && profileResult.data) {
+          profileResult.data.forEach(profile => {
             actorProfiles[profile.id] = profile;
           });
+        } else if (profileResult.error) {
+          console.warn('Error fetching actor profiles:', profileResult.error);
         }
       }
 

@@ -99,8 +99,8 @@ const GuideCard = ({ guide }: GuideCardProps) => {
         </Box>
       </Box>
       
-      <Box p={6}>
-        <Stack spacing={4}>
+      <Box p={{ base: 4, md: 6 }}>
+        <Stack spacing={{ base: 3, md: 4 }}>
           {/* Rating display */}
           <Flex align="center" justify="space-between">
             <StarRating rating={averageRating} size={18} />
@@ -143,7 +143,7 @@ const GuideCard = ({ guide }: GuideCardProps) => {
             as={RouterLink}
             to={`/profile/${guide.id}`}
             colorScheme="primary"
-            size="md"
+            size={{ base: "sm", md: "md" }}
             width="100%"
             borderRadius="full"
             fontWeight="semibold"
