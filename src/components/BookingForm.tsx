@@ -23,6 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthProvider';
 import { useBookings, BookingStatus } from '../contexts/BookingContext';
+import { sanitizeTextInput, sanitizeNumber } from '../utils/sanitization';
 
 interface BookingFormProps {
   tourId: string;
@@ -167,9 +168,6 @@ const BookingForm = ({
     setIsSubmitting(true);
 
     try {
-      // Import sanitization utilities
-      const { sanitizeTextInput, sanitizeNumber } = await import('../utils/sanitization');
-      
       const bookingData = {
         tour_id: tourId,
         tourist_id: isOffer ? touristId || '' : profile.id,

@@ -18,6 +18,7 @@ import StarRating from './StarRating';
 import { useReviews } from '../contexts/ReviewsContext';
 import { useAuth } from '../contexts/AuthProvider';
 import { useBookings } from '../contexts/BookingContext';
+import { sanitizeTextInput, sanitizeNumber } from '../utils/sanitization';
 
 // Import the ReviewData interface from context
 interface ReviewData {
@@ -143,9 +144,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       });
       return;
     }
-    
-    // Import sanitization utilities
-    const { sanitizeTextInput, sanitizeNumber } = await import('../utils/sanitization');
     
     // Prepare review data using 'comment' instead of 'content'
     const reviewData: ReviewData = {
