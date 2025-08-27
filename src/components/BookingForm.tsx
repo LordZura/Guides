@@ -28,9 +28,11 @@ interface BookingFormProps {
   tourId: string;
   tourTitle: string;
   guideId: string;
+  touristId?: string;
   pricePerPerson: number;
   maxCapacity: number;
   availableDays: boolean[];
+  isOffer?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -47,9 +49,11 @@ const BookingForm = ({
   tourId,
   tourTitle,
   guideId,
+  touristId,
   pricePerPerson,
   maxCapacity,
   availableDays,
+  isOffer = false,
   onSuccess,
   onCancel
 }: BookingFormProps) => {
@@ -165,9 +169,9 @@ const BookingForm = ({
     try {
       const bookingData = {
         tour_id: tourId,
-        tourist_id: profile.id,
-        guide_id: guideId,
-        status: 'requested' as BookingStatus,
+        tourist_id: isOffer ? touristId || '' : profile.id,
+        guide_id: isOffer ? profile.id : guideId,
+        status: (isOffer ? 'offered' : 'requested') as BookingStatus,
         party_size: partySize,
         booking_date: bookingDate,
         preferred_time: preferredTime,
@@ -243,6 +247,12 @@ const BookingForm = ({
         <VStack spacing={4} align="stretch">
           <Text fontWeight="bold" fontSize="lg">{tourTitle}</Text>
           
+          {isOffer && (
+            <Text fontSize="sm" color="orange.600" fontStyle="italic">
+              You are offering to provide this tour to the tourist who requested it.
+            </Text>
+          )}
+          
           {availableDayIndexes.length > 0 ? (
             <Text fontSize="sm">
               Available on: {availableDayIndexes.map(i => daysOfWeek[i]).join(', ')}
@@ -268,6 +278,39 @@ const BookingForm = ({
               value={bookingDate}
               onChange={handleDateChange}
               min={minDate}
+              bg="white"
+              border="2px"
+              borderColor="gray.200"
+              borderRadius="md"
+              px={4}
+              py={3}
+              fontSize="md"
+              _hover={{
+                borderColor: "primary.300",
+                bg: "gray.50"
+              }}
+              _focus={{
+                borderColor: "primary.500",
+                boxShadow: "0 0 0 1px var(--chakra-colors-primary-500)",
+                bg: "white"
+              }}
+              _invalid={{
+                borderColor: "red.300",
+                boxShadow: "0 0 0 1px var(--chakra-colors-red-300)"
+              }}
+              sx={{
+                '::-webkit-calendar-picker-indicator': {
+                  backgroundColor: 'var(--chakra-colors-primary-500)',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  transition: 'all 0.2s'
+                },
+                '::-webkit-calendar-picker-indicator:hover': {
+                  backgroundColor: 'var(--chakra-colors-primary-600)',
+                  transform: 'scale(1.1)'
+                }
+              }}
             />
             <FormErrorMessage>{errors.bookingDate}</FormErrorMessage>
           </FormControl>
@@ -278,6 +321,26 @@ const BookingForm = ({
               placeholder="Select time"
               value={preferredTime}
               onChange={(e) => setPreferredTime(e.target.value)}
+              bg="white"
+              border="2px"
+              borderColor="gray.200"
+              borderRadius="md"
+              px={4}
+              py={3}
+              fontSize="md"
+              _hover={{
+                borderColor: "primary.300",
+                bg: "gray.50"
+              }}
+              _focus={{
+                borderColor: "primary.500",
+                boxShadow: "0 0 0 1px var(--chakra-colors-primary-500)",
+                bg: "white"
+              }}
+              _invalid={{
+                borderColor: "red.300",
+                boxShadow: "0 0 0 1px var(--chakra-colors-red-300)"
+              }}
             >
               {timeSlots.map(time => (
                 <option key={time} value={time}>{time}</option>
@@ -320,7 +383,10 @@ const BookingForm = ({
               <Text>${totalPrice.toFixed(2)}</Text>
             </HStack>
             <Text fontSize="xs" color="gray.500" mt={2}>
-              Payment will be processed after the guide accepts your booking request.
+              {isOffer 
+                ? 'The tourist will be notified of your offer and can accept or decline.' 
+                : 'Payment will be processed after the guide accepts your booking request.'
+              }
             </Text>
           </Box>
           
@@ -346,9 +412,9 @@ const BookingForm = ({
               type="submit"
               colorScheme="primary"
               isLoading={isSubmitting}
-              loadingText="Submitting..."
+              loadingText={isOffer ? "Sending Offer..." : "Submitting..."}
             >
-              Submit Request
+              {isOffer ? "Send Offer" : "Submit Request"}
             </Button>
           </HStack>
         </VStack>

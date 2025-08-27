@@ -4,7 +4,7 @@ import { useAuth } from './AuthProvider';
 import { useToast } from '@chakra-ui/react';
 import { useNotifications } from './NotificationContext';
 
-export type BookingStatus = 'requested' | 'accepted' | 'declined' | 'paid' | 'completed' | 'cancelled';
+export type BookingStatus = 'requested' | 'offered' | 'accepted' | 'declined' | 'paid' | 'completed' | 'cancelled';
 
 export interface Booking {
   id: string;
@@ -172,8 +172,8 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
       console.log('Booking created successfully:', data);
       
-      // Create notification for the guide
-      if (data && data.guide_id) {
+      // Create notification for the appropriate party
+      if (data) {
         try {
           // Get tour title for notification message
           const { data: tourData } = await supabase
@@ -182,13 +182,20 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
             .eq('id', data.tour_id)
             .single();
           
+          // For 'offered' status, notify the tourist. For 'requested' status, notify the guide
+          const isOffer = data.status === 'offered';
+          const recipientId = isOffer ? data.tourist_id : data.guide_id;
+          const message = isOffer 
+            ? `A guide offered to provide '${tourData?.title || 'the tour'}' you requested for ${data.booking_date}`
+            : `${user.user_metadata?.full_name || 'Someone'} booked '${tourData?.title || 'your tour'}' for ${data.booking_date}`;
+          
           await createNotification({
             type: 'booking_created',
             actor_id: user.id,
-            recipient_id: data.guide_id,
+            recipient_id: recipientId,
             target_type: 'booking',
             target_id: data.id,
-            message: `${user.user_metadata?.full_name || 'Someone'} booked '${tourData?.title || 'your tour'}' for ${data.booking_date}`,
+            message: message,
             action_url: '/dashboard/my-bookings'
           });
         } catch (notificationError) {
@@ -197,8 +204,17 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // Update local state
-      setOutgoingBookings(prev => [data as Booking, ...prev]);
+      // Update local state based on booking type
+      if (data.status === 'offered') {
+        // For offers, guide is offering, so it goes to guide's outgoing
+        if (profile?.role === 'guide') {
+          setOutgoingBookings(prev => [data as Booking, ...prev]);
+        }
+        // Tourist will see it in incoming when they refresh or via real-time
+      } else {
+        // For requests, tourist is requesting, so it goes to tourist's outgoing
+        setOutgoingBookings(prev => [data as Booking, ...prev]);
+      }
 
       return { 
         success: true,
