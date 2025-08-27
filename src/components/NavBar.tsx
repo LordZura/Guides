@@ -9,10 +9,12 @@ import {
   Collapse,
   Link,
   useDisclosure,
+  HStack,
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthProvider';
 import { useModal } from '../contexts/ModalContext';
+import NotificationBadge from './NotificationBadge';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -74,7 +76,8 @@ const Navbar = () => {
           </Link>
 
           {user ? (
-            <>
+            <HStack spacing={2}>
+              <NotificationBadge />
               <Link as={RouterLink} to="/dashboard" px={4} py={2} borderRadius="lg" fontWeight="semibold" color="gray.700" _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} transition="all 0.2s">
                 Dashboard
               </Link>
@@ -90,7 +93,7 @@ const Navbar = () => {
               >
                 Sign Out
               </Button>
-            </>
+            </HStack>
           ) : (
             <Button
               ml={4}
