@@ -7,6 +7,32 @@ export interface TourLocation {
   order: number;
 }
 
+export interface TourTemplate {
+  id: string;
+  name: string;
+  description: string;
+  template_data: TourTemplateData;
+  is_system_template: boolean;
+  creator_id: string | null;
+  category: string;
+  is_active: boolean;
+  usage_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TourTemplateData {
+  title: string;
+  description: string;
+  duration: number;
+  price: number;
+  capacity: number;
+  languages: string[];
+  days_available: boolean[];
+  is_private: boolean;
+  locations: TourLocation[];
+}
+
 export interface Tour {
   id: string;
   title: string;

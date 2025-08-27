@@ -1,13 +1,5 @@
 // Test helpers for tour locations functionality
-import { TourLocation } from '../lib/types';
-import { 
-  createTourLocation, 
-  migrateSingleLocationToArray, 
-  getPrimaryLocation,
-  validateLocations,
-  getLocationsDisplayString,
-  exampleTourWithLocations
-} from '../utils/tourLocations';
+import { exampleTourWithLocations } from '../utils/tourLocations';
 
 // Example tour with multiple locations (as requested in requirements)
 export const exampleMultiLocationTour = {
