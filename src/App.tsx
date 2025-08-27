@@ -9,6 +9,7 @@ import AuthModal from './components/AuthModal';
 import TourDetail from './pages/TourDetails';
 import ProfilePage from './pages/Profile/[id]';
 import NotificationTestPanel from './components/NotificationTestPanel';
+import LanguageSelectorDemo from './components/LanguageSelectorDemo';
 
 // Placeholder components for routes not implemented in Subtask 1
 const About = () => <Box p={4} maxW="container.xl" mx="auto"><Box as="h1" fontSize="2xl" fontWeight="bold">About TourGuideHub</Box></Box>;
@@ -46,6 +47,7 @@ function App() {
           <Route path="/explore" element={<Explore />} />
           <Route path="/about" element={<About />} />
           <Route path="/test-notifications" element={<NotificationTestPanel />} />
+          <Route path="/demo-language" element={<LanguageSelectorDemo />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />

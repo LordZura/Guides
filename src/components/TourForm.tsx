@@ -23,6 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
+import SearchableLanguageSelector from './SearchableLanguageSelector';
 
 interface TourFormProps {
   onSuccess: () => void;
@@ -57,7 +58,6 @@ const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'S
 const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
   const { profile } = useAuth();
   const toast = useToast();
-  const [availableLanguages, setAvailableLanguages] = useState<{name: string, code: string}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(!!tourId);
   
@@ -75,33 +75,6 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
   
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
-  
-  // Load available languages
-  useEffect(() => {
-    const fetchLanguages = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('languages')
-          .select('name, code')
-          .order('name');
-        
-        if (error) throw error;
-        
-        setAvailableLanguages(data || []);
-      } catch (err) {
-        console.error('Error fetching languages:', err);
-        toast({
-          title: 'Error loading languages',
-          description: 'Could not load available languages. Please try again.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-    };
-    
-    fetchLanguages();
-  }, [toast]);
   
   // Load existing tour data if editing
   useEffect(() => {
@@ -196,11 +169,8 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
     setFormData({ ...formData, [name]: value });
   };
   
-  const handleLanguageToggle = (language: string, isChecked: boolean) => {
-    const updatedLanguages = isChecked 
-      ? [...formData.languages, language]
-      : formData.languages.filter(lang => lang !== language);
-    setFormData({ ...formData, languages: updatedLanguages });
+  const handleLanguageChange = (languages: string[]) => {
+    setFormData({ ...formData, languages });
   };
   
   const handleDayToggle = (index: number) => {
@@ -400,21 +370,16 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
             </FormControl>
           </Flex>
           
-          <FormControl isRequired isInvalid={!!errors.languages}>
-            <FormLabel>Languages</FormLabel>
-            <HStack wrap="wrap" spacing={3}>
-              {availableLanguages.map(lang => (
-                <Checkbox 
-                  key={lang.code} 
-                  isChecked={formData.languages.includes(lang.name)}
-                  onChange={(e) => handleLanguageToggle(lang.name, e.target.checked)}
-                >
-                  {lang.name}
-                </Checkbox>
-              ))}
-            </HStack>
-            <FormErrorMessage>{errors.languages}</FormErrorMessage>
-          </FormControl>
+          <SearchableLanguageSelector
+            selectedLanguages={formData.languages}
+            onChange={handleLanguageChange}
+            isRequired={true}
+            isInvalid={!!errors.languages}
+            errorMessage={errors.languages}
+            label="Languages"
+            placeholder="Search and select languages for your tour..."
+            helperText="Select all languages you can conduct this tour in"
+          />
           
           <FormControl>
             <FormLabel>Days Available</FormLabel>

@@ -7,7 +7,6 @@ import {
   FormErrorMessage,
   Input,
   Textarea,
-  Select,
   Heading,
   Flex,
   Text,
@@ -21,6 +20,7 @@ import {
 import { CheckIcon, CloseIcon, EditIcon } from '@chakra-ui/icons';
 import { supabase, Profile, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
+import SearchableLanguageSelector from './SearchableLanguageSelector';
 
 interface ProfileEditorProps {
   onSave: (updatedProfile: Profile) => void;
@@ -48,27 +48,6 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
   const { profile: currentProfile, user } = useAuth();
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Common languages list
-  const availableLanguages = [
-    { name: 'English', code: 'en' },
-    { name: 'Spanish', code: 'es' },
-    { name: 'French', code: 'fr' },
-    { name: 'German', code: 'de' },
-    { name: 'Italian', code: 'it' },
-    { name: 'Portuguese', code: 'pt' },
-    { name: 'Russian', code: 'ru' },
-    { name: 'Chinese', code: 'zh' },
-    { name: 'Japanese', code: 'ja' },
-    { name: 'Korean', code: 'ko' },
-    { name: 'Arabic', code: 'ar' },
-    { name: 'Hindi', code: 'hi' },
-    { name: 'Georgian', code: 'ka' }, // Added for Georgian tours
-    { name: 'Turkish', code: 'tr' },
-    { name: 'Dutch', code: 'nl' },
-    { name: 'Swedish', code: 'sv' },
-    { name: 'Norwegian', code: 'no' },
-    { name: 'Danish', code: 'da' }
-  ];
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -114,15 +93,13 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-  
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Handle multi-select for languages
-    const options = Array.from(e.target.selectedOptions, option => option.value);
-    setFormData({ ...formData, languages: options });
+
+  const handleLanguageChange = (languages: string[]) => {
+    setFormData({ ...formData, languages });
   };
   
   const handleAvatarClick = () => {
@@ -370,23 +347,13 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
             />
           </FormControl>
           
-          <FormControl>
-            <FormLabel>Languages</FormLabel>
-            <Select 
-              multiple
-              size="md"
-              height="100px"
-              name="languages"
-              value={formData.languages}
-              onChange={handleLanguageChange}
-            >
-              {availableLanguages.map(lang => (
-                <option key={lang.code} value={lang.name}>
-                  {lang.name}
-                </option>
-              ))}
-            </Select>
-          </FormControl>
+          <SearchableLanguageSelector
+            selectedLanguages={formData.languages}
+            onChange={handleLanguageChange}
+            label="Languages"
+            placeholder="Search and select languages..."
+            helperText="Select the languages you speak"
+          />
           
           {/* Guide-specific fields */}
           {currentProfile.role === 'guide' && (

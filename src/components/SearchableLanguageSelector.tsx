@@ -192,13 +192,6 @@ const SearchableLanguageSelector = ({
           styles={selectStyles}
           closeMenuOnSelect={false}
           hideSelectedOptions={false}
-          filterOption={(option, searchText) => {
-            const optionData = option as any;
-            return (
-              optionData.label.toLowerCase().includes(searchText.toLowerCase()) ||
-              optionData.code.toLowerCase().includes(searchText.toLowerCase())
-            );
-          }}
           getOptionLabel={(option) => option.label}
           getOptionValue={(option) => option.value}
           noOptionsMessage={() => 'No languages found'}
