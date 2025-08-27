@@ -254,13 +254,13 @@ const Explore = () => {
   };
   
   return (
-    <Container maxW="container.xl" px={6} py={8}>
+    <Container maxW="container.xl" px={{ base: 3, sm: 4, md: 6 }} py={{ base: 4, md: 8 }}>
       <Box bg="white" borderRadius="xl" overflow="hidden" boxShadow="xl" border="1px" borderColor="gray.100">
-        <Box p={8} bgGradient="linear(135deg, primary.500, primary.700)" color="white" position="relative">
+        <Box p={{ base: 4, sm: 6, md: 8 }} bgGradient="linear(135deg, primary.500, primary.700)" color="white" position="relative">
           <Box position="absolute" top="0" left="0" w="full" h="full" bgGradient="linear(135deg, primary.500, transparent)" opacity="0.1" />
           <Box position="relative" zIndex="1">
-            <Heading as="h1" size="xl" mb={3} fontWeight="black">Explore TourGuideHub</Heading>
-            <Text color="primary.50" fontSize="lg" maxW="md">Discover amazing guides, tours and travel stories from local experts</Text>
+            <Heading as="h1" size={{ base: "lg", md: "xl" }} mb={3} fontWeight="black">Explore TourGuideHub</Heading>
+            <Text color="primary.50" fontSize={{ base: "md", md: "lg" }} maxW="md">Discover amazing guides, tours and travel stories from local experts</Text>
             
             {isMobile && (
               <Button 
@@ -283,7 +283,7 @@ const Explore = () => {
         <Flex>
           {/* Filters - desktop */}
           {!isMobile && (
-            <Box width="280px" p={6} borderRightWidth="1px" borderColor="gray.100" bg="gray.50">
+            <Box width={{ base: "260px", lg: "280px" }} p={{ base: 4, md: 6 }} borderRightWidth="1px" borderColor="gray.100" bg="gray.50">
               <Heading size="sm" mb={6} color="gray.700">Search & Filters</Heading>
               
               <Stack spacing={6}>
@@ -384,21 +384,21 @@ const Explore = () => {
           {/* Main content */}
           <Box flex="1" bg="white">
             <Tabs colorScheme="primary" onChange={setTabIndex} index={tabIndex} variant="enclosed">
-              <TabList borderBottomColor="gray.200">
-                <Tab fontWeight="semibold" py={6} px={8} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }}>Guides</Tab>
-                <Tab fontWeight="semibold" py={6} px={8} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }}>Tours</Tab>
-                <Tab fontWeight="semibold" py={6} px={8} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }}>Posts</Tab>
+              <TabList borderBottomColor="gray.200" overflowX="auto" overflowY="hidden">
+                <Tab fontWeight="semibold" py={{ base: 4, md: 6 }} px={{ base: 4, md: 8 }} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }} minW="fit-content">Guides</Tab>
+                <Tab fontWeight="semibold" py={{ base: 4, md: 6 }} px={{ base: 4, md: 8 }} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }} minW="fit-content">Tours</Tab>
+                <Tab fontWeight="semibold" py={{ base: 4, md: 6 }} px={{ base: 4, md: 8 }} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }} minW="fit-content">Posts</Tab>
               </TabList>
               
               <TabPanels>
                 {/* Guides Tab */}
-                <TabPanel p={8}>
-                  <Text color="gray.600" mb={8} fontSize="lg">
+                <TabPanel p={{ base: 4, sm: 6, md: 8 }}>
+                  <Text color="gray.600" mb={{ base: 4, md: 8 }} fontSize={{ base: "md", md: "lg" }}>
                     Find expert local guides to enhance your travel experience.
                   </Text>
                   
                   {isLoadingGuides ? (
-                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
+                    <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing={{ base: 4, md: 8 }}>
                       {[1, 2, 3].map(i => (
                         <Box key={i} borderWidth="1px" borderRadius="xl" overflow="hidden" boxShadow="lg" borderColor="gray.200">
                           <Skeleton height="240px" />
@@ -429,7 +429,7 @@ const Explore = () => {
                       </Box>
                     </Center>
                   ) : (
-                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
+                    <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing={{ base: 4, md: 8 }}>
                       {guides.map(guide => (
                         <GuideCard key={guide.id} guide={guide} />
                       ))}
@@ -438,15 +438,15 @@ const Explore = () => {
                 </TabPanel>
                 
                 {/* Tours Tab */}
-                <TabPanel p={8}>
-                  <Text color="gray.600" mb={8} fontSize="lg">
+                <TabPanel p={{ base: 4, sm: 6, md: 8 }}>
+                  <Text color="gray.600" mb={{ base: 4, md: 8 }} fontSize={{ base: "md", md: "lg" }}>
                     {profile?.role === 'tourist' 
                       ? "Discover amazing tours curated by our expert guides."
                       : "Browse tour requests from tourists looking for guides."}
                   </Text>
                   
                   {isLoadingTours ? (
-                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
+                    <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing={{ base: 4, md: 8 }}>
                       {[1, 2, 3, 4].map(i => (
                         <Box key={i} borderWidth="1px" borderRadius="xl" overflow="hidden" boxShadow="lg" borderColor="gray.200">
                           <Box p={6}>
@@ -479,7 +479,7 @@ const Explore = () => {
                       </Box>
                     </Center>
                   ) : (
-                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 4, md: 6 }}>
                       {tours.map(tourId => (
                         <TourCard key={tourId} tourId={tourId} />
                       ))}
@@ -488,8 +488,8 @@ const Explore = () => {
                 </TabPanel>
                 
                 {/* Posts Tab */}
-                <TabPanel p={6}>
-                  <Text color="gray.600" mb={6}>
+                <TabPanel p={{ base: 4, sm: 6, md: 8 }}>
+                  <Text color="gray.600" mb={{ base: 4, md: 6 }} fontSize={{ base: "md", md: "lg" }}>
                     Read travel stories and tips from guides and fellow travelers.
                   </Text>
                   

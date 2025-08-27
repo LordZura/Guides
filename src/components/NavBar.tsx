@@ -45,11 +45,11 @@ const Navbar = () => {
         justifyContent="space-between"
         maxW="container.xl"
         mx="auto"
-        px={6}
+        px={{ base: 3, md: 6 }}
       >
         <Flex align="center">
           <Link as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
-            <Text fontSize="2xl" fontWeight="black" color="primary.600" letterSpacing="tight">
+            <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="black" color="primary.600" letterSpacing="tight">
               TourGuideHub
             </Text>
           </Link>
