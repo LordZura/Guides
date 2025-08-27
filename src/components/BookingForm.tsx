@@ -167,16 +167,19 @@ const BookingForm = ({
     setIsSubmitting(true);
 
     try {
+      // Import sanitization utilities
+      const { sanitizeTextInput, sanitizeNumber } = await import('../utils/sanitization');
+      
       const bookingData = {
         tour_id: tourId,
         tourist_id: isOffer ? touristId || '' : profile.id,
         guide_id: isOffer ? profile.id : guideId,
         status: (isOffer ? 'offered' : 'requested') as BookingStatus,
-        party_size: partySize,
-        booking_date: bookingDate,
-        preferred_time: preferredTime,
-        notes: notes || null,
-        total_price: totalPrice,
+        party_size: sanitizeNumber(partySize, 1, maxCapacity),
+        booking_date: bookingDate, // Date is already validated by HTML5 input
+        preferred_time: preferredTime, // Time is already validated by HTML5 input
+        notes: notes ? sanitizeTextInput(notes) : null,
+        total_price: sanitizeNumber(totalPrice, 0, 1000000), // Max $1M
       };
 
       console.log('Submitting booking:', bookingData);

@@ -19,6 +19,16 @@ import { useReviews } from '../contexts/ReviewsContext';
 import { useAuth } from '../contexts/AuthProvider';
 import { useBookings } from '../contexts/BookingContext';
 
+// Import the ReviewData interface from context
+interface ReviewData {
+  reviewer_id: string;
+  target_id: string;
+  target_type: 'guide' | 'tour';
+  rating: number;
+  comment: string;
+  tour_id?: string;
+}
+
 interface ReviewFormProps {
   targetId: string;
   targetType: 'guide' | 'tour';
@@ -134,18 +144,33 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       return;
     }
     
+    // Import sanitization utilities
+    const { sanitizeTextInput, sanitizeNumber } = await import('../utils/sanitization');
+    
     // Prepare review data using 'comment' instead of 'content'
-    const reviewData = {
+    const reviewData: ReviewData = {
       reviewer_id: user.id,
       target_id: targetId,
       target_type: targetType,
-      rating,
-      comment: content, // Map 'content' from form to 'comment' for database
+      rating: sanitizeNumber(rating, 1, 5), // Ensure rating is 1-5
+      comment: sanitizeTextInput(content), // Sanitize comment content
     };
+    
+    // Additional validation after sanitization
+    if (!reviewData.comment || reviewData.comment.length < 5) {
+      toast({
+        title: 'Review too short',
+        description: 'Review must be at least 5 characters after cleaning.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     
     // Only add tour_id if it exists and is not undefined
     if (tourId) {
-      (reviewData as any).tour_id = tourId;
+      reviewData.tour_id = tourId;
     }
     
     await addReview(reviewData);
