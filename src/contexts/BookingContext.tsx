@@ -251,7 +251,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   // Check if user has completed a specific tour
   const hasCompletedTour = async (tourId: string): Promise<boolean> => {
-    if (!user) return false;
+    if (!user || !tourId) return false;
 
     try {
       const { data, error } = await supabase
@@ -262,17 +262,23 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         .eq('status', 'completed')
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        // Log the error but don't throw to prevent UI crashes
+        console.warn('Unable to check tour completion:', error.message);
+        return false;
+      }
+      
       return !!data;
     } catch (err) {
-      console.error('Error checking tour completion:', err);
+      // Silently handle any unexpected errors and return false
+      console.warn('Error checking tour completion:', err);
       return false;
     }
   };
 
   // Check if user has completed a tour with a specific guide
   const hasCompletedGuideBooking = async (guideId: string): Promise<boolean> => {
-    if (!user) return false;
+    if (!user || !guideId) return false;
 
     try {
       const { data, error } = await supabase
@@ -283,10 +289,16 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         .eq('status', 'completed')
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        // Log the error but don't throw to prevent UI crashes
+        console.warn('Unable to check guide tour completion:', error.message);
+        return false;
+      }
+      
       return !!data;
     } catch (err) {
-      console.error('Error checking guide tour completion:', err);
+      // Silently handle any unexpected errors and return false
+      console.warn('Error checking guide tour completion:', err);
       return false;
     }
   };
