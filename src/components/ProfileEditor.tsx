@@ -48,7 +48,28 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
   const { profile: currentProfile, user } = useAuth();
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [availableLanguages, setAvailableLanguages] = useState<{name: string, code: string}[]>([]);
+  // Common languages list
+  const availableLanguages = [
+    { name: 'English', code: 'en' },
+    { name: 'Spanish', code: 'es' },
+    { name: 'French', code: 'fr' },
+    { name: 'German', code: 'de' },
+    { name: 'Italian', code: 'it' },
+    { name: 'Portuguese', code: 'pt' },
+    { name: 'Russian', code: 'ru' },
+    { name: 'Chinese', code: 'zh' },
+    { name: 'Japanese', code: 'ja' },
+    { name: 'Korean', code: 'ko' },
+    { name: 'Arabic', code: 'ar' },
+    { name: 'Hindi', code: 'hi' },
+    { name: 'Georgian', code: 'ka' }, // Added for Georgian tours
+    { name: 'Turkish', code: 'tr' },
+    { name: 'Dutch', code: 'nl' },
+    { name: 'Swedish', code: 'sv' },
+    { name: 'Norwegian', code: 'no' },
+    { name: 'Danish', code: 'da' }
+  ];
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -67,33 +88,6 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
   
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
-  
-  // Load available languages
-  useEffect(() => {
-    const fetchLanguages = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('languages')
-          .select('name, code')
-          .order('name');
-        
-        if (error) throw error;
-        
-        setAvailableLanguages(data || []);
-      } catch (err) {
-        console.error('Error fetching languages:', err);
-        toast({
-          title: 'Error loading languages',
-          description: 'Could not load available languages. Please try again.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-    };
-    
-    fetchLanguages();
-  }, [toast]);
   
   // Set initial avatar
   useEffect(() => {

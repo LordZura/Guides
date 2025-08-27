@@ -1,17 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { BookingProvider, useBookings } from '../contexts/BookingContext';
-import { createClient } from '@supabase/supabase-js';
+import { BookingProvider, useBookings } from './contexts/BookingContext';
 
 // Mock Supabase client
-vi.mock('../lib/supabaseClient', () => ({
+vi.mock('./lib/supabaseClient', () => ({
   supabase: {
     from: vi.fn()
   }
 }));
 
 // Mock AuthProvider
-vi.mock('../contexts/AuthProvider', () => ({
+vi.mock('./contexts/AuthProvider', () => ({
   useAuth: () => ({
     user: { id: 'test-user-id' },
     profile: { role: 'tourist' }
@@ -47,7 +46,7 @@ describe('BookingContext - hasCompletedGuideBooking', () => {
       error: null
     });
 
-    vi.doMock('../lib/supabaseClient', () => ({
+    vi.doMock('./lib/supabaseClient', () => ({
       supabase: mockSupabase
     }));
 
@@ -64,7 +63,7 @@ describe('BookingContext - hasCompletedGuideBooking', () => {
       error: null
     });
 
-    vi.doMock('../lib/supabaseClient', () => ({
+    vi.doMock('./lib/supabaseClient', () => ({
       supabase: mockSupabase
     }));
 
@@ -81,7 +80,7 @@ describe('BookingContext - hasCompletedGuideBooking', () => {
       error: { message: 'Table does not exist' }
     });
 
-    vi.doMock('../lib/supabaseClient', () => ({
+    vi.doMock('./lib/supabaseClient', () => ({
       supabase: mockSupabase
     }));
 
@@ -95,7 +94,7 @@ describe('BookingContext - hasCompletedGuideBooking', () => {
     // Mock exception
     mockSupabase.maybeSingle.mockRejectedValue(new Error('Network error'));
 
-    vi.doMock('../lib/supabaseClient', () => ({
+    vi.doMock('./lib/supabaseClient', () => ({
       supabase: mockSupabase
     }));
 
