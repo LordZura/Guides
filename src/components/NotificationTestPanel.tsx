@@ -15,7 +15,6 @@ import {
 } from '@chakra-ui/react';
 import { BellIcon } from '@chakra-ui/icons';
 import { createMockNotification, createTestNotifications, testNotificationCreation } from '../utils/notificationTest';
-import NotificationsList from './NotificationsList';
 import { Notification } from '../contexts/NotificationContext';
 
 const NotificationTestPanel = () => {
