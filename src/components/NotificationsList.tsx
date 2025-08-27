@@ -45,7 +45,6 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
     if (!notification.is_read) {
       onMarkAsRead(notification.id);
     }
-    // Navigation will be handled by the RouterLink wrapper
   };
 
   const content = (
@@ -56,7 +55,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
       borderColor={borderColor}
       borderRadius="md"
       cursor={notification.action_url ? 'pointer' : 'default'}
-      onClick={handleClick}
+      onClick={notification.action_url ? undefined : handleClick}
       _hover={notification.action_url ? { bg: useColorModeValue('gray.100', 'gray.600') } : {}}
       transition="background-color 0.2s"
     >
@@ -107,7 +106,12 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
   // If there's an action URL and notification type is not 'tour_rated', wrap in a Link
   if (notification.action_url && notification.type !== 'tour_rated') {
     return (
-      <Link as={RouterLink} to={notification.action_url} textDecoration="none">
+      <Link 
+        as={RouterLink} 
+        to={notification.action_url} 
+        textDecoration="none"
+        onClick={handleClick}
+      >
         {content}
       </Link>
     );

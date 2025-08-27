@@ -165,9 +165,11 @@ const TourDetail = () => {
     : 'Not specified';
   
   const isGuide = tour.creator_role === 'guide';
+  const isTourRequest = tour.creator_role === 'tourist';
   const isTourist = profile?.role === 'tourist';
   const isOwnTour = profile?.id === tour.creator_id;
-  const canBook = user && isTourist && !isOwnTour;
+  const canBook = user && isTourist && !isOwnTour && isGuide;
+  const canOfferTour = user && profile?.role === 'guide' && !isOwnTour && isTourRequest;
   
   return (
     <BookingProvider>
@@ -179,6 +181,9 @@ const TourDetail = () => {
               <HStack spacing={3} mb={2} flexWrap="wrap">
                 <Badge colorScheme={tour.is_private ? 'purple' : 'green'}>
                   {tour.is_private ? 'Private Tour' : 'Public Tour'}
+                </Badge>
+                <Badge colorScheme={isTourRequest ? 'orange' : 'blue'}>
+                  {isTourRequest ? 'Tourist Request' : 'Guide Tour'}
                 </Badge>
                 <Badge colorScheme="blue">
                   {tour.locations && tour.locations.length > 0 
@@ -386,6 +391,16 @@ const TourDetail = () => {
                   >
                     Book Now
                   </Button>
+                ) : canOfferTour ? (
+                  <Button 
+                    colorScheme="orange" 
+                    size="lg" 
+                    width="100%" 
+                    mt={4}
+                    onClick={onOpen}
+                  >
+                    Offer This Tour
+                  </Button>
                 ) : (
                   <Button 
                     colorScheme="primary" 
@@ -395,7 +410,7 @@ const TourDetail = () => {
                     isDisabled={true}
                     _hover={{ cursor: 'not-allowed' }}
                   >
-                    {!user ? 'Sign in to Book' : isOwnTour ? 'Your Tour' : 'Book Now'}
+                    {!user ? 'Sign in to View' : isOwnTour ? (isTourRequest ? 'Your Request' : 'Your Tour') : (isTourRequest ? 'Tourist Request' : 'Book Now')}
                   </Button>
                 )}
                 
@@ -407,25 +422,29 @@ const TourDetail = () => {
           </Grid>
         </Box>
         
-        {/* Booking Modal */}
+        {/* Booking/Offer Modal */}
         <Modal isOpen={isOpen} onClose={onClose} size="md">
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>Book This Tour</ModalHeader>
+            <ModalHeader>{canOfferTour ? 'Offer This Tour' : 'Book This Tour'}</ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>
               <BookingForm
                 tourId={tour.id}
                 tourTitle={tour.title}
-                guideId={tour.creator_id}
+                guideId={canOfferTour ? profile?.id || '' : tour.creator_id}
+                touristId={canOfferTour ? tour.creator_id : profile?.id || ''}
                 pricePerPerson={tour.price}
                 maxCapacity={tour.capacity}
                 availableDays={tour.days_available || []}
+                isOffer={canOfferTour || false}
                 onSuccess={() => {
                   onClose();
                   toast({
-                    title: 'Booking request submitted',
-                    description: 'Your booking request has been sent to the guide',
+                    title: canOfferTour ? 'Tour offer submitted' : 'Booking request submitted',
+                    description: canOfferTour 
+                      ? 'Your tour offer has been sent to the tourist' 
+                      : 'Your booking request has been sent to the guide',
                     status: 'success',
                     duration: 5000,
                     isClosable: true,
