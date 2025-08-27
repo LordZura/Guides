@@ -1,10 +1,18 @@
 import { Profile } from './supabaseClient';
 
+export interface TourLocation {
+  id: string;
+  name: string;
+  notes?: string;
+  order: number;
+}
+
 export interface Tour {
   id: string;
   title: string;
   description: string;
-  location: string;
+  location: string; // Keep for backward compatibility
+  locations?: TourLocation[]; // New array for multiple locations
   duration: number; // In hours
   price: number;
   capacity: number;

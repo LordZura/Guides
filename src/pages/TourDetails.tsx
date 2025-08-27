@@ -32,6 +32,7 @@ import { supabase, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import { ReviewsProvider } from '../contexts/ReviewsContext';
 import { BookingProvider } from '../contexts/BookingContext';
+import { getLocationsDisplayString, sortLocationsByOrder } from '../utils/tourLocations';
 import ReviewsList from '../components/ReviewsList';
 import ReviewForm from '../components/ReviewForm';
 import ReviewsSummary from '../components/ReviewsSummary';
@@ -179,7 +180,12 @@ const TourDetail = () => {
                 <Badge colorScheme={tour.is_private ? 'purple' : 'green'}>
                   {tour.is_private ? 'Private Tour' : 'Public Tour'}
                 </Badge>
-                <Badge colorScheme="blue">{tour.location}</Badge>
+                <Badge colorScheme="blue">
+                  {tour.locations && tour.locations.length > 0 
+                    ? getLocationsDisplayString(tour.locations, 30)
+                    : tour.location || 'Location not specified'
+                  }
+                </Badge>
               </HStack>
             </Box>
             
@@ -200,8 +206,15 @@ const TourDetail = () => {
                 <VStack align="start" spacing={3} mt={6}>
                   <Flex align="center">
                     <Icon as={MdLocationOn} color="primary.500" mr={2} />
-                    <Text fontWeight="medium">Location:</Text>
-                    <Text ml={2}>{tour.location}</Text>
+                    <Text fontWeight="medium">
+                      {tour.locations && tour.locations.length > 1 ? 'Route:' : 'Location:'}
+                    </Text>
+                    <Text ml={2}>
+                      {tour.locations && tour.locations.length > 0 
+                        ? getLocationsDisplayString(tour.locations, 60)
+                        : tour.location || 'Location not specified'
+                      }
+                    </Text>
                   </Flex>
                   
                   <Flex align="center">
@@ -235,6 +248,44 @@ const TourDetail = () => {
                   </Flex>
                 </VStack>
               </Box>
+              
+              {/* Show detailed itinerary if multiple locations */}
+              {tour.locations && tour.locations.length > 1 && (
+                <Box mb={8}>
+                  <Heading as="h3" size="md" mb={4} color="gray.800">Tour Itinerary</Heading>
+                  <Text fontSize="sm" color="gray.600" mb={4}>
+                    You will be guided through these locations in the following order:
+                  </Text>
+                  <VStack spacing={3} align="stretch">
+                    {sortLocationsByOrder(tour.locations).map((location, index) => (
+                      <Box 
+                        key={location.id}
+                        p={4} 
+                        bg="gray.50" 
+                        borderRadius="md" 
+                        border="1px solid" 
+                        borderColor="gray.200"
+                      >
+                        <HStack align="start" spacing={3}>
+                          <Badge colorScheme="primary" variant="solid" minW="24px" textAlign="center">
+                            {index + 1}
+                          </Badge>
+                          <VStack align="start" spacing={1} flex="1">
+                            <Text fontWeight="semibold" color="gray.800">
+                              {location.name}
+                            </Text>
+                            {location.notes && (
+                              <Text fontSize="sm" color="gray.600">
+                                {location.notes}
+                              </Text>
+                            )}
+                          </VStack>
+                        </HStack>
+                      </Box>
+                    ))}
+                  </VStack>
+                </Box>
+              )}
               
               {/* Only show guide reviews section if this is a guide's tour */}
               {isGuide && guide && (

@@ -17,26 +17,15 @@ import {
 import { MdAccessTime, MdAttachMoney, MdCalendarToday, MdGroup, MdLocationOn } from 'react-icons/md';
 import { Link as RouterLink } from 'react-router-dom';
 import { supabase, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
+import { Tour } from '../lib/types';
+import { getLocationsDisplayString } from '../utils/tourLocations';
 import StarRating from './StarRating';
 
 interface TourCardProps {
   tourId: string;
 }
 
-interface Tour {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  duration: number;
-  price: number;
-  capacity: number;
-  languages: string[];
-  days_available: boolean[];
-  is_private: boolean;
-  creator_id: string;
-  creator_role: string;
-  created_at: string;
+interface TourWithCreator extends Tour {
   creator_name?: string;
   creator_avatar?: string;
 }
@@ -44,7 +33,7 @@ interface Tour {
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const TourCard = ({ tourId }: TourCardProps) => {
-  const [tour, setTour] = useState<Tour | null>(null);
+  const [tour, setTour] = useState<TourWithCreator | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [averageRating, setAverageRating] = useState<number>(0);
   const [reviewCount, setReviewCount] = useState<number>(0);
@@ -194,7 +183,12 @@ const TourCard = ({ tourId }: TourCardProps) => {
         <VStack spacing={3} align="start" mb={6}>
           <Flex align="center">
             <Icon as={MdLocationOn} color="primary.500" mr={3} boxSize="4" />
-            <Text fontSize="sm" fontWeight="medium" color="gray.700">{tour.location}</Text>
+            <Text fontSize="sm" fontWeight="medium" color="gray.700">
+              {tour.locations && tour.locations.length > 0 
+                ? getLocationsDisplayString(tour.locations, 40)
+                : tour.location || 'Location not specified'
+              }
+            </Text>
           </Flex>
           
           <Flex align="center">
