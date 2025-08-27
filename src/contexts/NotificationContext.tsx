@@ -123,12 +123,10 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
+      // First fetch notifications without joins
+      const { data: notificationsData, error: fetchError } = await supabase
         .from('notifications')
-        .select(`
-          *,
-          actor:profiles!actor_id(id, full_name, avatar_url)
-        `)
+        .select('*')
         .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50); // Limit to recent 50 notifications
@@ -139,13 +137,31 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // Get unique actor IDs
+      const actorIds = [...new Set(notificationsData?.map(n => n.actor_id).filter(Boolean))];
+      
+      // Fetch profile data for all actors
+      let actorProfiles: { [key: string]: any } = {};
+      if (actorIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', actorIds);
+
+        if (!profilesError && profilesData) {
+          profilesData.forEach(profile => {
+            actorProfiles[profile.id] = profile;
+          });
+        }
+      }
+
       // Transform the data to match the expected format
-      const transformedData = data?.map(notification => ({
+      const transformedData = notificationsData?.map(notification => ({
         ...notification,
-        actor: notification.actor ? {
-          id: notification.actor.id,
-          name: notification.actor.full_name,
-          avatar: notification.actor.avatar_url
+        actor: notification.actor_id && actorProfiles[notification.actor_id] ? {
+          id: actorProfiles[notification.actor_id].id,
+          name: actorProfiles[notification.actor_id].full_name,
+          avatar: actorProfiles[notification.actor_id].avatar_url
         } : undefined
       })) || [];
 
