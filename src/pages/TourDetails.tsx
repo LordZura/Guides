@@ -8,7 +8,6 @@ import {
   Flex,
   Button,
   Badge,
-  Image,
   Grid,
   GridItem,
   VStack,
@@ -32,7 +31,7 @@ import { MdAccessTime, MdCalendarToday, MdGroup, MdLanguage, MdLocationOn } from
 import { supabase, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import { ReviewsProvider } from '../contexts/ReviewsContext';
-import { BookingProvider, useBookings } from '../contexts/BookingContext';
+import { BookingProvider } from '../contexts/BookingContext';
 import ReviewsList from '../components/ReviewsList';
 import ReviewForm from '../components/ReviewForm';
 import ReviewsSummary from '../components/ReviewsSummary';

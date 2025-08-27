@@ -20,7 +20,8 @@ import {
   MdPayment, 
   MdCheckCircle,
   MdCancel,
-  MdInfo
+  MdInfo,
+  MdStar
 } from 'react-icons/md';
 import { format } from 'date-fns';
 import { Booking } from '../contexts/BookingContext';
@@ -34,6 +35,7 @@ interface BookingItemProps {
   onCancel?: () => void;
   onPayment?: () => void;
   onComplete?: () => void;
+  onReview?: () => void;
   isProcessing?: boolean;
 }
 
@@ -45,6 +47,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   onCancel,
   onPayment,
   onComplete,
+  onReview,
   isProcessing = false
 }) => {
   const bg = useColorModeValue('white', 'gray.700');
@@ -99,6 +102,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   const showCancel = !isGuide && ['requested', 'accepted'].includes(booking.status);
   const showPayment = !isGuide && booking.status === 'accepted';
   const showComplete = isGuide && booking.status === 'paid';
+  const showReview = !isGuide && booking.status === 'completed';
 
   return (
     <Box
@@ -221,6 +225,17 @@ const BookingItem: React.FC<BookingItemProps> = ({
               isLoading={isProcessing}
             >
               Cancel
+            </Button>
+          )}
+
+          {showReview && (
+            <Button
+              size="sm"
+              colorScheme="yellow"
+              leftIcon={<MdStar />}
+              onClick={onReview}
+            >
+              Write Review
             </Button>
           )}
         </HStack>

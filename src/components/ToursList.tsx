@@ -7,7 +7,6 @@ import {
   Badge,
   Button,
   Flex,
-  SimpleGrid,
   IconButton,
   Menu,
   MenuButton,
@@ -26,9 +25,7 @@ import {
   Card,
   CardBody,
   CardHeader,
-  CardFooter,
   HStack,
-  Divider,
 } from '@chakra-ui/react';
 import { 
   DeleteIcon, 

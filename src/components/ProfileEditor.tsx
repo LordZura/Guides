@@ -324,10 +324,11 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
                   bottom="10px"
                   right="0"
                   borderRadius="full"
+                  isLoading={isUploading}
                 />
               </Box>
               <Text fontSize="sm" color="gray.500" mt={2}>
-                Click to change profile picture
+                {isUploading ? 'Uploading...' : 'Click to change profile picture'}
               </Text>
             </Flex>
           </Box>
