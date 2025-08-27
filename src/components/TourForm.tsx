@@ -204,17 +204,59 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
       return;
     }
     
+    // Prepare tour data outside try block for error logging
+    const tourData = {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      location: formData.location.trim(),
+      duration: Math.floor(formData.duration), // Ensure integer
+      price: Number(formData.price), // Ensure numeric
+      capacity: Math.floor(formData.capacity), // Ensure integer
+      languages: formData.languages, // Array of strings
+      days_available: formData.days_available, // Array of booleans
+      is_private: Boolean(formData.is_private), // Ensure boolean
+      creator_id: profile.id,
+      creator_role: profile.role,
+      is_active: true,
+      // Remove manual timestamp setting - let database handle with DEFAULT NOW()
+    };
+    
+    // Additional validation before submission
+    if (isNaN(tourData.duration) || tourData.duration <= 0) {
+      toast({
+        title: 'Invalid duration',
+        description: 'Duration must be a valid positive number.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+    
+    if (isNaN(tourData.price) || tourData.price < 0) {
+      toast({
+        title: 'Invalid price',
+        description: 'Price must be a valid non-negative number.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+    
+    if (isNaN(tourData.capacity) || tourData.capacity <= 0) {
+      toast({
+        title: 'Invalid capacity',
+        description: 'Capacity must be a valid positive number.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+    
     try {
       setIsSubmitting(true);
-      
-      const tourData = {
-        ...formData,
-        creator_id: profile.id,
-        creator_role: profile.role,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
       
       if (tourId) {
         // Update existing tour
@@ -222,7 +264,7 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
           .from('tours')
           .update({
             ...tourData,
-            updated_at: new Date().toISOString(),
+            // Remove manual updated_at - let database trigger handle it
           })
           .eq('id', tourId);
         
@@ -255,11 +297,32 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
       onSuccess();
     } catch (err: any) {
       console.error('Error saving tour:', err);
+      
+      // Provide more detailed error information
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+      let errorDetails = '';
+      
+      if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      if (err.details) {
+        errorDetails = err.details;
+        console.error('Error details:', errorDetails);
+      }
+      
+      if (err.hint) {
+        console.error('Error hint:', err.hint);
+      }
+      
+      // Log the complete tourData for debugging
+      console.error('Tour data that failed:', tourData);
+      
       toast({
         title: 'Error saving tour',
-        description: err.message || 'An unexpected error occurred. Please try again.',
+        description: errorMessage,
         status: 'error',
-        duration: 5000,
+        duration: 7000, // Longer duration for error messages
         isClosable: true,
       });
     } finally {
