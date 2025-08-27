@@ -14,7 +14,11 @@ const About = () => <Box p={4} maxW="container.xl" mx="auto"><Box as="h1" fontSi
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <Box p={4} textAlign="center">Loading...</Box>;
+  }
   
   if (!user) {
     return <Navigate to="/explore" replace />;

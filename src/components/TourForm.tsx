@@ -7,7 +7,6 @@ import {
   FormErrorMessage,
   Input,
   Textarea,
-  Select,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
@@ -197,10 +196,11 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
     setFormData({ ...formData, [name]: value });
   };
   
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Handle multi-select for languages
-    const options = Array.from(e.target.selectedOptions, option => option.value);
-    setFormData({ ...formData, languages: options });
+  const handleLanguageToggle = (language: string, isChecked: boolean) => {
+    const updatedLanguages = isChecked 
+      ? [...formData.languages, language]
+      : formData.languages.filter(lang => lang !== language);
+    setFormData({ ...formData, languages: updatedLanguages });
   };
   
   const handleDayToggle = (index: number) => {
@@ -402,20 +402,17 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
           
           <FormControl isRequired isInvalid={!!errors.languages}>
             <FormLabel>Languages</FormLabel>
-            <Select 
-              multiple
-              size="md"
-              height="100px"
-              name="languages"
-              value={formData.languages}
-              onChange={handleLanguageChange}
-            >
+            <HStack wrap="wrap" spacing={3}>
               {availableLanguages.map(lang => (
-                <option key={lang.code} value={lang.name}>
+                <Checkbox 
+                  key={lang.code} 
+                  isChecked={formData.languages.includes(lang.name)}
+                  onChange={(e) => handleLanguageToggle(lang.name, e.target.checked)}
+                >
                   {lang.name}
-                </option>
+                </Checkbox>
               ))}
-            </Select>
+            </HStack>
             <FormErrorMessage>{errors.languages}</FormErrorMessage>
           </FormControl>
           

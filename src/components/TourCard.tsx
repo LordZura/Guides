@@ -232,15 +232,27 @@ const TourCard = ({ tourId }: TourCardProps) => {
         )}
         
         <Flex justify="space-between" align="center" pt={2} borderTop="1px" borderColor="gray.100">
-          <Badge 
-            colorScheme={tour.is_private ? 'purple' : 'green'} 
-            fontSize="xs" 
-            borderRadius="full"
-            px={3}
-            py={1}
-          >
-            {tour.is_private ? 'Private' : 'Public'}
-          </Badge>
+          <HStack spacing={2}>
+            <Badge 
+              colorScheme={tour.is_private ? 'purple' : 'green'} 
+              fontSize="xs" 
+              borderRadius="full"
+              px={3}
+              py={1}
+            >
+              {tour.is_private ? 'Private' : 'Public'}
+            </Badge>
+            
+            <Badge 
+              colorScheme={isGuide ? 'blue' : 'orange'} 
+              fontSize="xs" 
+              borderRadius="full"
+              px={3}
+              py={1}
+            >
+              {isGuide ? 'Guide Tour' : 'Tourist Request'}
+            </Badge>
+          </HStack>
           
           <Button
             as={RouterLink}

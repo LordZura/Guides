@@ -16,10 +16,8 @@ import {
   FormControl,
   FormLabel,
   Stack,
-  RangeSlider,
-  RangeSliderTrack,
-  RangeSliderFilledTrack,
-  RangeSliderThumb,
+  NumberInput,
+  NumberInputField,
   Button,
   SimpleGrid,
   Skeleton,
@@ -32,6 +30,7 @@ import {
   DrawerCloseButton,
   useBreakpointValue,
   useToast,
+  HStack,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import { FaMap, FaEdit, FaFilter } from 'react-icons/fa'; 
@@ -63,7 +62,7 @@ const Explore = () => {
   const [locations, setLocations] = useState<string[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([20, 1000]);
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   
   // Fetch guides with no filters
@@ -242,7 +241,7 @@ const Explore = () => {
   const clearFilters = () => {
     setSelectedLanguage('');
     setSelectedLocation('');
-    setPriceRange([0, 1000]);
+    setPriceRange([20, 1000]);
     
     // Fetch data without filters
     if (tabIndex === 0) {
@@ -326,24 +325,31 @@ const Explore = () => {
                 
                 <FormControl>
                   <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Price Range</FormLabel>
-                  <RangeSlider 
-                    min={0} 
-                    max={1000} 
-                    step={50}
-                    value={priceRange}
-                    onChange={(val) => setPriceRange(val as [number, number])}
-                    colorScheme="primary"
-                  >
-                    <RangeSliderTrack bg="gray.200" borderRadius="full">
-                      <RangeSliderFilledTrack bg="primary.500" />
-                    </RangeSliderTrack>
-                    <RangeSliderThumb index={0} boxSize="5" bg="primary.500" />
-                    <RangeSliderThumb index={1} boxSize="5" bg="primary.500" />
-                  </RangeSlider>
-                  <Flex justify="space-between" mt={2}>
-                    <Text fontSize="sm" fontWeight="medium" color="gray.600">${priceRange[0]}</Text>
-                    <Text fontSize="sm" fontWeight="medium" color="gray.600">${priceRange[1]}</Text>
-                  </Flex>
+                  <HStack spacing={3}>
+                    <Box flex="1">
+                      <Text fontSize="xs" color="gray.500" mb={1}>Min ($)</Text>
+                      <NumberInput 
+                        min={20} 
+                        max={1000}
+                        value={priceRange[0]}
+                        onChange={(_, value) => setPriceRange([value || 20, priceRange[1]])}
+                      >
+                        <NumberInputField placeholder="Min" />
+                      </NumberInput>
+                    </Box>
+                    <Text color="gray.400" mt={6}>-</Text>
+                    <Box flex="1">
+                      <Text fontSize="xs" color="gray.500" mb={1}>Max ($)</Text>
+                      <NumberInput 
+                        min={20} 
+                        max={1000}
+                        value={priceRange[1]}
+                        onChange={(_, value) => setPriceRange([priceRange[0], value || 1000])}
+                      >
+                        <NumberInputField placeholder="Max" />
+                      </NumberInput>
+                    </Box>
+                  </HStack>
                 </FormControl>
                 
                 <Flex gap={3}>
@@ -539,23 +545,31 @@ const Explore = () => {
               
               <FormControl>
                 <FormLabel>Price Range</FormLabel>
-                <RangeSlider 
-                  min={0} 
-                  max={1000} 
-                  step={50}
-                  value={priceRange}
-                  onChange={(val) => setPriceRange(val as [number, number])}
-                >
-                  <RangeSliderTrack>
-                    <RangeSliderFilledTrack />
-                  </RangeSliderTrack>
-                  <RangeSliderThumb index={0} />
-                  <RangeSliderThumb index={1} />
-                </RangeSlider>
-                <Flex justify="space-between" mt={1}>
-                  <Text fontSize="sm">${priceRange[0]}</Text>
-                  <Text fontSize="sm">${priceRange[1]}</Text>
-                </Flex>
+                <HStack spacing={2}>
+                  <Box flex="1">
+                    <Text fontSize="xs" color="gray.500" mb={1}>Min ($)</Text>
+                    <NumberInput 
+                      min={20} 
+                      max={1000}
+                      value={priceRange[0]}
+                      onChange={(_, value) => setPriceRange([value || 20, priceRange[1]])}
+                    >
+                      <NumberInputField placeholder="Min" />
+                    </NumberInput>
+                  </Box>
+                  <Text color="gray.400" mt={6}>-</Text>
+                  <Box flex="1">
+                    <Text fontSize="xs" color="gray.500" mb={1}>Max ($)</Text>
+                    <NumberInput 
+                      min={20} 
+                      max={1000}
+                      value={priceRange[1]}
+                      onChange={(_, value) => setPriceRange([priceRange[0], value || 1000])}
+                    >
+                      <NumberInputField placeholder="Max" />
+                    </NumberInput>
+                  </Box>
+                </HStack>
               </FormControl>
               
               <Flex gap={2}>
