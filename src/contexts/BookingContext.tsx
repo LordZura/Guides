@@ -151,12 +151,10 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Creating booking with data:', bookingData);
       
-      // Make sure we have the current timestamp for created_at and updated_at
-      const timestamp = new Date().toISOString();
+      // Remove manual timestamp setting - let database handle with DEFAULT NOW()
       const finalBookingData = {
         ...bookingData,
-        created_at: timestamp,
-        updated_at: timestamp
+        // Remove created_at and updated_at - database will handle these
       };
       
       const { data, error } = await supabase
@@ -247,13 +245,12 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const timestamp = new Date().toISOString();
-      
+      // Remove manual timestamp setting - let database trigger handle it
       const { error } = await supabase
         .from('bookings')
         .update({ 
-          status, 
-          updated_at: timestamp 
+          status
+          // Remove updated_at - database trigger will handle this
         })
         .eq('id', bookingId);
 
@@ -313,7 +310,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         setIncomingBookings(prev => 
           prev.map(booking => 
             booking.id === bookingId 
-              ? { ...booking, status, updated_at: timestamp } 
+              ? { ...booking, status, updated_at: new Date().toISOString() } 
               : booking
           )
         );
@@ -321,7 +318,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         setOutgoingBookings(prev => 
           prev.map(booking => 
             booking.id === bookingId 
-              ? { ...booking, status, updated_at: timestamp } 
+              ? { ...booking, status, updated_at: new Date().toISOString() } 
               : booking
           )
         );
