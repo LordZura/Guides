@@ -72,7 +72,9 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
   }
 
   const isGuide = profile.role === 'guide';
-  const bookings = isGuide ? incomingBookings : outgoingBookings;
+  // For guides: only show incoming bookings (tourist requests)
+  // For tourists: show both incoming (guide offers) and outgoing (tourist requests)
+  const bookings = isGuide ? incomingBookings : [...incomingBookings, ...outgoingBookings];
 
   // Filter bookings by status
   const pendingBookings = bookings.filter(b => 
