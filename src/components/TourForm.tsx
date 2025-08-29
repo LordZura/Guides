@@ -41,6 +41,11 @@ interface FormData {
   languages: string[];
   days_available: boolean[];
   is_private: boolean;
+  // Tourist-specific fields
+  preferred_date?: string;
+  preferred_time?: string;
+  party_size?: number;
+  budget_range?: [number, number];
 }
 
 interface FormErrors {
@@ -71,6 +76,11 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
     languages: [],
     days_available: [false, false, false, false, false, false, false],
     is_private: false,
+    // Tourist-specific fields
+    preferred_date: '',
+    preferred_time: '',
+    party_size: 1,
+    budget_range: [50, 500],
   };
   
   const [formData, setFormData] = useState<FormData>(initialFormData);

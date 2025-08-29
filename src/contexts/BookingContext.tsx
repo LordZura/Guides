@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@chakra-ui/react';
 import { useNotifications } from './NotificationContext';
+import { shouldAutoComplete, validatePaymentTiming } from '../utils/paymentUtils';
 
 export type BookingStatus = 'requested' | 'offered' | 'accepted' | 'declined' | 'paid' | 'completed' | 'cancelled';
 
@@ -392,13 +393,141 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
+  // Auto-complete bookings that are past their deadline
+  const checkAndAutoCompleteBookings = useCallback(async () => {
+    if (!user || !profile) return;
+
+    try {
+      // Fetch paid bookings that might need auto-completion
+      const { data: paidBookings, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('status', 'paid')
+        .filter('guide_id', 'eq', profile.role === 'guide' ? user.id : '')
+        .filter('tourist_id', 'eq', profile.role === 'tourist' ? user.id : '');
+
+      if (error) {
+        console.warn('Error fetching paid bookings for auto-completion:', error);
+        return;
+      }
+
+      if (!paidBookings || paidBookings.length === 0) return;
+
+      // Check each booking for auto-completion
+      for (const booking of paidBookings) {
+        if (shouldAutoComplete(booking.booking_date, booking.status, booking.preferred_time)) {
+          console.log(`Auto-completing booking ${booking.id}`);
+          
+          // Update booking to completed
+          const { error: updateError } = await supabase
+            .from('bookings')
+            .update({ 
+              status: 'completed',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', booking.id);
+
+          if (updateError) {
+            console.warn(`Failed to auto-complete booking ${booking.id}:`, updateError);
+            continue;
+          }
+
+          // Send notifications to both parties
+          try {
+            // Notify tourist
+            await createNotification({
+              type: 'booking_completed',
+              actor_id: booking.guide_id,
+              recipient_id: booking.tourist_id,
+              target_type: 'booking',
+              target_id: booking.id,
+              message: `Your tour has been automatically completed. Payment has been released to the guide.`,
+              action_url: '/dashboard/my-bookings'
+            });
+
+            // Notify guide
+            await createNotification({
+              type: 'booking_completed',
+              actor_id: booking.tourist_id,
+              recipient_id: booking.guide_id,
+              target_type: 'booking',
+              target_id: booking.id,
+              message: `Your tour has been automatically completed. Payment has been released.`,
+              action_url: '/dashboard/my-bookings'
+            });
+          } catch (notificationError) {
+            console.warn('Failed to send auto-completion notifications:', notificationError);
+          }
+
+          // Update local state if this booking affects current user
+          if (profile.role === 'guide') {
+            setIncomingBookings(prev => 
+              prev.map(b => 
+                b.id === booking.id 
+                  ? { ...b, status: 'completed', updated_at: new Date().toISOString() } 
+                  : b
+              )
+            );
+          } else {
+            setOutgoingBookings(prev => 
+              prev.map(b => 
+                b.id === booking.id 
+                  ? { ...b, status: 'completed', updated_at: new Date().toISOString() } 
+                  : b
+              )
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Error in auto-completion check:', err);
+    }
+  }, [user, profile, createNotification]);
+
+  // Check for auto-completion when bookings refresh and periodically
+  useEffect(() => {
+    if (profile) {
+      checkAndAutoCompleteBookings();
+
+      // Set up periodic check (every 5 minutes)
+      const interval = setInterval(checkAndAutoCompleteBookings, 5 * 60 * 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [profile, checkAndAutoCompleteBookings]);
+
+  // Enhanced updateBookingStatus with payment validation
+  const updateBookingStatusWithValidation = async (bookingId: string, newStatus: BookingStatus): Promise<boolean> => {
+    if (!user || !profile) return false;
+
+    // If status is changing to paid, validate payment timing
+    if (newStatus === 'paid') {
+      const booking = [...incomingBookings, ...outgoingBookings].find(b => b.id === bookingId);
+      if (booking) {
+        const validation = validatePaymentTiming(booking.booking_date, booking.preferred_time);
+        if (!validation.canPay) {
+          toast({
+            title: 'Payment Deadline Passed',
+            description: validation.error,
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+          return false;
+        }
+      }
+    }
+
+    return updateBookingStatus(bookingId, newStatus);
+  };
+
   const value = {
     incomingBookings,
     outgoingBookings,
     isLoading,
     error,
     createBooking,
-    updateBookingStatus,
+    updateBookingStatus: updateBookingStatusWithValidation,
     refreshBookings,
     hasCompletedTour,
     hasCompletedGuideBooking,
