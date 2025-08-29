@@ -24,22 +24,29 @@ import {
 import { SearchIcon } from '@chakra-ui/icons';
 
 export interface FilterOptions {
-  days: number[];
-  priceRange: [number, number];
-  languages: string[];
-  location: string;
+  days?: number[];
+  priceRange?: [number, number];
+  languages?: string[];
+  location?: string;
+  rating?: number;
+  reviewCount?: number;
 }
 
+export type FilterMode = 'guides' | 'tours';
+
 interface FiltersProps {
+  mode: FilterMode;
   onFilterChange: (filters: FilterOptions) => void;
   languages: { id: number; name: string; code: string }[];
 }
 
-const Filters = ({ onFilterChange, languages }: FiltersProps) => {
+const Filters = ({ mode, onFilterChange, languages }: FiltersProps) => {
   const [days, setDays] = useState<number[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([20, 10000]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [location, setLocation] = useState('');
+  const [minRating, setMinRating] = useState<number>(0);
+  const [minReviewCount, setMinReviewCount] = useState<number>(0);
   
   const isMobile = useBreakpointValue({ base: true, md: false });
   
@@ -66,26 +73,31 @@ const Filters = ({ onFilterChange, languages }: FiltersProps) => {
   };
   
   const applyFilters = () => {
-    onFilterChange({
-      days,
-      priceRange,
-      languages: selectedLanguages,
-      location,
-    });
+    const filters: FilterOptions = {
+      languages: selectedLanguages.length > 0 ? selectedLanguages : undefined,
+      location: location.trim() || undefined,
+    };
+
+    if (mode === 'tours') {
+      filters.days = days.length > 0 ? days : undefined;
+      filters.priceRange = priceRange;
+    } else if (mode === 'guides') {
+      filters.rating = minRating > 0 ? minRating : undefined;
+      filters.reviewCount = minReviewCount > 0 ? minReviewCount : undefined;
+    }
+
+    onFilterChange(filters);
   };
   
   const resetFilters = () => {
     setDays([]);
-    setPriceRange([0, 500]);
+    setPriceRange([20, 10000]);
     setSelectedLanguages([]);
     setLocation('');
+    setMinRating(0);
+    setMinReviewCount(0);
     
-    onFilterChange({
-      days: [],
-      priceRange: [0, 500],
-      languages: [],
-      location: '',
-    });
+    onFilterChange({});
   };
   
   return (

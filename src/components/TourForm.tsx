@@ -24,6 +24,7 @@ import {
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import SearchableLanguageSelector from './SearchableLanguageSelector';
+import TouristTourRequestForm from './TouristTourRequestForm';
 
 interface TourFormProps {
   onSuccess: () => void;
@@ -41,6 +42,11 @@ interface FormData {
   languages: string[];
   days_available: boolean[];
   is_private: boolean;
+  // Tourist-specific fields
+  preferred_date?: string;
+  preferred_time?: string;
+  party_size?: number;
+  budget_range?: [number, number];
 }
 
 interface FormErrors {
@@ -71,6 +77,11 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
     languages: [],
     days_available: [false, false, false, false, false, false, false],
     is_private: false,
+    // Tourist-specific fields
+    preferred_date: '',
+    preferred_time: '',
+    party_size: 1,
+    budget_range: [50, 500],
   };
   
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -340,9 +351,15 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
   
   return (
     <Box>
-      <Heading size="md" mb={6}>
-        {tourId ? 'Edit Tour' : profile?.role === 'guide' ? 'Create Tour' : 'Post Tour Request'}
-      </Heading>
+      {profile?.role === 'tourist' && !tourId ? (
+        // Render tourist tour request form
+        <TouristTourRequestForm onSuccess={onSuccess} onCancel={onCancel} />
+      ) : (
+        // Render guide tour creation form
+        <>
+          <Heading size="md" mb={6}>
+            {tourId ? 'Edit Tour' : 'Create Tour'}
+          </Heading>
       
       <form onSubmit={handleSubmit}>
         <VStack spacing={6} align="stretch">
@@ -484,6 +501,8 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
           </Flex>
         </VStack>
       </form>
+      </>
+      )}
     </Box>
   );
 };

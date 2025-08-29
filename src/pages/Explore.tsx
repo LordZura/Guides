@@ -43,6 +43,9 @@ interface FilterOptions {
   language?: string;
   location?: string;
   priceRange?: [number, number];
+  rating?: number;
+  reviewCount?: number;
+  days?: number[];
 }
 
 const Explore = () => {
@@ -62,7 +65,7 @@ const Explore = () => {
   const [locations, setLocations] = useState<string[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([20, 1000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([20, 10000]);
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   
   // Fetch guides with no filters
