@@ -31,6 +31,8 @@ import {
   useBreakpointValue,
   useToast,
   HStack,
+  VStack,
+  Checkbox,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import { FaMap, FaEdit, FaFilter } from 'react-icons/fa'; 
@@ -39,13 +41,15 @@ import { useAuth } from '../contexts/AuthProvider';
 import GuideCard from '../components/GuideCard';
 import TourCard from '../components/TourCard';
 
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
 interface FilterOptions {
   language?: string;
   location?: string;
   priceRange?: [number, number];
   rating?: number;
   reviewCount?: number;
-  days?: number[];
+  daysAvailable?: number[];
 }
 
 const Explore = () => {
@@ -66,9 +70,12 @@ const Explore = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [priceRange, setPriceRange] = useState<[number, number]>([20, 10000]);
+  const [selectedRating, setSelectedRating] = useState<number>(0);
+  const [selectedReviewCount, setSelectedReviewCount] = useState<number>(0);
+  const [selectedDaysAvailable, setSelectedDaysAvailable] = useState<number[]>([]);
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   
-  // Fetch guides with no filters
+  // Fetch guides with filters
   const fetchGuides = async (filters: FilterOptions = {}) => {
     setIsLoadingGuides(true);
     setError(null);
@@ -82,7 +89,7 @@ const Explore = () => {
       
       // Apply filters if provided
       if (filters.language && filters.language.trim() !== '') {
-        // Using containedBy instead of contains since we're looking for profiles that have the selected language
+        // Using contains to check if guide speaks the selected language
         query = query.contains('languages', [filters.language]);
       }
       
@@ -90,13 +97,31 @@ const Explore = () => {
         query = query.eq('location', filters.location);
       }
       
+      // For rating and review count filters, we'll need to filter client-side
+      // since these may be calculated fields or from related tables
+      
       const { data, error } = await query;
       
       if (error) {
         throw error;
       }
       
-      setGuides(data || []);
+      let filteredGuides = data || [];
+      
+      // Apply client-side filters for rating and review count
+      if (filters.rating && filters.rating > 0) {
+        filteredGuides = filteredGuides.filter(guide => 
+          (guide.average_rating || 0) >= filters.rating!
+        );
+      }
+      
+      if (filters.reviewCount && filters.reviewCount > 0) {
+        filteredGuides = filteredGuides.filter(guide => 
+          (guide.reviews_count || 0) >= filters.reviewCount!
+        );
+      }
+      
+      setGuides(filteredGuides);
     } catch (err) {
       console.error("Error fetching guides:", err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch guides';
@@ -125,14 +150,14 @@ const Explore = () => {
       // Tourists see tours from guides, guides see tours from tourists
       const oppositeRole = profile.role === 'guide' ? 'tourist' : 'guide';
       
-      // Build the query
+      // Build the query - get more fields to enable client-side filtering
       let query = supabase
         .from('tours')
-        .select('id')
+        .select('id, location, price, languages, days_available')
         .eq('creator_role', oppositeRole)
         .eq('is_active', true);
       
-      // Apply filters if provided
+      // Apply server-side filters
       if (filters.location) {
         query = query.eq('location', filters.location);
       }
@@ -148,7 +173,25 @@ const Explore = () => {
       
       if (error) throw error;
       
-      setTours(data?.map(tour => tour.id) || []);
+      let filteredTours = data || [];
+      
+      // Apply client-side filters
+      if (filters.language && filters.language.trim() !== '') {
+        filteredTours = filteredTours.filter(tour => 
+          tour.languages && tour.languages.includes(filters.language!)
+        );
+      }
+      
+      if (filters.daysAvailable && filters.daysAvailable.length > 0) {
+        filteredTours = filteredTours.filter(tour => {
+          if (!tour.days_available) return false;
+          return filters.daysAvailable!.some(dayIndex => 
+            tour.days_available[dayIndex] === true
+          );
+        });
+      }
+      
+      setTours(filteredTours.map(tour => tour.id));
     } catch (err) {
       console.error("Error fetching tours:", err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tours';
@@ -208,12 +251,22 @@ const Explore = () => {
   const applyFilters = () => {
     setIsFiltering(true);
     
-    // Prepare filter object
+    // Prepare filter object based on current tab
     const filters: FilterOptions = {
       language: selectedLanguage || undefined,
       location: selectedLocation || undefined,
-      priceRange: priceRange.every(val => val !== 0) ? priceRange : undefined
     };
+    
+    // Add tab-specific filters
+    if (tabIndex === 0) {
+      // Guides tab filters: languages, rating, review count
+      if (selectedRating > 0) filters.rating = selectedRating;
+      if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
+    } else if (tabIndex === 1) {
+      // Tours tab filters: languages, rating, days available, price range
+      if (priceRange.every(val => val !== 0)) filters.priceRange = priceRange;
+      if (selectedDaysAvailable.length > 0) filters.daysAvailable = selectedDaysAvailable;
+    }
     
     console.log("Applying filters:", filters);
     
@@ -230,7 +283,10 @@ const Explore = () => {
   const clearFilters = () => {
     setSelectedLanguage('');
     setSelectedLocation('');
-    setPriceRange([20, 1000]);
+    setPriceRange([20, 10000]);
+    setSelectedRating(0);
+    setSelectedReviewCount(0);
+    setSelectedDaysAvailable([]);
     
     // Fetch data without filters
     if (tabIndex === 0) {
@@ -312,34 +368,103 @@ const Explore = () => {
                   </Select>
                 </FormControl>
                 
-                <FormControl>
-                  <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Price Range</FormLabel>
-                  <HStack spacing={3}>
-                    <Box flex="1">
-                      <Text fontSize="xs" color="gray.500" mb={1}>Min ($)</Text>
-                      <NumberInput 
-                        min={20} 
-                        max={1000}
-                        value={priceRange[0]}
-                        onChange={(_, value) => setPriceRange([value || 20, priceRange[1]])}
+                {/* Tab-specific filters */}
+                {tabIndex === 0 ? (
+                  /* Guides filters: rating, review count */
+                  <>
+                    <FormControl>
+                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Rating</FormLabel>
+                      <Select 
+                        placeholder="Any rating"
+                        value={selectedRating}
+                        onChange={(e) => setSelectedRating(Number(e.target.value))}
+                        borderRadius="lg"
+                        border="2px"
+                        borderColor="gray.200"
+                        _hover={{ borderColor: 'primary.300' }}
+                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
                       >
-                        <NumberInputField placeholder="Min" />
-                      </NumberInput>
-                    </Box>
-                    <Text color="gray.400" mt={6}>-</Text>
-                    <Box flex="1">
-                      <Text fontSize="xs" color="gray.500" mb={1}>Max ($)</Text>
-                      <NumberInput 
-                        min={20} 
-                        max={1000}
-                        value={priceRange[1]}
-                        onChange={(_, value) => setPriceRange([priceRange[0], value || 1000])}
+                        <option value={4}>4+ stars</option>
+                        <option value={3}>3+ stars</option>
+                        <option value={2}>2+ stars</option>
+                        <option value={1}>1+ stars</option>
+                      </Select>
+                    </FormControl>
+                    
+                    <FormControl>
+                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
+                      <Select 
+                        placeholder="Any review count"
+                        value={selectedReviewCount}
+                        onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
+                        borderRadius="lg"
+                        border="2px"
+                        borderColor="gray.200"
+                        _hover={{ borderColor: 'primary.300' }}
+                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
                       >
-                        <NumberInputField placeholder="Max" />
-                      </NumberInput>
-                    </Box>
-                  </HStack>
-                </FormControl>
+                        <option value={50}>50+ reviews</option>
+                        <option value={20}>20+ reviews</option>
+                        <option value={10}>10+ reviews</option>
+                        <option value={5}>5+ reviews</option>
+                      </Select>
+                    </FormControl>
+                  </>
+                ) : tabIndex === 1 ? (
+                  /* Tours filters: price range, days available */
+                  <>
+                    <FormControl>
+                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Price Range</FormLabel>
+                      <HStack spacing={3}>
+                        <Box flex="1">
+                          <Text fontSize="xs" color="gray.500" mb={1}>Min ($)</Text>
+                          <NumberInput 
+                            min={20} 
+                            max={10000}
+                            value={priceRange[0]}
+                            onChange={(_, value) => setPriceRange([value || 20, priceRange[1]])}
+                          >
+                            <NumberInputField placeholder="Min" />
+                          </NumberInput>
+                        </Box>
+                        <Text color="gray.400" mt={6}>-</Text>
+                        <Box flex="1">
+                          <Text fontSize="xs" color="gray.500" mb={1}>Max ($)</Text>
+                          <NumberInput 
+                            min={20} 
+                            max={10000}
+                            value={priceRange[1]}
+                            onChange={(_, value) => setPriceRange([priceRange[0], value || 10000])}
+                          >
+                            <NumberInputField placeholder="Max" />
+                          </NumberInput>
+                        </Box>
+                      </HStack>
+                    </FormControl>
+                    
+                    <FormControl>
+                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Days Available</FormLabel>
+                      <VStack align="start" spacing={2}>
+                        {DAYS_OF_WEEK.map((day, index) => (
+                          <Checkbox
+                            key={day}
+                            isChecked={selectedDaysAvailable.includes(index)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedDaysAvailable([...selectedDaysAvailable, index]);
+                              } else {
+                                setSelectedDaysAvailable(selectedDaysAvailable.filter(d => d !== index));
+                              }
+                            }}
+                            size="sm"
+                          >
+                            {day}
+                          </Checkbox>
+                        ))}
+                      </VStack>
+                    </FormControl>
+                  </>
+                ) : null}
                 
                 <Flex gap={3}>
                   <Button 
@@ -506,6 +631,7 @@ const Explore = () => {
           
           <DrawerBody>
             <Stack spacing={4}>
+              {/* Common filters for both tabs */}
               <FormControl>
                 <FormLabel>Language</FormLabel>
                 <Select 
@@ -532,34 +658,93 @@ const Explore = () => {
                 </Select>
               </FormControl>
               
-              <FormControl>
-                <FormLabel>Price Range</FormLabel>
-                <HStack spacing={2}>
-                  <Box flex="1">
-                    <Text fontSize="xs" color="gray.500" mb={1}>Min ($)</Text>
-                    <NumberInput 
-                      min={20} 
-                      max={1000}
-                      value={priceRange[0]}
-                      onChange={(_, value) => setPriceRange([value || 20, priceRange[1]])}
+              {/* Tab-specific filters */}
+              {tabIndex === 0 ? (
+                /* Guides filters: rating, review count */
+                <>
+                  <FormControl>
+                    <FormLabel>Minimum Rating</FormLabel>
+                    <Select 
+                      placeholder="Any rating"
+                      value={selectedRating}
+                      onChange={(e) => setSelectedRating(Number(e.target.value))}
                     >
-                      <NumberInputField placeholder="Min" />
-                    </NumberInput>
-                  </Box>
-                  <Text color="gray.400" mt={6}>-</Text>
-                  <Box flex="1">
-                    <Text fontSize="xs" color="gray.500" mb={1}>Max ($)</Text>
-                    <NumberInput 
-                      min={20} 
-                      max={1000}
-                      value={priceRange[1]}
-                      onChange={(_, value) => setPriceRange([priceRange[0], value || 1000])}
+                      <option value={4}>4+ stars</option>
+                      <option value={3}>3+ stars</option>
+                      <option value={2}>2+ stars</option>
+                      <option value={1}>1+ stars</option>
+                    </Select>
+                  </FormControl>
+                  
+                  <FormControl>
+                    <FormLabel>Minimum Reviews</FormLabel>
+                    <Select 
+                      placeholder="Any review count"
+                      value={selectedReviewCount}
+                      onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
                     >
-                      <NumberInputField placeholder="Max" />
-                    </NumberInput>
-                  </Box>
-                </HStack>
-              </FormControl>
+                      <option value={50}>50+ reviews</option>
+                      <option value={20}>20+ reviews</option>
+                      <option value={10}>10+ reviews</option>
+                      <option value={5}>5+ reviews</option>
+                    </Select>
+                  </FormControl>
+                </>
+              ) : tabIndex === 1 ? (
+                /* Tours filters: price range, days available */
+                <>
+                  <FormControl>
+                    <FormLabel>Price Range</FormLabel>
+                    <HStack spacing={2}>
+                      <Box flex="1">
+                        <Text fontSize="xs" color="gray.500" mb={1}>Min ($)</Text>
+                        <NumberInput 
+                          min={20} 
+                          max={10000}
+                          value={priceRange[0]}
+                          onChange={(_, value) => setPriceRange([value || 20, priceRange[1]])}
+                        >
+                          <NumberInputField placeholder="Min" />
+                        </NumberInput>
+                      </Box>
+                      <Text color="gray.400" mt={6}>-</Text>
+                      <Box flex="1">
+                        <Text fontSize="xs" color="gray.500" mb={1}>Max ($)</Text>
+                        <NumberInput 
+                          min={20} 
+                          max={10000}
+                          value={priceRange[1]}
+                          onChange={(_, value) => setPriceRange([priceRange[0], value || 10000])}
+                        >
+                          <NumberInputField placeholder="Max" />
+                        </NumberInput>
+                      </Box>
+                    </HStack>
+                  </FormControl>
+                  
+                  <FormControl>
+                    <FormLabel>Days Available</FormLabel>
+                    <VStack align="start" spacing={2}>
+                      {DAYS_OF_WEEK.map((day, index) => (
+                        <Checkbox
+                          key={day}
+                          isChecked={selectedDaysAvailable.includes(index)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedDaysAvailable([...selectedDaysAvailable, index]);
+                            } else {
+                              setSelectedDaysAvailable(selectedDaysAvailable.filter(d => d !== index));
+                            }
+                          }}
+                          size="sm"
+                        >
+                          {day}
+                        </Checkbox>
+                      ))}
+                    </VStack>
+                  </FormControl>
+                </>
+              ) : null}
               
               <Flex gap={2}>
                 <Button 
