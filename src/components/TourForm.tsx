@@ -25,6 +25,9 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import SearchableLanguageSelector from './SearchableLanguageSelector';
 import TouristTourRequestForm from './TouristTourRequestForm';
+import TourLocationManager from './TourLocationManager';
+import { TourLocation } from '../lib/types';
+import { getPrimaryLocation, migrateSingleLocationToArray } from '../utils/tourLocations';
 
 interface TourFormProps {
   onSuccess: () => void;
@@ -36,6 +39,7 @@ interface FormData {
   title: string;
   description: string;
   location: string;
+  locations: TourLocation[]; // New field for multiple locations
   duration: number; // In hours
   price: number;
   capacity: number;
@@ -71,6 +75,7 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
     title: '',
     description: '',
     location: '',
+    locations: [],
     duration: 2,
     price: 50,
     capacity: 10,
@@ -103,10 +108,14 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
         if (error) throw error;
         
         if (data) {
+          // Handle locations migration from single location to array
+          const locations = data.locations || migrateSingleLocationToArray(data.location || '');
+          
           setFormData({
             title: data.title || '',
             description: data.description || '',
             location: data.location || '',
+            locations: locations,
             duration: data.duration || 2,
             price: data.price || 50,
             capacity: data.capacity || 10,
@@ -147,8 +156,8 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
       newErrors.description = 'Description must be at least 20 characters';
     }
     
-    if (!formData.location.trim()) {
-      newErrors.location = 'Location is required';
+    if (!formData.location.trim() && formData.locations.length === 0) {
+      newErrors.location = 'At least one location is required';
     }
     
     if (formData.duration <= 0) {
@@ -182,6 +191,15 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
   
   const handleLanguageChange = (languages: string[]) => {
     setFormData({ ...formData, languages });
+  };
+  
+  const handleLocationsChange = (locations: TourLocation[]) => {
+    setFormData({ 
+      ...formData, 
+      locations,
+      // Update the legacy location field with the primary location for backward compatibility
+      location: getPrimaryLocation(locations)
+    });
   };
   
   const handleDayToggle = (index: number) => {
@@ -220,6 +238,7 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
       title: formData.title.trim(),
       description: formData.description.trim(),
       location: formData.location.trim(),
+      locations: formData.locations, // Add the new locations array
       duration: Math.floor(formData.duration), // Ensure integer
       price: Number(formData.price), // Ensure numeric
       capacity: Math.floor(formData.capacity), // Ensure integer
@@ -386,16 +405,12 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
             <FormErrorMessage>{errors.description}</FormErrorMessage>
           </FormControl>
           
-          <FormControl isRequired isInvalid={!!errors.location}>
-            <FormLabel>Location</FormLabel>
-            <Input 
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              placeholder="Where will this tour take place?"
-            />
-            <FormErrorMessage>{errors.location}</FormErrorMessage>
-          </FormControl>
+          {/* Tour Locations Manager */}
+          <TourLocationManager
+            locations={formData.locations}
+            onChange={handleLocationsChange}
+            error={errors.location}
+          />
           
           <Flex gap={4} direction={{ base: 'column', md: 'row' }}>
             <FormControl isRequired isInvalid={!!errors.duration}>
