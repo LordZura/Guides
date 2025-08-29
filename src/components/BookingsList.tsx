@@ -75,7 +75,10 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
   const bookings = isGuide ? incomingBookings : outgoingBookings;
 
   // Filter bookings by status
-  const pendingBookings = bookings.filter(b => b.status === 'requested');
+  const pendingBookings = bookings.filter(b => 
+    b.status === 'requested' || 
+    (b.status === 'offered' && !isGuide) // Tourists see offered bookings as pending
+  );
   const upcomingBookings = bookings.filter(b => ['accepted', 'paid'].includes(b.status));
   const pastBookings = bookings.filter(b => ['completed', 'declined', 'cancelled'].includes(b.status));
 

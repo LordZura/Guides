@@ -66,6 +66,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'requested': return 'yellow';
+      case 'offered': return 'orange';
       case 'accepted': return 'blue';
       case 'paid': return 'green';
       case 'completed': return 'purple';
@@ -79,6 +80,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   const getStatusDescription = (status: string) => {
     switch (status) {
       case 'requested': return 'Your booking request is waiting for guide approval';
+      case 'offered': return 'A guide has offered to provide your requested tour';
       case 'accepted': return 'The guide has accepted your booking. Payment is required to confirm.';
       case 'paid': return 'Your booking is confirmed and paid. Enjoy your tour!';
       case 'completed': return 'This tour has been completed.';
@@ -99,6 +101,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
 
   // Determine what actions to show based on status and role
   const showAcceptDecline = isGuide && booking.status === 'requested';
+  const showAcceptDeclineOffer = !isGuide && booking.status === 'offered'; // Tourist can accept/decline offers
   const showCancel = !isGuide && ['requested', 'accepted'].includes(booking.status);
   const showPayment = !isGuide && booking.status === 'accepted';
   const showComplete = isGuide && booking.status === 'paid';
@@ -188,6 +191,30 @@ const BookingItem: React.FC<BookingItemProps> = ({
                 isLoading={isProcessing}
               >
                 Decline
+              </Button>
+            </>
+          )}
+
+          {showAcceptDeclineOffer && (
+            <>
+              <Button
+                size="sm"
+                colorScheme="green"
+                leftIcon={<MdCheckCircle />}
+                onClick={onAccept}
+                isLoading={isProcessing}
+              >
+                Accept Offer
+              </Button>
+              <Button
+                size="sm"
+                colorScheme="red"
+                variant="outline"
+                leftIcon={<MdCancel />}
+                onClick={onDecline}
+                isLoading={isProcessing}
+              >
+                Decline Offer
               </Button>
             </>
           )}
