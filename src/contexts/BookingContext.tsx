@@ -100,12 +100,12 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         setIncomingBookings(transformedData);
         setOutgoingBookings([]);
       } else {
-        // Tourists see bookings they've made
+        // Tourists see both outgoing and incoming bookings
         const { data, error: fetchError } = await supabase
           .from('bookings')
           .select(`
             *,
-            tours!tour_id(title, location),
+            tours!tour_id(title, location, creator_role),
             profiles!guide_id(full_name, avatar_url)
           `)
           .eq('tourist_id', user.id)
@@ -122,8 +122,16 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
           guide_avatar: booking.profiles?.avatar_url || null
         })) || [];
         
-        setOutgoingBookings(transformedData);
-        setIncomingBookings([]);
+        // Separate incoming and outgoing based on booking status and tour creator
+        const incoming = transformedData.filter(booking => 
+          booking.status === 'offered' // Guide offers to provide tourist's tour request
+        );
+        const outgoing = transformedData.filter(booking => 
+          booking.status !== 'offered' // Tourist's bookings for guide tours
+        );
+        
+        setIncomingBookings(incoming);
+        setOutgoingBookings(outgoing);
       }
     } catch (err: any) {
       console.error('Error fetching bookings:', err);
@@ -208,11 +216,18 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         // For offers, guide is offering, so it goes to guide's outgoing
         if (profile?.role === 'guide') {
           setOutgoingBookings(prev => [data as Booking, ...prev]);
+        } else {
+          // Tourist should see offers in incoming
+          setIncomingBookings(prev => [data as Booking, ...prev]);
         }
-        // Tourist will see it in incoming when they refresh or via real-time
       } else {
         // For requests, tourist is requesting, so it goes to tourist's outgoing
-        setOutgoingBookings(prev => [data as Booking, ...prev]);
+        if (profile?.role === 'tourist') {
+          setOutgoingBookings(prev => [data as Booking, ...prev]);
+        } else {
+          // Guide should see requests in incoming
+          setIncomingBookings(prev => [data as Booking, ...prev]);
+        }
       }
 
       return { 
@@ -306,24 +321,17 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         console.warn('Failed to create status change notification:', notificationError);
       }
 
-      // Update local state based on user role
-      if (profile?.role === 'guide') {
-        setIncomingBookings(prev => 
-          prev.map(booking => 
-            booking.id === bookingId 
-              ? { ...booking, status, updated_at: new Date().toISOString() } 
-              : booking
-          )
+      // Update local state - need to check both incoming and outgoing for both roles
+      // since tourists can have incoming offers and outgoing requests
+      const updateBookingInList = (bookings: Booking[]) => 
+        bookings.map(booking => 
+          booking.id === bookingId 
+            ? { ...booking, status, updated_at: new Date().toISOString() } 
+            : booking
         );
-      } else {
-        setOutgoingBookings(prev => 
-          prev.map(booking => 
-            booking.id === bookingId 
-              ? { ...booking, status, updated_at: new Date().toISOString() } 
-              : booking
-          )
-        );
-      }
+      
+      setIncomingBookings(prev => updateBookingInList(prev));
+      setOutgoingBookings(prev => updateBookingInList(prev));
 
       return true;
     } catch (err: any) {
