@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import App from './App';
+import ErrorBoundary from './ErrorBoundary';
 import { AuthProvider } from './contexts/AuthProvider';
 import { ModalProvider } from './contexts/ModalContext';
 import { ReviewsProvider } from './contexts/ReviewsContext';
@@ -31,20 +32,22 @@ const theme = extendTheme({
 // Mount the React app into #root
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ChakraProvider theme={theme}>
-      <BrowserRouter basename="/Guides">
-        <AuthProvider>
-          <ModalProvider>
-            <NotificationProvider>
-              <TourTemplateProvider>
-                <ReviewsProvider>
-                  <App />
-                </ReviewsProvider>
-              </TourTemplateProvider>
-            </NotificationProvider>
-          </ModalProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ChakraProvider>
+    <ErrorBoundary>
+      <ChakraProvider theme={theme}>
+        <BrowserRouter basename="/Guides">
+          <AuthProvider>
+            <ModalProvider>
+              <NotificationProvider>
+                <TourTemplateProvider>
+                  <ReviewsProvider>
+                    <App />
+                  </ReviewsProvider>
+                </TourTemplateProvider>
+              </NotificationProvider>
+            </ModalProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </ChakraProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );
