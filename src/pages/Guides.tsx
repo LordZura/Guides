@@ -23,18 +23,25 @@ import {
   Select,
 } from '@chakra-ui/react';
 import { SearchIcon, ChevronDownIcon } from '@chakra-ui/icons';
+import { GuideProfile } from '../lib/types';
 import { supabase } from '../lib/supabaseClient';
 import GuideCard from '../components/GuideCard';
 
+interface Language {
+  id: string;
+  name: string;
+  code: string;
+}
+
 const Guides = () => {
-  const [guides, setGuides] = useState<any[]>([]);
-  const [filteredGuides, setFilteredGuides] = useState<any[]>([]);
+  const [guides, setGuides] = useState<GuideProfile[]>([]);
+  const [filteredGuides, setFilteredGuides] = useState<GuideProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<string>('name_asc');
-  const [languages, setLanguages] = useState<any[]>([]);
+  const [languages, setLanguages] = useState<Language[]>([]);
   
   useEffect(() => {
     const fetchGuides = async () => {
@@ -47,7 +54,7 @@ const Guides = () => {
         if (error) throw error;
         setGuides(data || []);
         setFilteredGuides(data || []);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error fetching guides:', err);
         setError('Failed to load guides. Please try again later.');
       } finally {
@@ -64,7 +71,7 @@ const Guides = () => {
           
         if (error) throw error;
         setLanguages(data || []);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error fetching languages:', err);
       }
     };

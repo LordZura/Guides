@@ -28,7 +28,8 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { MdAccessTime, MdCalendarToday, MdGroup, MdLanguage, MdLocationOn } from 'react-icons/md';
-import { supabase, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
+import { Tour } from '../lib/types';
+import { supabase, DEFAULT_AVATAR_URL, Profile } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import { ReviewsProvider } from '../contexts/ReviewsContext';
 import { BookingProvider } from '../contexts/BookingContext';
@@ -47,8 +48,8 @@ const TourDetail = () => {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   
-  const [tour, setTour] = useState<any | null>(null);
-  const [guide, setGuide] = useState<any | null>(null);
+  const [tour, setTour] = useState<Tour | null>(null);
+  const [guide, setGuide] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [reviewSummary, setReviewSummary] = useState({
@@ -105,12 +106,13 @@ const TourDetail = () => {
             });
           }
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error fetching tour details:', err);
-        setError(err.message || 'Failed to load tour details');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load tour details';
+        setError(errorMessage);
         toast({
           title: 'Error loading tour',
-          description: err.message || 'An unexpected error occurred',
+          description: errorMessage,
           status: 'error',
           duration: 5000,
           isClosable: true,
