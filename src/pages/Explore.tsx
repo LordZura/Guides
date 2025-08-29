@@ -74,8 +74,6 @@ const Explore = () => {
     setError(null);
     
     try {
-      console.log("Fetching guides with role='guide'", filters);
-      
       // Build the query
       let query = supabase
         .from('profiles')
@@ -92,30 +90,20 @@ const Explore = () => {
         query = query.eq('location', filters.location);
       }
       
-      // Add debugging output before executing the query
-      console.log("Supabase query:", query);
-      
       const { data, error } = await query;
       
       if (error) {
-        console.error("Supabase error fetching guides:", error);
         throw error;
       }
       
-      console.log("Guides fetched:", data?.length, data);
-      
-      // If no guides are found, log a more specific message
-      if (!data || data.length === 0) {
-        console.log("No guides found with the current filters.");
-      }
-      
       setGuides(data || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching guides:", err);
-      setError(err.message);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch guides';
+      setError(errorMessage);
       toast({
         title: "Error fetching guides",
-        description: err.message,
+        description: errorMessage,
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -136,8 +124,6 @@ const Explore = () => {
     try {
       // Tourists see tours from guides, guides see tours from tourists
       const oppositeRole = profile.role === 'guide' ? 'tourist' : 'guide';
-      
-      console.log(`Fetching tours with creator_role='${oppositeRole}'`, filters);
       
       // Build the query
       let query = supabase
@@ -162,14 +148,14 @@ const Explore = () => {
       
       if (error) throw error;
       
-      console.log("Tours fetched:", data?.length, data);
       setTours(data?.map(tour => tour.id) || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching tours:", err);
-      setError(err.message);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tours';
+      setError(errorMessage);
       toast({
         title: "Error fetching tours",
-        description: err.message,
+        description: errorMessage,
         status: "error",
         duration: 5000,
         isClosable: true,

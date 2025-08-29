@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Text } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import { useAuth } from './contexts/AuthProvider';
 import { useModal } from './contexts/ModalContext';
 import Navbar from './components/NavBar';
@@ -33,10 +33,7 @@ function App() {
   
   return (
     <Box minH="100vh" bg="transparent">
-      {/* Debug banner - remove for production */}
-      <Box bg="yellow.300" p={2} textAlign="center" fontSize="sm">
-        <Text fontWeight="medium">DEBUG: If you see this, rendering is working</Text>
-      </Box>
+
       
       <Navbar />
       
