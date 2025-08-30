@@ -107,15 +107,20 @@ const Explore = () => {
       let filteredGuides = data || [];
       
       // Apply client-side filters for rating and review count
+      // Only filter guides that have rating data - don't exclude guides without ratings
       if (filters.rating && filters.rating > 0) {
         filteredGuides = filteredGuides.filter(guide => 
-          (guide.average_rating || 0) >= filters.rating!
+          // Include guides without rating data (undefined, null, non-numeric)
+          // Only filter out guides that have numeric ratings below the threshold
+          typeof guide.average_rating !== 'number' || guide.average_rating >= filters.rating!
         );
       }
       
       if (filters.reviewCount && filters.reviewCount > 0) {
         filteredGuides = filteredGuides.filter(guide => 
-          (guide.reviews_count || 0) >= filters.reviewCount!
+          // Include guides without review count data (undefined, null, non-numeric)
+          // Only filter out guides that have numeric review counts below the threshold
+          typeof guide.reviews_count !== 'number' || guide.reviews_count >= filters.reviewCount!
         );
       }
       
