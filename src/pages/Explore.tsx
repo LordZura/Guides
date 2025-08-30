@@ -542,8 +542,58 @@ const Explore = () => {
                     </FormControl>
                   </>
                 ) : tabIndex === 1 ? (
-                  /* Tours filters: price range, days available */
+                  /* Tours filters: rating, review count, price range, days available */
                   <>
+                    <FormControl>
+                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Rating</FormLabel>
+                      <HStack spacing={3}>
+                        <StarRating 
+                          rating={selectedRating}
+                          interactive={true}
+                          size={24}
+                          onChange={(rating) => setSelectedRating(rating)}
+                        />
+                        {selectedRating > 0 && (
+                          <>
+                            <Text fontSize="sm" color="gray.600">
+                              {selectedRating === 5 ? '5.0+ stars' : `${selectedRating - 0.5}+ stars`}
+                            </Text>
+                            <Button 
+                              size="xs" 
+                              variant="ghost" 
+                              onClick={() => setSelectedRating(0)}
+                              color="gray.500"
+                              _hover={{ color: 'gray.700' }}
+                            >
+                              Clear
+                            </Button>
+                          </>
+                        )}
+                        {selectedRating === 0 && (
+                          <Text fontSize="sm" color="gray.500">Click stars to filter by rating</Text>
+                        )}
+                      </HStack>
+                    </FormControl>
+                    
+                    <FormControl>
+                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
+                      <Select 
+                        placeholder="Any review count"
+                        value={selectedReviewCount}
+                        onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
+                        borderRadius="lg"
+                        border="2px"
+                        borderColor="gray.200"
+                        _hover={{ borderColor: 'primary.300' }}
+                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
+                      >
+                        <option value={50}>50+ reviews</option>
+                        <option value={20}>20+ reviews</option>
+                        <option value={10}>10+ reviews</option>
+                        <option value={5}>5+ reviews</option>
+                      </Select>
+                    </FormControl>
+                    
                     <FormControl>
                       <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Price Range</FormLabel>
                       <HStack spacing={3}>
