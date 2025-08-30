@@ -40,6 +40,7 @@ import { supabase, Profile } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import GuideCard from '../components/GuideCard';
 import TourCard from '../components/TourCard';
+import Filters, { FilterOptions as FiltersFilterOptions } from '../components/Filters';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -65,7 +66,7 @@ const Explore = () => {
   const toast = useToast();
   
   // Filter state
-  const [languages, setLanguages] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<{ id: number; name: string; code: string }[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
@@ -310,9 +311,13 @@ const Explore = () => {
         throw new Error(`Location fetch error: ${locationError.message}`);
       }
       
-      // Set languages as array of strings for the dropdown (using names)
-      const languages = (languageData || []).map(lang => lang.name);
-      setLanguages(languages);
+      // Set languages as objects to support both name and code
+      const languageObjects = (languageData || []).map(lang => ({
+        id: lang.id,
+        name: lang.name,
+        code: lang.code
+      }));
+      setLanguages(languageObjects);
       
       // Get unique locations
       const uniqueLocations = Array.from(new Set((locationData || []).map(tour => tour.location)));
@@ -330,8 +335,15 @@ const Explore = () => {
       // Always use fallback for development since the database is being blocked
       console.log("Using fallback language and location data for development");
       
-      // Fallback languages
-      setLanguages(['English', 'Spanish', 'French', 'Japanese', 'German', 'Italian']);
+      // Fallback languages with full object structure
+      setLanguages([
+        { id: 1, name: 'English', code: 'en' },
+        { id: 2, name: 'Spanish', code: 'es' },
+        { id: 3, name: 'French', code: 'fr' },
+        { id: 4, name: 'Japanese', code: 'ja' },
+        { id: 5, name: 'German', code: 'de' },
+        { id: 6, name: 'Italian', code: 'it' }
+      ]);
       
       // Fallback locations (for tours)
       setLocations(['London', 'Barcelona', 'Tokyo', 'Paris', 'Berlin', 'Rome']);
@@ -344,6 +356,29 @@ const Explore = () => {
     fetchFilterOptions();
   }, [profile]);
   
+  const handleFilterChange = (filters: FiltersFilterOptions) => {
+    setIsFiltering(true);
+    
+    // Map the filters to the internal format
+    const mappedFilters: FilterOptions = {
+      language: filters.languages && filters.languages.length > 0 ? filters.languages[0] : undefined,
+      location: filters.location,
+      priceRange: filters.priceRange,
+      rating: filters.rating,
+      reviewCount: filters.reviewCount,
+      daysAvailable: filters.days,
+    };
+    
+    console.log("Handling filter change:", mappedFilters);
+    
+    // Apply filters based on current tab
+    if (tabIndex === 0) {
+      fetchGuides(mappedFilters);
+    } else if (tabIndex === 1) {
+      fetchTours(mappedFilters);
+    }
+  };
+
   const applyFilters = () => {
     setIsFiltering(true);
     
@@ -428,173 +463,12 @@ const Explore = () => {
         <Flex>
           {/* Filters - desktop */}
           {!isMobile && (
-            <Box width={{ base: "260px", lg: "280px" }} p={{ base: 4, md: 6 }} borderRightWidth="1px" borderColor="gray.100" bg="gray.50">
-              <Heading size="sm" mb={6} color="gray.700">Search & Filters</Heading>
-              
-              <Stack spacing={6}>
-                <FormControl>
-                  <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Language</FormLabel>
-                  <Select 
-                    placeholder="Any language"
-                    value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                    borderRadius="lg"
-                    border="2px"
-                    borderColor="gray.200"
-                    _hover={{ borderColor: 'primary.300' }}
-                    _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
-                  >
-                    {languages.map(lang => (
-                      <option key={lang} value={lang}>{lang}</option>
-                    ))}
-                  </Select>
-                </FormControl>
-                
-                {/* Location filter only for tours, not guides */}
-                {tabIndex === 1 && (
-                  <FormControl>
-                    <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Location</FormLabel>
-                    <Select 
-                      placeholder="Any location"
-                      value={selectedLocation}
-                      onChange={(e) => setSelectedLocation(e.target.value)}
-                      borderRadius="lg"
-                      border="2px"
-                      borderColor="gray.200"
-                      _hover={{ borderColor: 'primary.300' }}
-                      _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
-                    >
-                      {locations.map(loc => (
-                        <option key={loc} value={loc}>{loc}</option>
-                      ))}
-                    </Select>
-                  </FormControl>
-                )}
-                
-                {/* Tab-specific filters */}
-                {tabIndex === 0 ? (
-                  /* Guides filters: rating, review count */
-                  <>
-                    <FormControl>
-                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Rating</FormLabel>
-                      <Select 
-                        placeholder="Any rating"
-                        value={selectedRating}
-                        onChange={(e) => setSelectedRating(Number(e.target.value))}
-                        borderRadius="lg"
-                        border="2px"
-                        borderColor="gray.200"
-                        _hover={{ borderColor: 'primary.300' }}
-                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
-                      >
-                        <option value={4}>4+ stars</option>
-                        <option value={3}>3+ stars</option>
-                        <option value={2}>2+ stars</option>
-                        <option value={1}>1+ stars</option>
-                      </Select>
-                    </FormControl>
-                    
-                    <FormControl>
-                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
-                      <Select 
-                        placeholder="Any review count"
-                        value={selectedReviewCount}
-                        onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
-                        borderRadius="lg"
-                        border="2px"
-                        borderColor="gray.200"
-                        _hover={{ borderColor: 'primary.300' }}
-                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
-                      >
-                        <option value={50}>50+ reviews</option>
-                        <option value={20}>20+ reviews</option>
-                        <option value={10}>10+ reviews</option>
-                        <option value={5}>5+ reviews</option>
-                      </Select>
-                    </FormControl>
-                  </>
-                ) : tabIndex === 1 ? (
-                  /* Tours filters: price range, days available */
-                  <>
-                    <FormControl>
-                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Price Range</FormLabel>
-                      <HStack spacing={3}>
-                        <Box flex="1">
-                          <Text fontSize="xs" color="gray.500" mb={1}>Min ($)</Text>
-                          <NumberInput 
-                            min={20} 
-                            max={10000}
-                            value={priceRange[0]}
-                            onChange={(_, value) => setPriceRange([value || 20, priceRange[1]])}
-                          >
-                            <NumberInputField placeholder="Min" />
-                          </NumberInput>
-                        </Box>
-                        <Text color="gray.400" mt={6}>-</Text>
-                        <Box flex="1">
-                          <Text fontSize="xs" color="gray.500" mb={1}>Max ($)</Text>
-                          <NumberInput 
-                            min={20} 
-                            max={10000}
-                            value={priceRange[1]}
-                            onChange={(_, value) => setPriceRange([priceRange[0], value || 10000])}
-                          >
-                            <NumberInputField placeholder="Max" />
-                          </NumberInput>
-                        </Box>
-                      </HStack>
-                    </FormControl>
-                    
-                    <FormControl>
-                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Days Available</FormLabel>
-                      <VStack align="start" spacing={2}>
-                        {DAYS_OF_WEEK.map((day, index) => (
-                          <Checkbox
-                            key={day}
-                            isChecked={selectedDaysAvailable.includes(index)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedDaysAvailable([...selectedDaysAvailable, index]);
-                              } else {
-                                setSelectedDaysAvailable(selectedDaysAvailable.filter(d => d !== index));
-                              }
-                            }}
-                            size="sm"
-                          >
-                            {day}
-                          </Checkbox>
-                        ))}
-                      </VStack>
-                    </FormControl>
-                  </>
-                ) : null}
-                
-                <Flex gap={3}>
-                  <Button 
-                    colorScheme="primary" 
-                    flex="1"
-                    onClick={applyFilters}
-                    isLoading={isFiltering}
-                    borderRadius="lg"
-                    fontWeight="semibold"
-                    _hover={{ transform: 'translateY(-1px)', boxShadow: 'lg' }}
-                    transition="all 0.2s"
-                  >
-                    Apply
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    colorScheme="primary"
-                    onClick={clearFilters}
-                    borderRadius="lg"
-                    fontWeight="semibold"
-                    _hover={{ bg: 'primary.50', transform: 'translateY(-1px)' }}
-                    transition="all 0.2s"
-                  >
-                    Clear
-                  </Button>
-                </Flex>
-              </Stack>
+            <Box width={{ base: "260px", lg: "280px" }} borderRightWidth="1px" borderColor="gray.100" bg="gray.50">
+              <Filters 
+                mode={tabIndex === 0 ? 'guides' : 'tours'}
+                onFilterChange={handleFilterChange}
+                languages={languages}
+              />
             </Box>
           )}
           
@@ -743,7 +617,7 @@ const Explore = () => {
                   onChange={(e) => setSelectedLanguage(e.target.value)}
                 >
                   {languages.map(lang => (
-                    <option key={lang} value={lang}>{lang}</option>
+                    <option key={lang.code} value={lang.name}>{lang.name}</option>
                   ))}
                 </Select>
               </FormControl>
