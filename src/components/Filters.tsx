@@ -112,64 +112,7 @@ const Filters = ({ mode, onFilterChange, languages }: FiltersProps) => {
       <Heading size="md" mb={4}>Filters</Heading>
       
       <Accordion defaultIndex={isMobile ? [] : [0, 1, 2, 3]} allowMultiple>
-        {/* Available Days */}
-        <AccordionItem>
-          <h2>
-            <AccordionButton>
-              <Box flex="1" textAlign="left" fontWeight="medium">
-                Available Days
-              </Box>
-              <AccordionIcon />
-            </AccordionButton>
-          </h2>
-          <AccordionPanel pb={4}>
-            <CheckboxGroup colorScheme="primary" value={days} onChange={handleDayChange}>
-              <Stack spacing={2}>
-                {dayOptions.map(day => (
-                  <Checkbox key={day.value} value={day.value}>
-                    {day.label}
-                  </Checkbox>
-                ))}
-              </Stack>
-            </CheckboxGroup>
-          </AccordionPanel>
-        </AccordionItem>
-        
-        {/* Price Range */}
-        <AccordionItem>
-          <h2>
-            <AccordionButton>
-              <Box flex="1" textAlign="left" fontWeight="medium">
-                Price Range
-              </Box>
-              <AccordionIcon />
-            </AccordionButton>
-          </h2>
-          <AccordionPanel pb={4}>
-            <RangeSlider
-              aria-label={['min', 'max']}
-              defaultValue={[0, 500]}
-              min={0}
-              max={500}
-              step={10}
-              value={priceRange}
-              onChange={handlePriceChange}
-              colorScheme="primary"
-            >
-              <RangeSliderTrack>
-                <RangeSliderFilledTrack />
-              </RangeSliderTrack>
-              <RangeSliderThumb index={0} />
-              <RangeSliderThumb index={1} />
-            </RangeSlider>
-            <HStack justifyContent="space-between" mt={2}>
-              <Text fontSize="sm">${priceRange[0]}</Text>
-              <Text fontSize="sm">${priceRange[1]}</Text>
-            </HStack>
-          </AccordionPanel>
-        </AccordionItem>
-        
-        {/* Languages */}
+        {/* Languages - always visible */}
         <AccordionItem>
           <h2>
             <AccordionButton>
@@ -183,7 +126,7 @@ const Filters = ({ mode, onFilterChange, languages }: FiltersProps) => {
             <CheckboxGroup colorScheme="primary" value={selectedLanguages} onChange={handleLanguageChange}>
               <Stack spacing={2}>
                 {languages.map(language => (
-                  <Checkbox key={language.id} value={language.code}>
+                  <Checkbox key={language.id} value={language.name}>
                     {language.name}
                   </Checkbox>
                 ))}
@@ -192,7 +135,7 @@ const Filters = ({ mode, onFilterChange, languages }: FiltersProps) => {
           </AccordionPanel>
         </AccordionItem>
         
-        {/* Location */}
+        {/* Location - always visible, but mainly for tours */}
         <AccordionItem>
           <h2>
             <AccordionButton>
@@ -215,6 +158,152 @@ const Filters = ({ mode, onFilterChange, languages }: FiltersProps) => {
             </HStack>
           </AccordionPanel>
         </AccordionItem>
+
+        {/* Tour-specific filters */}
+        {mode === 'tours' && (
+          <>
+            {/* Available Days */}
+            <AccordionItem>
+              <h2>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left" fontWeight="medium">
+                    Available Days
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4}>
+                <CheckboxGroup colorScheme="primary" value={days} onChange={handleDayChange}>
+                  <Stack spacing={2}>
+                    {dayOptions.map(day => (
+                      <Checkbox key={day.value} value={day.value}>
+                        {day.label}
+                      </Checkbox>
+                    ))}
+                  </Stack>
+                </CheckboxGroup>
+              </AccordionPanel>
+            </AccordionItem>
+            
+            {/* Price Range */}
+            <AccordionItem>
+              <h2>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left" fontWeight="medium">
+                    Price Range
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4}>
+                <RangeSlider
+                  aria-label={['min', 'max']}
+                  min={20}
+                  max={10000}
+                  step={50}
+                  value={priceRange}
+                  onChange={handlePriceChange}
+                  colorScheme="primary"
+                >
+                  <RangeSliderTrack>
+                    <RangeSliderFilledTrack />
+                  </RangeSliderTrack>
+                  <RangeSliderThumb index={0} />
+                  <RangeSliderThumb index={1} />
+                </RangeSlider>
+                <HStack justifyContent="space-between" mt={2}>
+                  <Text fontSize="sm">${priceRange[0]}</Text>
+                  <Text fontSize="sm">${priceRange[1]}</Text>
+                </HStack>
+              </AccordionPanel>
+            </AccordionItem>
+          </>
+        )}
+
+        {/* Guide-specific filters */}
+        {mode === 'guides' && (
+          <>
+            {/* Minimum Rating */}
+            <AccordionItem>
+              <h2>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left" fontWeight="medium">
+                    Minimum Rating
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4}>
+                <Stack spacing={2}>
+                  <Checkbox
+                    isChecked={minRating === 4}
+                    onChange={(e) => setMinRating(e.target.checked ? 4 : 0)}
+                  >
+                    4+ stars
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={minRating === 3}
+                    onChange={(e) => setMinRating(e.target.checked ? 3 : 0)}
+                  >
+                    3+ stars
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={minRating === 2}
+                    onChange={(e) => setMinRating(e.target.checked ? 2 : 0)}
+                  >
+                    2+ stars
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={minRating === 1}
+                    onChange={(e) => setMinRating(e.target.checked ? 1 : 0)}
+                  >
+                    1+ stars
+                  </Checkbox>
+                </Stack>
+              </AccordionPanel>
+            </AccordionItem>
+
+            {/* Minimum Review Count */}
+            <AccordionItem>
+              <h2>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left" fontWeight="medium">
+                    Minimum Reviews
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4}>
+                <Stack spacing={2}>
+                  <Checkbox
+                    isChecked={minReviewCount === 50}
+                    onChange={(e) => setMinReviewCount(e.target.checked ? 50 : 0)}
+                  >
+                    50+ reviews
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={minReviewCount === 20}
+                    onChange={(e) => setMinReviewCount(e.target.checked ? 20 : 0)}
+                  >
+                    20+ reviews
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={minReviewCount === 10}
+                    onChange={(e) => setMinReviewCount(e.target.checked ? 10 : 0)}
+                  >
+                    10+ reviews
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={minReviewCount === 5}
+                    onChange={(e) => setMinReviewCount(e.target.checked ? 5 : 0)}
+                  >
+                    5+ reviews
+                  </Checkbox>
+                </Stack>
+              </AccordionPanel>
+            </AccordionItem>
+          </>
+        )}
       </Accordion>
       
       <Divider my={4} />
