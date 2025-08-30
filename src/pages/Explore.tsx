@@ -114,8 +114,10 @@ const Explore = () => {
         const minRatingThreshold = filters.rating === 5 ? 5.0 : filters.rating - 0.5;
         
         filteredGuides = filteredGuides.filter(guide => 
-          // Only include guides with numeric rating data that meets the threshold
-          typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold
+          // Include guides with numeric rating data that meets the threshold
+          // Also include guides without ratings only if threshold is 1 star (lowest rating filter)
+          (typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold) ||
+          (typeof guide.average_rating !== 'number' && filters.rating === 1)
         );
       }
       
@@ -196,14 +198,19 @@ const Explore = () => {
           const minRatingThreshold = filters.rating === 5 ? 5.0 : filters.rating - 0.5;
           
           filteredGuides = filteredGuides.filter(guide => 
-            guide.average_rating >= minRatingThreshold
+            // Include guides with numeric rating data that meets the threshold
+            // Also include guides without ratings only if threshold is 1 star (lowest rating filter)
+            (typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold) ||
+            (typeof guide.average_rating !== 'number' && filters.rating === 1)
           );
         }
         
         // Apply review count filter
         if (filters.reviewCount && filters.reviewCount > 0) {
           filteredGuides = filteredGuides.filter(guide => 
-            guide.reviews_count >= filters.reviewCount!
+            // Include guides without review count data (undefined, null, non-numeric)
+            // Only filter out guides that have numeric review counts below the threshold
+            typeof guide.reviews_count !== 'number' || guide.reviews_count >= filters.reviewCount!
           );
         }
         
@@ -370,7 +377,9 @@ const Explore = () => {
       if (selectedRating > 0) filters.rating = selectedRating;
       if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
     } else if (tabIndex === 1) {
-      // Tours tab filters: languages, location, rating, days available, price range
+      // Tours tab filters: languages, location, rating, review count, days available, price range
+      if (selectedRating > 0) filters.rating = selectedRating;
+      if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
       if (priceRange.every(val => val !== 0)) filters.priceRange = priceRange;
       if (selectedDaysAvailable.length > 0) filters.daysAvailable = selectedDaysAvailable;
     }
@@ -816,8 +825,36 @@ const Explore = () => {
                   </FormControl>
                 </>
               ) : tabIndex === 1 ? (
-                /* Tours filters: price range, days available */
+                /* Tours filters: price range, days available, rating, review count */
                 <>
+                  <FormControl>
+                    <FormLabel>Minimum Rating</FormLabel>
+                    <Select 
+                      placeholder="Any rating"
+                      value={selectedRating}
+                      onChange={(e) => setSelectedRating(Number(e.target.value))}
+                    >
+                      <option value={4}>4+ stars</option>
+                      <option value={3}>3+ stars</option>
+                      <option value={2}>2+ stars</option>
+                      <option value={1}>1+ stars</option>
+                    </Select>
+                  </FormControl>
+                  
+                  <FormControl>
+                    <FormLabel>Minimum Reviews</FormLabel>
+                    <Select 
+                      placeholder="Any review count"
+                      value={selectedReviewCount}
+                      onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
+                    >
+                      <option value={50}>50+ reviews</option>
+                      <option value={20}>20+ reviews</option>
+                      <option value={10}>10+ reviews</option>
+                      <option value={5}>5+ reviews</option>
+                    </Select>
+                  </FormControl>
+                  
                   <FormControl>
                     <FormLabel>Price Range</FormLabel>
                     <HStack spacing={2}>
