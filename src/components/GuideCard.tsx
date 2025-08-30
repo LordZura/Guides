@@ -27,8 +27,16 @@ const GuideCard = ({ guide }: GuideCardProps) => {
   const [averageRating, setAverageRating] = useState<number>(0);
   const [reviewCount, setReviewCount] = useState<number>(0);
   
-  // Fetch guide's average rating
+  // Fetch guide's average rating or use existing data
   useEffect(() => {
+    // Check if the guide already has rating data (from our fallback data)
+    if ('average_rating' in guide && 'reviews_count' in guide) {
+      setAverageRating((guide as any).average_rating || 0);
+      setReviewCount((guide as any).reviews_count || 0);
+      return;
+    }
+
+    // Otherwise try to fetch from database
     const fetchGuideRating = async () => {
       try {
         // Use RPC function to get review summary
@@ -46,11 +54,12 @@ const GuideCard = ({ guide }: GuideCardProps) => {
         }
       } catch (err) {
         console.error('Error fetching guide rating:', err);
+        // Don't show error to user, just keep default values
       }
     };
     
     fetchGuideRating();
-  }, [guide.id]);
+  }, [guide]);
   
   return (
     <Box
