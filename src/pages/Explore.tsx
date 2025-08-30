@@ -40,6 +40,7 @@ import { supabase, Profile } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import GuideCard from '../components/GuideCard';
 import TourCard from '../components/TourCard';
+import StarRating from '../components/StarRating';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -107,12 +108,14 @@ const Explore = () => {
       let filteredGuides = data || [];
       
       // Apply client-side filters for rating and review count
-      // Only filter guides that have rating data - don't exclude guides without ratings
       if (filters.rating && filters.rating > 0) {
+        // Calculate the minimum rating threshold based on the selected stars
+        // 1 star = 0.5+, 2 stars = 1.5+, 3 stars = 2.5+, 4 stars = 3.5+, 5 stars = 5.0+
+        const minRatingThreshold = filters.rating === 5 ? 5.0 : filters.rating - 0.5;
+        
         filteredGuides = filteredGuides.filter(guide => 
-          // Include guides without rating data (undefined, null, non-numeric)
-          // Only filter out guides that have numeric ratings below the threshold
-          typeof guide.average_rating !== 'number' || guide.average_rating >= filters.rating!
+          // Only include guides with numeric rating data that meets the threshold
+          typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold
         );
       }
       
@@ -188,8 +191,12 @@ const Explore = () => {
         
         // Apply rating filter
         if (filters.rating && filters.rating > 0) {
+          // Calculate the minimum rating threshold based on the selected stars
+          // 1 star = 0.5+, 2 stars = 1.5+, 3 stars = 2.5+, 4 stars = 3.5+, 5 stars = 5.0+
+          const minRatingThreshold = filters.rating === 5 ? 5.0 : filters.rating - 0.5;
+          
           filteredGuides = filteredGuides.filter(guide => 
-            guide.average_rating >= filters.rating!
+            guide.average_rating >= minRatingThreshold
           );
         }
         
@@ -477,21 +484,33 @@ const Explore = () => {
                   <>
                     <FormControl>
                       <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Rating</FormLabel>
-                      <Select 
-                        placeholder="Any rating"
-                        value={selectedRating}
-                        onChange={(e) => setSelectedRating(Number(e.target.value))}
-                        borderRadius="lg"
-                        border="2px"
-                        borderColor="gray.200"
-                        _hover={{ borderColor: 'primary.300' }}
-                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
-                      >
-                        <option value={4}>4+ stars</option>
-                        <option value={3}>3+ stars</option>
-                        <option value={2}>2+ stars</option>
-                        <option value={1}>1+ stars</option>
-                      </Select>
+                      <HStack spacing={3}>
+                        <StarRating 
+                          rating={selectedRating}
+                          interactive={true}
+                          size={24}
+                          onChange={(rating) => setSelectedRating(rating)}
+                        />
+                        {selectedRating > 0 && (
+                          <>
+                            <Text fontSize="sm" color="gray.600">
+                              {selectedRating === 5 ? '5.0+ stars' : `${selectedRating - 0.5}+ stars`}
+                            </Text>
+                            <Button 
+                              size="xs" 
+                              variant="ghost" 
+                              onClick={() => setSelectedRating(0)}
+                              color="gray.500"
+                              _hover={{ color: 'gray.700' }}
+                            >
+                              Clear
+                            </Button>
+                          </>
+                        )}
+                        {selectedRating === 0 && (
+                          <Text fontSize="sm" color="gray.500">Click stars to filter by rating</Text>
+                        )}
+                      </HStack>
                     </FormControl>
                     
                     <FormControl>
