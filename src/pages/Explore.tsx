@@ -179,6 +179,20 @@ const Explore = () => {
             phone: null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
+          },
+          {
+            id: '4',
+            full_name: 'Alex Thompson',
+            role: 'guide' as const,
+            bio: 'Adventure guide in New York',
+            location: 'New York',
+            languages: ['English'],
+            average_rating: 3.0,
+            reviews_count: 12,
+            avatar_url: null,
+            phone: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
         ];
         
