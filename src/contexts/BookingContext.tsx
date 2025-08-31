@@ -261,6 +261,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      // Log attempt for debugging
+      console.log(`Attempting to update booking ${bookingId} to status ${status} for user ${user.id}`);
+      
       // Remove manual timestamp setting - let database trigger handle it
       const { error } = await supabase
         .from('bookings')
@@ -270,7 +273,19 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         })
         .eq('id', bookingId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', {
+          error,
+          bookingId,
+          status,
+          userId: user.id,
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorDetails: error.details,
+          errorHint: error.hint
+        });
+        throw error;
+      }
 
       // Create notifications for status changes
       try {
@@ -336,9 +351,34 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } catch (err: any) {
       console.error('Error updating booking status:', err);
+      
+      // Provide more specific error messages for common issues
+      let errorTitle = 'Error updating booking';
+      let errorDescription = err.message || 'An unexpected error occurred';
+      
+      // Check for RLS policy errors (common cause of payment failures)
+      if (err.message && err.message.includes('policy')) {
+        errorTitle = 'Permission Error';
+        errorDescription = 'You do not have permission to perform this action. Please try again or contact support.';
+        
+        // Log additional context for RLS errors
+        console.error('RLS Policy Error Context:', {
+          bookingId,
+          newStatus: status,
+          userId: user?.id,
+          userRole: profile?.role,
+          errorCode: err.code,
+          errorDetails: err.details,
+          errorHint: err.hint
+        });
+      } else if (status === 'paid' && err.message) {
+        errorTitle = 'Payment Update Failed';
+        errorDescription = 'Your payment was processed, but we could not update your booking status. Please contact support.';
+      }
+      
       toast({
-        title: 'Error updating booking',
-        description: err.message || 'An unexpected error occurred',
+        title: errorTitle,
+        description: errorDescription,
         status: 'error',
         duration: 5000,
         isClosable: true,
