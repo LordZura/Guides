@@ -1,5 +1,3 @@
-// Update the Filters.tsx component to use the RatingFilter component
-
 import { useState } from 'react';
 import {
   Box,
@@ -24,7 +22,6 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
-import RatingFilter from './RatingFilter'; // Import the new component
 
 export interface FilterOptions {
   days?: number[];
@@ -192,26 +189,6 @@ const Filters = ({ mode, onFilterChange, languages }: FiltersProps) => {
                 ))}
               </Stack>
             </CheckboxGroup>
-          </AccordionPanel>
-        </AccordionItem>
-        
-        {/* Minimum Rating - use the new component */}
-        <AccordionItem>
-          <h2>
-            <AccordionButton>
-              <Box flex="1" textAlign="left" fontWeight="medium">
-                Rating
-              </Box>
-              <AccordionIcon />
-            </AccordionButton>
-          </h2>
-          <AccordionPanel pb={4}>
-            <RatingFilter
-              selectedRating={minRating}
-              onChange={setMinRating}
-              label="Minimum Rating"
-              showClear={true}
-            />
           </AccordionPanel>
         </AccordionItem>
         

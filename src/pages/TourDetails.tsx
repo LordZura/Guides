@@ -31,13 +31,8 @@ import { MdAccessTime, MdCalendarToday, MdGroup, MdLanguage, MdLocationOn } from
 import { Tour } from '../lib/types';
 import { supabase, DEFAULT_AVATAR_URL, Profile } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
-import { ReviewsProvider } from '../contexts/ReviewsContext';
 import { BookingProvider } from '../contexts/BookingContext';
 import { getLocationsDisplayString, sortLocationsByOrder } from '../utils/tourLocations';
-import ReviewsList from '../components/ReviewsList';
-import ReviewForm from '../components/ReviewForm';
-import ReviewsSummary from '../components/ReviewsSummary';
-import StarRating from '../components/StarRating';
 import BookingForm from '../components/BookingForm';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -52,11 +47,6 @@ const TourDetail = () => {
   const [guide, setGuide] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [reviewSummary, setReviewSummary] = useState({
-    averageRating: 0,
-    totalReviews: 0,
-    ratingCounts: {}
-  });
   
   useEffect(() => {
     const fetchTourDetails = async () => {
@@ -90,21 +80,6 @@ const TourDetail = () => {
           }
           
           setGuide(guideData || null);
-          
-          // Fetch guide rating summary
-          const { data: summaryData, error: summaryError } = await supabase
-            .rpc('get_review_summary', { 
-              target_id_param: tourData.creator_id, 
-              target_type_param: 'guide' 
-            });
-          
-          if (!summaryError && summaryData) {
-            setReviewSummary({
-              averageRating: summaryData.average_rating || 0,
-              totalReviews: summaryData.total_reviews || 0,
-              ratingCounts: summaryData.rating_counts || {}
-            });
-          }
         }
       } catch (err) {
         console.error('Error fetching tour details:', err);
@@ -294,34 +269,7 @@ const TourDetail = () => {
                 </Box>
               )}
               
-              {/* Only show guide reviews section if this is a guide's tour */}
-              {isGuide && guide && (
-                <Box mt={8}>
-                  <Heading as="h2" size="lg" mb={4}>Guide Reviews</Heading>
-                  
-                  <ReviewsProvider>
-                    <ReviewsSummary 
-                      averageRating={reviewSummary.averageRating} 
-                      totalReviews={reviewSummary.totalReviews} 
-                      ratingCounts={reviewSummary.ratingCounts}
-                    />
-                    
-                    <ReviewForm 
-                      targetId={tour.creator_id || ''}
-                      targetType="guide"
-                      tourId={id || ''}
-                    />
-                    
-                    <Box mt={6}>
-                      <ReviewsList 
-                        targetId={tour.creator_id || ''}
-                        targetType="guide"
-                        showTourInfo={true}
-                      />
-                    </Box>
-                  </ReviewsProvider>
-                </Box>
-              )}
+              {/* Remove guide reviews section completely */}
             </GridItem>
             
             <GridItem>
@@ -347,13 +295,6 @@ const TourDetail = () => {
                         mb={2}
                       />
                       <Text fontWeight="bold">{guide.full_name}</Text>
-                      
-                      <HStack mt={1}>
-                        <StarRating rating={reviewSummary.averageRating} size={16} />
-                        <Text fontSize="sm" color="gray.500">
-                          ({reviewSummary.totalReviews})
-                        </Text>
-                      </HStack>
                       
                       {guide.years_experience && (
                         <Text fontSize="sm" mt={1}>{guide.years_experience} years experience</Text>

@@ -40,7 +40,6 @@ import { supabase, Profile } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import GuideCard from '../components/GuideCard';
 import TourCard from '../components/TourCard';
-import RatingFilter from '../components/RatingFilter';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 

@@ -20,7 +20,6 @@ import { supabase, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import { Tour } from '../lib/types';
 import { getLocationsDisplayString } from '../utils/tourLocations';
 import { retrySupabaseQuery } from '../utils/supabaseRetry';
-import StarRating from './StarRating';
 
 interface TourCardProps {
   tourId: string;
@@ -36,8 +35,6 @@ const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'S
 const TourCard = ({ tourId }: TourCardProps) => {
   const [tour, setTour] = useState<TourWithCreator | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [averageRating, setAverageRating] = useState<number>(0);
-  const [reviewCount, setReviewCount] = useState<number>(0);
   const cardBg = useColorModeValue('white', 'gray.700');
   const toast = useToast();
   
@@ -92,20 +89,6 @@ const TourCard = ({ tourId }: TourCardProps) => {
         } catch (profileError) {
           console.error('Profile fetch exception:', profileError);
           profileData = { full_name: 'Unknown Guide', avatar_url: null };
-        }
-        
-        // If this is a guide's tour, fetch their rating
-        if (tourData.creator_role === 'guide') {
-          const { data: ratingData, error: ratingError } = await supabase
-            .rpc('get_review_summary', {
-              target_id_param: tourData.creator_id,
-              target_type_param: 'guide'
-            });
-          
-          if (!ratingError && ratingData) {
-            setAverageRating(ratingData.average_rating || 0);
-            setReviewCount(ratingData.total_reviews || 0);
-          }
         }
         
         // Combine the data
@@ -193,14 +176,6 @@ const TourCard = ({ tourId }: TourCardProps) => {
           />
           <Box>
             <Text fontSize="sm" fontWeight="semibold" color="gray.700">{tour.creator_name}</Text>
-            {isGuide && (
-              <Flex align="center" mt={1}>
-                <StarRating rating={averageRating} size={14} />
-                <Text fontSize="xs" ml={2} color="gray.500" fontWeight="medium">
-                  ({reviewCount} reviews)
-                </Text>
-              </Flex>
-            )}
           </Box>
         </Flex>
         
