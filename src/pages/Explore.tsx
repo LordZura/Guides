@@ -47,8 +47,6 @@ interface FilterOptions {
   language?: string;
   location?: string;
   priceRange?: [number, number];
-  rating?: number;
-  reviewCount?: number;
   daysAvailable?: number[];
 }
 
@@ -70,8 +68,6 @@ const Explore = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [priceRange, setPriceRange] = useState<[number, number]>([20, 10000]);
-  const [selectedRating, setSelectedRating] = useState<number>(0);
-  const [selectedReviewCount, setSelectedReviewCount] = useState<number>(0);
   const [selectedDaysAvailable, setSelectedDaysAvailable] = useState<number[]>([]);
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   
@@ -106,25 +102,7 @@ const Explore = () => {
       
       let filteredGuides = data || [];
       
-      // Apply client-side filters for rating and review count
-      if (filters.rating && filters.rating > 0) {
-        // Use consistent filter logic - ratings are now exact thresholds (4 stars means 4.0+)
-        const minRatingThreshold = filters.rating;
-        
-        filteredGuides = filteredGuides.filter(guide => 
-          // Only include guides with numeric rating that meets or exceeds the threshold
-          typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold
-        );
-      }
-      
-      if (filters.reviewCount && filters.reviewCount > 0) {
-        filteredGuides = filteredGuides.filter(guide => 
-          // Include guides without review count data (undefined, null, non-numeric)
-          // Only filter out guides that have numeric review counts below the threshold
-          typeof guide.reviews_count !== 'number' || guide.reviews_count >= filters.reviewCount!
-        );
-      }
-      
+      // Apply client-side filters (removed rating/review filters)
       setGuides(filteredGuides);
     } catch (err) {
       console.error("Error fetching guides:", err);
@@ -201,24 +179,7 @@ const Explore = () => {
           );
         }
         
-        // Apply rating filter
-        if (filters.rating && filters.rating > 0) {
-          const minRatingThreshold = filters.rating;
-          
-          filteredGuides = filteredGuides.filter(guide => 
-            typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold
-          );
-        }
-        
-        // Apply review count filter
-        if (filters.reviewCount && filters.reviewCount > 0) {
-          filteredGuides = filteredGuides.filter(guide => 
-            // Include guides without review count data (undefined, null, non-numeric)
-            // Only filter out guides that have numeric review counts below the threshold
-            typeof guide.reviews_count !== 'number' || guide.reviews_count >= filters.reviewCount!
-          );
-        }
-        
+        // Apply remaining filters (removed rating/review filters) 
         setGuides(filteredGuides);
       } else {
         setError(errorMessage);
@@ -378,13 +339,9 @@ const Explore = () => {
     
     // Add tab-specific filters
     if (tabIndex === 0) {
-      // Guides tab filters: languages, rating, review count (NO location)
-      if (selectedRating > 0) filters.rating = selectedRating;
-      if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
+      // Guides tab filters: languages only (removed rating/review filters)
     } else if (tabIndex === 1) {
-      // Tours tab filters: languages, location, rating, review count, days available, price range
-      if (selectedRating > 0) filters.rating = selectedRating;
-      if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
+      // Tours tab filters: languages, location, days available, price range (removed rating/review filters)
       if (priceRange.every(val => val !== 0)) filters.priceRange = priceRange;
       if (selectedDaysAvailable.length > 0) filters.daysAvailable = selectedDaysAvailable;
     }
@@ -405,8 +362,6 @@ const Explore = () => {
     setSelectedLanguage('');
     setSelectedLocation('');
     setPriceRange([20, 10000]);
-    setSelectedRating(0);
-    setSelectedReviewCount(0);
     setSelectedDaysAvailable([]);
     
     // Fetch data without filters
@@ -494,63 +449,12 @@ const Explore = () => {
                 
                 {/* Tab-specific filters */}
                 {tabIndex === 0 ? (
-                  /* Guides filters: rating, review count */
+                  /* Guides filters: no rating/review filters */
                   <>
-                    <RatingFilter
-                      selectedRating={selectedRating}
-                      onChange={setSelectedRating}
-                      label="Minimum Rating"
-                      showClear={true}
-                    />
-                    
-                    <FormControl>
-                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
-                      <Select 
-                        placeholder="Any review count"
-                        value={selectedReviewCount}
-                        onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
-                        borderRadius="lg"
-                        border="2px"
-                        borderColor="gray.200"
-                        _hover={{ borderColor: 'primary.300' }}
-                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
-                      >
-                        <option value={50}>50+ reviews</option>
-                        <option value={20}>20+ reviews</option>
-                        <option value={10}>10+ reviews</option>
-                        <option value={5}>5+ reviews</option>
-                      </Select>
-                    </FormControl>
                   </>
                 ) : tabIndex === 1 ? (
-                  /* Tours filters: rating, review count, price range, days available */
+                  /* Tours filters: price range, days available (removed rating/review filters) */
                   <>
-                    <RatingFilter
-                      selectedRating={selectedRating}
-                      onChange={setSelectedRating}
-                      label="Minimum Rating"
-                      showClear={true}
-                    />
-                    
-                    <FormControl>
-                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
-                      <Select 
-                        placeholder="Any review count"
-                        value={selectedReviewCount}
-                        onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
-                        borderRadius="lg"
-                        border="2px"
-                        borderColor="gray.200"
-                        _hover={{ borderColor: 'primary.300' }}
-                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
-                      >
-                        <option value={50}>50+ reviews</option>
-                        <option value={20}>20+ reviews</option>
-                        <option value={10}>10+ reviews</option>
-                        <option value={5}>5+ reviews</option>
-                      </Select>
-                    </FormControl>
-                    
                     <FormControl>
                       <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Price Range</FormLabel>
                       <HStack spacing={3}>
@@ -801,53 +705,12 @@ const Explore = () => {
               
               {/* Tab-specific filters */}
               {tabIndex === 0 ? (
-                /* Guides filters: rating, review count */
+                /* Guides filters: no rating/review filters */
                 <>
-                  <RatingFilter
-                    selectedRating={selectedRating}
-                    onChange={setSelectedRating}
-                    label="Minimum Rating"
-                    showClear={false}
-                  />
-                  
-                  <FormControl>
-                    <FormLabel>Minimum Reviews</FormLabel>
-                    <Select 
-                      placeholder="Any review count"
-                      value={selectedReviewCount}
-                      onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
-                    >
-                      <option value={50}>50+ reviews</option>
-                      <option value={20}>20+ reviews</option>
-                      <option value={10}>10+ reviews</option>
-                      <option value={5}>5+ reviews</option>
-                    </Select>
-                  </FormControl>
                 </>
               ) : tabIndex === 1 ? (
-                /* Tours filters: price range, days available, rating, review count */
+                /* Tours filters: price range, days available (removed rating/review filters) */
                 <>
-                  <RatingFilter
-                    selectedRating={selectedRating}
-                    onChange={setSelectedRating}
-                    label="Minimum Rating"
-                    showClear={false}
-                  />
-                  
-                  <FormControl>
-                    <FormLabel>Minimum Reviews</FormLabel>
-                    <Select 
-                      placeholder="Any review count"
-                      value={selectedReviewCount}
-                      onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
-                    >
-                      <option value={50}>50+ reviews</option>
-                      <option value={20}>20+ reviews</option>
-                      <option value={10}>10+ reviews</option>
-                      <option value={5}>5+ reviews</option>
-                    </Select>
-                  </FormControl>
-                  
                   <FormControl>
                     <FormLabel>Price Range</FormLabel>
                     <HStack spacing={2}>

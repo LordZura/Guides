@@ -62,22 +62,6 @@ export interface TourWithGuide extends Tour {
   guide?: Profile;
 }
 
-export interface Review {
-  id: string;
-  reviewer_id: string;
-  reviewer_name: string;
-  reviewer_avatar?: string;
-  target_id: string;
-  target_type: 'guide' | 'tour';
-  rating: number;
-  comment: string; // Changed from 'content' to 'comment'
-  created_at: string;
-  tour_id?: string;
-  tour_name?: string;
-}
-
 export interface GuideProfile extends Profile {
-  average_rating: number;
-  reviews_count: number;
   completed_tours_count: number;
 }
