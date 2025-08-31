@@ -33,13 +33,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // If profile exists, return it
       if (existingProfile) {
-        console.log('Found existing profile');
         return existingProfile as Profile;
       }
 
       // If there was a "not found" error, create profile
       if (fetchError && fetchError.code === 'PGRST116') {
-        console.log('No profile found, creating new profile');
         
         // Get metadata from user if available, or use provided metadata
         const userMetadata = user.user_metadata || {};
@@ -65,7 +63,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .single();
 
           if (!error) {
-            console.log('Profile created successfully on attempt', attempt + 1);
             return data as Profile;
           }
           
@@ -77,7 +74,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
           
           if (error.code === '23503') { // Foreign key violation
-            console.log('Foreign key constraint, waiting before retry');
             // Exponential backoff: 500ms, 1s, 2s
             await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)));
             continue;
@@ -118,8 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Set up auth state change listener
       const { data: { subscription } } = await supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log('Auth state changed:', event);
+        async (_event, session) => {
           setSession(session);
           setUser(session?.user ?? null);
           
@@ -147,9 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Sign up with email and password - now simpler, just handle auth
   const signUp = async (email: string, password: string, fullName: string, phone: string, role: UserRole) => {
     try {
-      console.log('Starting signup process for:', email);
-      
-      const { data, error } = await supabase.auth.signUp({
+      const { data: _, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -167,7 +160,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error };
       }
 
-      console.log('User signed up successfully!', data);
       // No profile creation here - we'll create it when they sign in
       
       return { error: null };
