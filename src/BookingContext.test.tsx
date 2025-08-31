@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { BookingProvider, useBookings } from './contexts/BookingContext';
@@ -23,7 +24,12 @@ vi.mock('@chakra-ui/react', () => ({
 }));
 
 describe('BookingContext - hasCompletedGuideBooking', () => {
-  let mockSupabase: any;
+  let mockSupabase: {
+    from: ReturnType<typeof vi.fn>;
+    select: ReturnType<typeof vi.fn>;
+    eq: ReturnType<typeof vi.fn>;
+    maybeSingle: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -112,7 +118,7 @@ describe('BookingContext - hasCompletedGuideBooking', () => {
     expect(hasCompleted1).toBe(false);
     
     // Test with null/undefined guideId
-    const hasCompleted2 = await result.current.hasCompletedGuideBooking(null as any);
+    const hasCompleted2 = await result.current.hasCompletedGuideBooking(null as unknown as string);
     expect(hasCompleted2).toBe(false);
   });
 });

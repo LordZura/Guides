@@ -57,7 +57,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'MMMM d, yyyy');
-    } catch (e) {
+    } catch {
       return dateString;
     }
   };
@@ -92,11 +92,11 @@ const BookingItem: React.FC<BookingItemProps> = ({
 
   // Safely display tour title and location
   const tourTitle = typeof booking.tour_title === 'object' 
-    ? (booking.tour_title as any)?.title || 'Unknown Tour'
+    ? (booking.tour_title as { title?: string })?.title || 'Unknown Tour'
     : booking.tour_title || 'Unknown Tour';
     
   const tourLocation = typeof booking.tour_location === 'object'
-    ? (booking.tour_location as any)?.location || 'Unknown Location'
+    ? (booking.tour_location as { location?: string })?.location || 'Unknown Location'
     : booking.tour_location || 'Unknown Location';
 
   // Determine what actions to show based on status and role

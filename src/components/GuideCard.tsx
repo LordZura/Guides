@@ -30,9 +30,14 @@ const GuideCard = ({ guide }: GuideCardProps) => {
   // Fetch guide's average rating or use existing data
   useEffect(() => {
     // Check if the guide already has rating data (from our fallback data)
+    const guideWithRating = guide as Profile & { 
+      average_rating?: number; 
+      reviews_count?: number; 
+    };
+    
     if ('average_rating' in guide && 'reviews_count' in guide) {
-      setAverageRating((guide as any).average_rating || 0);
-      setReviewCount((guide as any).reviews_count || 0);
+      setAverageRating(guideWithRating.average_rating || 0);
+      setReviewCount(guideWithRating.reviews_count || 0);
       return;
     }
 
