@@ -192,9 +192,10 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         setTotalReviews(summaryData.total_reviews || 0);
         setRatingCounts(summaryData.rating_counts || {});
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading reviews:', err);
-      setError(err.message || 'Failed to load reviews');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load reviews';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -228,7 +229,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       
       // Only add tour_id if it exists
       if (reviewData.tour_id) {
-        (dataToInsert as any).tour_id = reviewData.tour_id;
+        (dataToInsert as typeof dataToInsert & { tour_id: string }).tour_id = reviewData.tour_id;
       }
       
       console.log('Inserting review data:', dataToInsert);

@@ -53,7 +53,7 @@ const getNotificationMessage = (
   type: NotificationType, 
   actorName: string, 
   targetName?: string,
-  additionalData?: any
+  additionalData?: Record<string, unknown>
 ): string => {
   switch (type) {
     case 'booking_created':
@@ -168,7 +168,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       const actorIds = [...new Set(notificationsData?.map(n => n.actor_id).filter(Boolean))];
       
       // Fetch profile data for all actors with retry mechanism
-      let actorProfiles: { [key: string]: any } = {};
+      let actorProfiles: { [key: string]: { id: string; full_name: string; avatar_url?: string } } = {};
       if (actorIds.length > 0) {
         const profileResult = await retrySupabaseQuery(async () => {
           return await supabase
@@ -197,9 +197,10 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       })) || [];
 
       setNotifications(transformedData);
-    } catch (err: any) {
+    } catch (err) {
       console.warn('Error fetching notifications:', err);
-      setError(err.message || 'Failed to load notifications');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load notifications';
+      setError(errorMessage);
       setNotifications([]);
     } finally {
       setIsLoading(false);

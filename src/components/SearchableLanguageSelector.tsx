@@ -7,7 +7,7 @@ import {
   FormHelperText,
   useColorModeValue,
 } from '@chakra-ui/react';
-import Select from 'react-select';
+import Select, { StylesConfig } from 'react-select';
 
 export interface LanguageOption {
   value: string;
@@ -17,7 +17,7 @@ export interface LanguageOption {
 
 interface SearchableLanguageSelectorProps {
   selectedLanguages: string[];
-  onChange: (languages: string[]) => void;
+  onChange: (_languages: string[]) => void;
   isRequired?: boolean;
   isInvalid?: boolean;
   errorMessage?: string;
@@ -113,8 +113,8 @@ const SearchableLanguageSelector = ({
   };
 
   // Custom styles for react-select to match Chakra UI theme
-  const selectStyles = {
-    control: (provided: any, state: any) => ({
+  const selectStyles: StylesConfig<LanguageOption, true> = {
+    control: (provided, state) => ({
       ...provided,
       backgroundColor: selectBackgroundColor,
       borderColor: isInvalid ? '#E53E3E' : (state.isFocused ? '#3182CE' : selectBorderColor),
@@ -127,17 +127,17 @@ const SearchableLanguageSelector = ({
       minHeight: '40px',
       fontSize: '16px',
     }),
-    multiValue: (provided: any) => ({
+    multiValue: (provided) => ({
       ...provided,
       backgroundColor: '#EBF8FF',
       borderRadius: '6px',
     }),
-    multiValueLabel: (provided: any) => ({
+    multiValueLabel: (provided) => ({
       ...provided,
       color: '#2B6CB0',
       fontSize: '14px',
     }),
-    multiValueRemove: (provided: any) => ({
+    multiValueRemove: (provided) => ({
       ...provided,
       color: '#2B6CB0',
       '&:hover': {
@@ -145,7 +145,7 @@ const SearchableLanguageSelector = ({
         color: '#1A365D',
       },
     }),
-    option: (provided: any, state: any) => ({
+    option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected ? '#3182CE' : (state.isFocused ? '#EBF8FF' : selectBackgroundColor),
       color: state.isSelected ? '#FFFFFF' : selectTextColor,
@@ -154,22 +154,22 @@ const SearchableLanguageSelector = ({
         color: state.isSelected ? '#FFFFFF' : '#2B6CB0',
       },
     }),
-    menu: (provided: any) => ({
+    menu: (provided) => ({
       ...provided,
       backgroundColor: selectBackgroundColor,
       border: `1px solid ${selectBorderColor}`,
       borderRadius: '6px',
       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
     }),
-    placeholder: (provided: any) => ({
+    placeholder: (provided) => ({
       ...provided,
       color: '#A0AEC0',
     }),
-    input: (provided: any) => ({
+    input: (provided) => ({
       ...provided,
       color: selectTextColor,
     }),
-    singleValue: (provided: any) => ({
+    singleValue: (provided) => ({
       ...provided,
       color: selectTextColor,
     }),
