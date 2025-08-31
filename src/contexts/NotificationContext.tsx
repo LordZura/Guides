@@ -40,10 +40,10 @@ interface NotificationContextType {
   unreadCount: number;
   isLoading: boolean;
   error: string | null;
-  markAsRead: (notificationId: string) => Promise<boolean>;
+  markAsRead: (_notificationId: string) => Promise<boolean>;
   markAllAsRead: () => Promise<boolean>;
   refreshNotifications: () => Promise<void>;
-  createNotification: (notificationData: Partial<Notification>) => Promise<boolean>;
+  createNotification: (_notificationData: Partial<Notification>) => Promise<boolean>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);

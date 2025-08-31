@@ -137,7 +137,7 @@ const BookingForm = ({
       }));
     } else {
       setErrors(prev => {
-        const { bookingDate, ...rest } = prev;
+        const { bookingDate: _, ...rest } = prev;
         return rest;
       });
     }

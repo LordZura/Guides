@@ -24,6 +24,7 @@ vi.mock('@chakra-ui/react', () => ({
 }));
 
 describe('BookingContext - hasCompletedGuideBooking', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSupabase: any;
 
   beforeEach(() => {
@@ -113,6 +114,7 @@ describe('BookingContext - hasCompletedGuideBooking', () => {
     expect(hasCompleted1).toBe(false);
     
     // Test with null/undefined guideId
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const hasCompleted2 = await result.current.hasCompletedGuideBooking(null as any);
     expect(hasCompleted2).toBe(false);
   });
