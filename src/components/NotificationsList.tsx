@@ -20,13 +20,13 @@ import {
 } from '@chakra-ui/react';
 import { BellIcon, CheckIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useNotifications, Notification } from '../contexts/NotificationContext';
 import { DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import { formatDistanceToNow } from 'date-fns';
 
 interface NotificationItemProps {
-  notification: any;
-  onMarkAsRead: (id: string) => void;
+  notification: Notification;
+  onMarkAsRead: (_id: string) => void;
 }
 
 const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps) => {

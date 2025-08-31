@@ -36,10 +36,10 @@ interface ReviewsContextType {
   isLoading: boolean;
   error: string | null;
   hasMoreReviews: boolean;
-  loadReviews: (id: string, type: 'guide' | 'tour', page?: number) => Promise<void>;
+  loadReviews: (_id: string, _type: 'guide' | 'tour', _page?: number) => Promise<void>;
   loadMoreReviews: () => Promise<void>;
-  addReview: (review: ReviewData) => Promise<void>;
-  deleteReview: (reviewId: string) => Promise<void>;
+  addReview: (_review: ReviewData) => Promise<void>;
+  deleteReview: (_reviewId: string) => Promise<void>;
   refreshReviews: () => Promise<void>;
 }
 
@@ -230,8 +230,6 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       if (reviewData.tour_id) {
         (dataToInsert as any).tour_id = reviewData.tour_id;
       }
-      
-      console.log('Inserting review data:', dataToInsert);
       
       // Insert the review
       const { error } = await supabase

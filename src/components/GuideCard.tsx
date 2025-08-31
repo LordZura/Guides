@@ -18,6 +18,12 @@ import StarRating from './StarRating';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
+// Extended profile type with optional rating data
+type ProfileWithRating = Profile & {
+  average_rating?: number;
+  reviews_count?: number;
+};
+
 interface GuideCardProps {
   guide: Profile;
 }
@@ -31,8 +37,9 @@ const GuideCard = ({ guide }: GuideCardProps) => {
   useEffect(() => {
     // Check if the guide already has rating data (from our fallback data)
     if ('average_rating' in guide && 'reviews_count' in guide) {
-      setAverageRating((guide as any).average_rating || 0);
-      setReviewCount((guide as any).reviews_count || 0);
+      const guideWithRating = guide as ProfileWithRating;
+      setAverageRating(guideWithRating.average_rating || 0);
+      setReviewCount(guideWithRating.reviews_count || 0);
       return;
     }
 

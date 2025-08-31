@@ -12,13 +12,13 @@ interface TourTemplateContextType {
   error: string | null;
   categories: string[];
   selectedCategory: string;
-  setSelectedCategory: (category: string) => void;
+  setSelectedCategory: (_category: string) => void;
   refreshTemplates: () => Promise<void>;
-  createTemplate: (templateData: Partial<TourTemplate>) => Promise<boolean>;
-  updateTemplate: (templateId: string, templateData: Partial<TourTemplate>) => Promise<boolean>;
-  deleteTemplate: (templateId: string) => Promise<boolean>;
-  useTemplate: (templateId: string) => Promise<TourTemplateData | null>;
-  saveAsTemplate: (name: string, description: string, tourData: TourTemplateData, category?: string) => Promise<boolean>;
+  createTemplate: (_templateData: Partial<TourTemplate>) => Promise<boolean>;
+  updateTemplate: (_templateId: string, _templateData: Partial<TourTemplate>) => Promise<boolean>;
+  deleteTemplate: (_templateId: string) => Promise<boolean>;
+  useTemplate: (_templateId: string) => Promise<TourTemplateData | null>;
+  saveAsTemplate: (_name: string, _description: string, _tourData: TourTemplateData, _category?: string) => Promise<boolean>;
 }
 
 const TourTemplateContext = createContext<TourTemplateContextType | undefined>(undefined);

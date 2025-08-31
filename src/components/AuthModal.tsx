@@ -65,7 +65,7 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
         onClose();
         navigate('/dashboard');
       }
-    } catch (err) {
+    } catch (_) {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -102,7 +102,7 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
         setError('Registration successful! Please check your email for a confirmation link.');
         setTabIndex(0);
       }
-    } catch (err) {
+    } catch (_) {
       setError('An unexpected error occurred. Please try again later.');
     } finally {
       setIsLoading(false);

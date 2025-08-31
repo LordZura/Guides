@@ -40,10 +40,10 @@ interface NotificationContextType {
   unreadCount: number;
   isLoading: boolean;
   error: string | null;
-  markAsRead: (notificationId: string) => Promise<boolean>;
+  markAsRead: (_notificationId: string) => Promise<boolean>;
   markAllAsRead: () => Promise<boolean>;
   refreshNotifications: () => Promise<void>;
-  createNotification: (notificationData: Partial<Notification>) => Promise<boolean>;
+  createNotification: (_notificationData: Partial<Notification>) => Promise<boolean>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -121,8 +121,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         schema: 'public', 
         table: 'notifications',
         filter: `recipient_id=eq.${user.id}`
-      }, (payload) => {
-        console.log('Notification change:', payload);
+      }, (_payload) => {
         // Refresh notifications when any change occurs
         refreshNotifications();
       })

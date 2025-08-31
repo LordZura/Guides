@@ -19,6 +19,8 @@ export default [
         window: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
         setImmediate: 'readonly',
         navigator: 'readonly',
         fetch: 'readonly',

@@ -27,6 +27,10 @@ import { format } from 'date-fns';
 import { Booking } from '../contexts/BookingContext';
 import { DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 
+// Type for dynamic tour data
+type TourData = { title: string } | string;
+type LocationData = { location: string } | string;
+
 interface BookingItemProps {
   booking: Booking;
   isGuide: boolean;
@@ -57,7 +61,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'MMMM d, yyyy');
-    } catch (e) {
+    } catch (_e) {
       return dateString;
     }
   };
@@ -92,11 +96,11 @@ const BookingItem: React.FC<BookingItemProps> = ({
 
   // Safely display tour title and location
   const tourTitle = typeof booking.tour_title === 'object' 
-    ? (booking.tour_title as any)?.title || 'Unknown Tour'
+    ? (booking.tour_title as TourData & { title: string })?.title || 'Unknown Tour'
     : booking.tour_title || 'Unknown Tour';
     
   const tourLocation = typeof booking.tour_location === 'object'
-    ? (booking.tour_location as any)?.location || 'Unknown Location'
+    ? (booking.tour_location as LocationData & { location: string })?.location || 'Unknown Location'
     : booking.tour_location || 'Unknown Location';
 
   // Determine what actions to show based on status and role

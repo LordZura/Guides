@@ -158,8 +158,6 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      console.log('Creating booking with data:', bookingData);
-      
       // Remove manual timestamp setting - let database handle with DEFAULT NOW()
       const finalBookingData = {
         ...bookingData,
@@ -177,8 +175,6 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
-      console.log('Booking created successfully:', data);
-      
       // Create notification for the appropriate party
       if (data) {
         try {
@@ -424,8 +420,6 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       // Check each booking for auto-completion
       for (const booking of paidBookings) {
         if (shouldAutoComplete(booking.booking_date, booking.status, booking.preferred_time)) {
-          console.log(`Auto-completing booking ${booking.id}`);
-          
           // Update booking to completed
           const { error: updateError } = await supabase
             .from('bookings')
