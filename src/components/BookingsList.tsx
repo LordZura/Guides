@@ -27,7 +27,6 @@ import {
 import { useBookings, Booking, BookingStatus } from '../contexts/BookingContext';
 import BookingItem from './BookingItem';
 import PaymentModal from './PaymentModal';
-import ReviewForm from './ReviewForm';
 import { useAuth } from '../contexts/AuthProvider';
 
 interface BookingsListProps {
@@ -46,7 +45,6 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
   const { profile } = useAuth();
   const toast = useToast();
   const { isOpen: isConfirmOpen, onOpen: onConfirmOpen, onClose: onConfirmClose } = useDisclosure();
-  const { isOpen: isReviewOpen, onOpen: onReviewOpen, onClose: onReviewClose } = useDisclosure();
   
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -228,23 +226,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
     }, 500);
   };
 
-  // Handler for review button click
-  const handleReviewClick = (booking: Booking) => {
-    setSelectedBooking(booking);
-    onReviewOpen();
-  };
-
-  // Handler for successful review submission
-  const handleReviewSuccess = () => {
-    onReviewClose();
-    toast({
-      title: 'Review submitted',
-      description: 'Thank you for your review!',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
-  };
+  // Remove review handlers since rating system is removed
 
   if (isLoading) {
     return (
@@ -363,7 +345,6 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
                     key={booking.id}
                     booking={booking}
                     isGuide={isGuide}
-                    onReview={() => handleReviewClick(booking)}
                     isProcessing={isProcessing && selectedBooking?.id === booking.id}
                   />
                 ))}
@@ -407,24 +388,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
         </ModalContent>
       </Modal>
 
-      {/* Review Modal */}
-      <Modal isOpen={isReviewOpen} onClose={onReviewClose} size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Write a Review</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {selectedBooking && (
-              <ReviewForm
-                targetId={selectedBooking.guide_id}
-                targetType="guide"
-                tourId={selectedBooking.tour_id}
-                onSuccess={handleReviewSuccess}
-              />
-            )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      {/* Review functionality removed */}
     </Box>
   );
 };

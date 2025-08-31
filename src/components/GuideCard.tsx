@@ -14,9 +14,6 @@ import {
 import { MdLocationOn, MdStar } from 'react-icons/md';
 import { Link as RouterLink } from 'react-router-dom';
 import { Profile, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
-import StarRating from './StarRating';
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
 
 interface GuideCardProps {
   guide: Profile;
@@ -24,42 +21,6 @@ interface GuideCardProps {
 
 const GuideCard = ({ guide }: GuideCardProps) => {
   const cardBg = useColorModeValue('white', 'gray.700');
-  const [averageRating, setAverageRating] = useState<number>(0);
-  const [reviewCount, setReviewCount] = useState<number>(0);
-  
-  // Fetch guide's average rating or use existing data
-  useEffect(() => {
-    // Check if the guide already has rating data (from our fallback data)
-    if ('average_rating' in guide && 'reviews_count' in guide) {
-      setAverageRating((guide as any).average_rating || 0);
-      setReviewCount((guide as any).reviews_count || 0);
-      return;
-    }
-
-    // Otherwise try to fetch from database
-    const fetchGuideRating = async () => {
-      try {
-        // Use RPC function to get review summary
-        const { data, error } = await supabase
-          .rpc('get_review_summary', { 
-            target_id_param: guide.id, 
-            target_type_param: 'guide' 
-          });
-        
-        if (error) throw error;
-        
-        if (data) {
-          setAverageRating(data.average_rating || 0);
-          setReviewCount(data.total_reviews || 0);
-        }
-      } catch (err) {
-        console.error('Error fetching guide rating:', err);
-        // Don't show error to user, just keep default values
-      }
-    };
-    
-    fetchGuideRating();
-  }, [guide]);
   
   return (
     <Box
@@ -110,14 +71,6 @@ const GuideCard = ({ guide }: GuideCardProps) => {
       
       <Box p={{ base: 4, md: 6 }}>
         <Stack spacing={{ base: 3, md: 4 }}>
-          {/* Rating display */}
-          <Flex align="center" justify="space-between">
-            <StarRating rating={averageRating} size={18} />
-            <Text fontSize="sm" color="gray.500" fontWeight="medium">
-              {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
-            </Text>
-          </Flex>
-          
           {guide.bio && (
             <Text fontSize="sm" noOfLines={2} color="gray.600" lineHeight="1.5">
               {guide.bio}

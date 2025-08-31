@@ -6,7 +6,6 @@ import App from './App';
 import ErrorBoundary from './ErrorBoundary';
 import { AuthProvider } from './contexts/AuthProvider';
 import { ModalProvider } from './contexts/ModalContext';
-import { ReviewsProvider } from './contexts/ReviewsContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { TourTemplateProvider } from './contexts/TourTemplateContext';
 import './index.css';
@@ -39,9 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <ModalProvider>
               <NotificationProvider>
                 <TourTemplateProvider>
-                  <ReviewsProvider>
-                    <App />
-                  </ReviewsProvider>
+                  <App />
                 </TourTemplateProvider>
               </NotificationProvider>
             </ModalProvider>
