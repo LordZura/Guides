@@ -867,6 +867,7 @@ const Explore = () => {
                       value={selectedRating}
                       onChange={(e) => setSelectedRating(Number(e.target.value))}
                     >
+                      <option value={5}>5+ stars</option>
                       <option value={4}>4+ stars</option>
                       <option value={3}>3+ stars</option>
                       <option value={2}>2+ stars</option>
@@ -898,6 +899,7 @@ const Explore = () => {
                       value={selectedRating}
                       onChange={(e) => setSelectedRating(Number(e.target.value))}
                     >
+                      <option value={5}>5+ stars</option>
                       <option value={4}>4+ stars</option>
                       <option value={3}>3+ stars</option>
                       <option value={2}>2+ stars</option>
