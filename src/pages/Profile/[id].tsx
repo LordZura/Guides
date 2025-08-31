@@ -56,12 +56,13 @@ const ProfilePage = () => {
         setGuideProfile(data.profile);
         setTours(data.tours);
         setReviews(data.reviews);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error fetching guide profile:', err);
-        setError(err.message || 'Failed to load guide profile');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load guide profile';
+        setError(errorMessage);
         toast({
           title: 'Error loading profile',
-          description: err.message || 'An unexpected error occurred',
+          description: errorMessage,
           status: 'error',
           duration: 5000,
           isClosable: true,

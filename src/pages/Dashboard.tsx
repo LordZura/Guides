@@ -36,7 +36,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthProvider';
 import { ToursProvider } from '../contexts/ToursContext';
 import { BookingProvider } from '../contexts/BookingContext';
-import { DEFAULT_AVATAR_URL, Profile } from '../lib/supabaseClient';
+import { DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import ProfileEditor from '../components/ProfileEditor';
 import TourForm from '../components/TourForm';
 import ToursList from '../components/ToursList';
@@ -66,7 +66,7 @@ const Dashboard = () => {
     setIsEditing(true);
   };
 
-  const handleEditComplete = (_updatedProfile: Profile) => {
+  const handleEditComplete = () => {
     setIsEditing(false);
     // Instead of forcing a page reload, we just show a success toast
     toast({
