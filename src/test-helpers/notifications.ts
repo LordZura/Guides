@@ -120,8 +120,17 @@ export const notificationTestCases = [
 ];
 
 // Helper to create notification with specific event types
-export const createNotificationByEvent = (event: string, actorName: string, targetName: string, additionalData?: any) => {
-  const eventMap: Record<string, any> = {
+export const createNotificationByEvent = (
+  event: string, 
+  actorName: string, 
+  targetName: string, 
+  additionalData?: Record<string, unknown>
+) => {
+  const eventMap: Record<string, {
+    type: string;
+    message: string;
+    actionUrl: string | null;
+  }> = {
     'tourist_booked_tour': {
       type: 'booking_created',
       message: `${actorName} booked '${targetName}' for ${additionalData?.date || 'a tour'}`,

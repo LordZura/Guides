@@ -7,7 +7,7 @@ export const createMockNotification = (type: string, overrides: Partial<Notifica
   
   const defaultNotification: Notification = {
     id: baseId,
-    type: type as any,
+    type: type as Notification['type'],
     actor_id: 'mock-actor-id',
     recipient_id: 'mock-recipient-id',
     target_type: 'booking',
@@ -81,15 +81,18 @@ export const testNotificationCreation = () => {
   const notifications = createTestNotifications();
   const unreadCount = notifications.filter(n => !n.is_read).length;
   
-  console.log('🔔 Notification Test Results:');
-  console.log(`Total notifications: ${notifications.length}`);
-  console.log(`Unread notifications: ${unreadCount}`);
-  console.log('Notifications:');
-  notifications.forEach((n, i) => {
-    console.log(`  ${i + 1}. [${n.is_read ? 'READ' : 'UNREAD'}] ${n.type}: ${n.message}`);
-    console.log(`     Action URL: ${n.action_url || 'None'}`);
-    console.log(`     Created: ${new Date(n.created_at).toLocaleString()}`);
-  });
+  // Only log in development environment
+  if (import.meta.env.MODE === 'development') {
+    console.log('🔔 Notification Test Results:');
+    console.log(`Total notifications: ${notifications.length}`);
+    console.log(`Unread notifications: ${unreadCount}`);
+    console.log('Notifications:');
+    notifications.forEach((n, i) => {
+      console.log(`  ${i + 1}. [${n.is_read ? 'READ' : 'UNREAD'}] ${n.type}: ${n.message}`);
+      console.log(`     Action URL: ${n.action_url || 'None'}`);
+      console.log(`     Created: ${new Date(n.created_at).toLocaleString()}`);
+    });
+  }
   
   return { notifications, unreadCount };
 };

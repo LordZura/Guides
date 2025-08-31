@@ -133,7 +133,6 @@ const Explore = () => {
       
       // If database is not accessible, use fallback data for development/testing
       if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_BLOCKED_BY_CLIENT')) {
-        console.log("Using fallback guide data for development");
         const fallbackGuides = [
           {
             id: '1',
@@ -338,17 +337,12 @@ const Explore = () => {
       const uniqueLocations = Array.from(new Set((locationData || []).map(tour => tour.location)));
       setLocations(uniqueLocations);
       
-      console.log("Successfully loaded filter options:", { languages: languages.length, locations: uniqueLocations.length });
       
     } catch (err) {
       console.error("Error fetching filter options:", err);
       
       // If database is not accessible, use fallback data for development/testing
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch filter options';
-      console.log("Filter options error message:", errorMessage);
-      
       // Always use fallback for development since the database is being blocked
-      console.log("Using fallback language and location data for development");
       
       // Fallback languages
       setLanguages(['English', 'Spanish', 'French', 'Japanese', 'German', 'Italian']);
@@ -389,8 +383,6 @@ const Explore = () => {
       if (priceRange.every(val => val !== 0)) filters.priceRange = priceRange;
       if (selectedDaysAvailable.length > 0) filters.daysAvailable = selectedDaysAvailable;
     }
-    
-    console.log("Applying filters:", filters);
     
     // Apply filters based on current tab
     if (tabIndex === 0) {
