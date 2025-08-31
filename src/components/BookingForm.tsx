@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -179,8 +179,6 @@ const BookingForm = ({
         total_price: totalPrice,
       };
 
-      console.log('Submitting booking:', bookingData);
-      
       // Set up progress simulation
       const progressInterval = setInterval(() => {
         setSubmitProgress(prev => {
@@ -216,7 +214,6 @@ const BookingForm = ({
         throw new Error(result.error || 'Failed to create booking');
       }
 
-      console.log('Booking created successfully:', result.booking);
       toast({
         title: 'Booking request submitted',
         description: 'Your booking request has been sent to the guide',

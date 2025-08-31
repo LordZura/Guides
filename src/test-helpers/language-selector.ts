@@ -256,11 +256,8 @@ export const performanceTests = [
 // Mock data helpers
 export const createMockLanguageData = (languages: string[]) => ({
   selectedLanguages: languages,
-  onChange: (newLanguages: string[]) => {
-    // Only log in development environment
-    if (import.meta.env.MODE === 'development') {
-      console.log('Languages changed:', newLanguages);
-    }
+  onChange: (_newLanguages: string[]) => {
+    // Development logging removed for production build
   },
   isRequired: false,
   isInvalid: false

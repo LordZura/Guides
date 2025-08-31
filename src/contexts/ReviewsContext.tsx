@@ -231,8 +231,6 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         (dataToInsert as any).tour_id = reviewData.tour_id;
       }
       
-      console.log('Inserting review data:', dataToInsert);
-      
       // Insert the review
       const { error } = await supabase
         .from('reviews')

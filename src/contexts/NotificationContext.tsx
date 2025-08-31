@@ -121,8 +121,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         schema: 'public', 
         table: 'notifications',
         filter: `recipient_id=eq.${user.id}`
-      }, (payload) => {
-        console.log('Notification change:', payload);
+      }, (_payload) => {
         // Refresh notifications when any change occurs
         refreshNotifications();
       })
