@@ -4,6 +4,7 @@ import { useAuth } from './AuthProvider';
 import { useToast } from '@chakra-ui/react';
 import { useNotifications } from './NotificationContext';
 import { shouldAutoComplete, validatePaymentTiming } from '../utils/paymentUtils';
+import { retryBookingUpdate } from '../utils/supabaseRetry';
 
 export type BookingStatus = 'requested' | 'offered' | 'accepted' | 'declined' | 'paid' | 'completed' | 'cancelled';
 
@@ -264,27 +265,34 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       // Log attempt for debugging
       console.log(`Attempting to update booking ${bookingId} to status ${status} for user ${user.id}`);
       
-      // Remove manual timestamp setting - let database trigger handle it
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          status
-          // Remove updated_at - database trigger will handle this
-        })
-        .eq('id', bookingId);
+      // Use retry mechanism for booking updates to handle transient errors
+      const result = await retryBookingUpdate(
+        async () => {
+          const { data, error } = await supabase
+            .from('bookings')
+            .update({ 
+              status
+              // Remove updated_at - database trigger will handle this
+            })
+            .eq('id', bookingId)
+            .select();
+          return { data, error };
+        },
+        { maxRetries: 3, baseDelay: 1000 }
+      );
 
-      if (error) {
+      if (result.error) {
         console.error('Supabase update error:', {
-          error,
+          error: result.error,
           bookingId,
           status,
           userId: user.id,
-          errorCode: error.code,
-          errorMessage: error.message,
-          errorDetails: error.details,
-          errorHint: error.hint
+          errorCode: result.error.code,
+          errorMessage: result.error.message,
+          errorDetails: result.error.details,
+          errorHint: result.error.hint
         });
-        throw error;
+        throw result.error;
       }
 
       // Create notifications for status changes
