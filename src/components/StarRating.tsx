@@ -1,5 +1,5 @@
 import React from 'react';
-import { HStack, Icon, useColorModeValue } from '@chakra-ui/react';
+import { HStack, Icon, useColorModeValue, Box, Tooltip } from '@chakra-ui/react';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 
 export interface StarRatingProps {
@@ -9,6 +9,7 @@ export interface StarRatingProps {
   color?: string;
   spacing?: number;
   interactive?: boolean;
+  showTooltip?: boolean;
   onChange?: (rating: number) => void;
 }
 
@@ -19,6 +20,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   color,
   spacing = 0.5,
   interactive = false,
+  showTooltip = false,
   onChange
 }) => {
   const starColor = useColorModeValue(color || 'yellow.400', color || 'yellow.300');
@@ -26,50 +28,44 @@ const StarRating: React.FC<StarRatingProps> = ({
 
   const handleClick = (index: number) => {
     if (interactive && onChange) {
-      onChange(index + 1);
+      // If clicking on the same star that's already selected, clear the rating
+      const newRating = rating === index + 1 ? 0 : index + 1;
+      onChange(newRating);
     }
   };
 
   for (let i = 0; i < maxRating; i++) {
+    // Determine which star icon to use
+    let StarIcon = FaRegStar;
     if (i < Math.floor(rating)) {
-      // Full star
-      stars.push(
-        <Icon 
-          key={i} 
-          as={FaStar} 
-          w={`${size}px`} 
-          h={`${size}px`} 
-          color={starColor} 
-          cursor={interactive ? 'pointer' : 'default'} 
-          onClick={() => handleClick(i)}
-        />
-      );
+      StarIcon = FaStar;
     } else if (i < Math.ceil(rating) && !Number.isInteger(rating)) {
-      // Half star
+      StarIcon = FaStarHalfAlt;
+    }
+    
+    // Wrap star in tooltip if showTooltip is true
+    const star = (
+      <Icon 
+        key={i} 
+        as={StarIcon} 
+        w={`${size}px`} 
+        h={`${size}px`} 
+        color={starColor} 
+        cursor={interactive ? 'pointer' : 'default'} 
+        onClick={() => handleClick(i)}
+        _hover={interactive ? { transform: 'scale(1.2)' } : undefined}
+        transition="transform 0.2s"
+      />
+    );
+    
+    if (showTooltip && interactive) {
       stars.push(
-        <Icon 
-          key={i} 
-          as={FaStarHalfAlt} 
-          w={`${size}px`} 
-          h={`${size}px`} 
-          color={starColor}
-          cursor={interactive ? 'pointer' : 'default'} 
-          onClick={() => handleClick(i)}
-        />
+        <Tooltip key={i} label={`${i + 1} stars`} placement="top">
+          <Box>{star}</Box>
+        </Tooltip>
       );
     } else {
-      // Empty star
-      stars.push(
-        <Icon 
-          key={i} 
-          as={FaRegStar} 
-          w={`${size}px`} 
-          h={`${size}px`} 
-          color={starColor}
-          cursor={interactive ? 'pointer' : 'default'} 
-          onClick={() => handleClick(i)}
-        />
-      );
+      stars.push(star);
     }
   }
 

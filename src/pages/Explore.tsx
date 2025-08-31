@@ -40,7 +40,7 @@ import { supabase, Profile } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import GuideCard from '../components/GuideCard';
 import TourCard from '../components/TourCard';
-import StarRating from '../components/StarRating';
+import RatingFilter from '../components/RatingFilter';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -109,15 +109,12 @@ const Explore = () => {
       
       // Apply client-side filters for rating and review count
       if (filters.rating && filters.rating > 0) {
-        // Calculate the minimum rating threshold based on the selected stars
-        // 1 star = 0.5+, 2 stars = 1.5+, 3 stars = 2.5+, 4 stars = 3.5+, 5 stars = 5.0+
-        const minRatingThreshold = filters.rating === 5 ? 5.0 : filters.rating - 0.5;
+        // Use consistent filter logic - ratings are now exact thresholds (4 stars means 4.0+)
+        const minRatingThreshold = filters.rating;
         
         filteredGuides = filteredGuides.filter(guide => 
-          // Include guides with numeric rating data that meets the threshold
-          // Also include guides without ratings only if threshold is 1 star (lowest rating filter)
-          (typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold) ||
-          (typeof guide.average_rating !== 'number' && filters.rating === 1)
+          // Only include guides with numeric rating that meets or exceeds the threshold
+          typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold
         );
       }
       
@@ -207,15 +204,10 @@ const Explore = () => {
         
         // Apply rating filter
         if (filters.rating && filters.rating > 0) {
-          // Calculate the minimum rating threshold based on the selected stars
-          // 1 star = 0.5+, 2 stars = 1.5+, 3 stars = 2.5+, 4 stars = 3.5+, 5 stars = 5.0+
-          const minRatingThreshold = filters.rating === 5 ? 5.0 : filters.rating - 0.5;
+          const minRatingThreshold = filters.rating;
           
           filteredGuides = filteredGuides.filter(guide => 
-            // Include guides with numeric rating data that meets the threshold
-            // Also include guides without ratings only if threshold is 1 star (lowest rating filter)
-            (typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold) ||
-            (typeof guide.average_rating !== 'number' && filters.rating === 1)
+            typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold
           );
         }
         
@@ -505,36 +497,12 @@ const Explore = () => {
                 {tabIndex === 0 ? (
                   /* Guides filters: rating, review count */
                   <>
-                    <FormControl>
-                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Rating</FormLabel>
-                      <HStack spacing={3}>
-                        <StarRating 
-                          rating={selectedRating}
-                          interactive={true}
-                          size={24}
-                          onChange={(rating) => setSelectedRating(rating)}
-                        />
-                        {selectedRating > 0 && (
-                          <>
-                            <Text fontSize="sm" color="gray.600">
-                              {selectedRating === 5 ? '5.0+ stars' : `${selectedRating - 0.5}+ stars`}
-                            </Text>
-                            <Button 
-                              size="xs" 
-                              variant="ghost" 
-                              onClick={() => setSelectedRating(0)}
-                              color="gray.500"
-                              _hover={{ color: 'gray.700' }}
-                            >
-                              Clear
-                            </Button>
-                          </>
-                        )}
-                        {selectedRating === 0 && (
-                          <Text fontSize="sm" color="gray.500">Click stars to filter by rating</Text>
-                        )}
-                      </HStack>
-                    </FormControl>
+                    <RatingFilter
+                      selectedRating={selectedRating}
+                      onChange={setSelectedRating}
+                      label="Minimum Rating"
+                      showClear={true}
+                    />
                     
                     <FormControl>
                       <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
@@ -558,36 +526,12 @@ const Explore = () => {
                 ) : tabIndex === 1 ? (
                   /* Tours filters: rating, review count, price range, days available */
                   <>
-                    <FormControl>
-                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Rating</FormLabel>
-                      <HStack spacing={3}>
-                        <StarRating 
-                          rating={selectedRating}
-                          interactive={true}
-                          size={24}
-                          onChange={(rating) => setSelectedRating(rating)}
-                        />
-                        {selectedRating > 0 && (
-                          <>
-                            <Text fontSize="sm" color="gray.600">
-                              {selectedRating === 5 ? '5.0+ stars' : `${selectedRating - 0.5}+ stars`}
-                            </Text>
-                            <Button 
-                              size="xs" 
-                              variant="ghost" 
-                              onClick={() => setSelectedRating(0)}
-                              color="gray.500"
-                              _hover={{ color: 'gray.700' }}
-                            >
-                              Clear
-                            </Button>
-                          </>
-                        )}
-                        {selectedRating === 0 && (
-                          <Text fontSize="sm" color="gray.500">Click stars to filter by rating</Text>
-                        )}
-                      </HStack>
-                    </FormControl>
+                    <RatingFilter
+                      selectedRating={selectedRating}
+                      onChange={setSelectedRating}
+                      label="Minimum Rating"
+                      showClear={true}
+                    />
                     
                     <FormControl>
                       <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
@@ -860,20 +804,12 @@ const Explore = () => {
               {tabIndex === 0 ? (
                 /* Guides filters: rating, review count */
                 <>
-                  <FormControl>
-                    <FormLabel>Minimum Rating</FormLabel>
-                    <Select 
-                      placeholder="Any rating"
-                      value={selectedRating}
-                      onChange={(e) => setSelectedRating(Number(e.target.value))}
-                    >
-                      <option value={5}>5+ stars</option>
-                      <option value={4}>4+ stars</option>
-                      <option value={3}>3+ stars</option>
-                      <option value={2}>2+ stars</option>
-                      <option value={1}>1+ stars</option>
-                    </Select>
-                  </FormControl>
+                  <RatingFilter
+                    selectedRating={selectedRating}
+                    onChange={setSelectedRating}
+                    label="Minimum Rating"
+                    showClear={false}
+                  />
                   
                   <FormControl>
                     <FormLabel>Minimum Reviews</FormLabel>
@@ -892,20 +828,12 @@ const Explore = () => {
               ) : tabIndex === 1 ? (
                 /* Tours filters: price range, days available, rating, review count */
                 <>
-                  <FormControl>
-                    <FormLabel>Minimum Rating</FormLabel>
-                    <Select 
-                      placeholder="Any rating"
-                      value={selectedRating}
-                      onChange={(e) => setSelectedRating(Number(e.target.value))}
-                    >
-                      <option value={5}>5+ stars</option>
-                      <option value={4}>4+ stars</option>
-                      <option value={3}>3+ stars</option>
-                      <option value={2}>2+ stars</option>
-                      <option value={1}>1+ stars</option>
-                    </Select>
-                  </FormControl>
+                  <RatingFilter
+                    selectedRating={selectedRating}
+                    onChange={setSelectedRating}
+                    label="Minimum Rating"
+                    showClear={false}
+                  />
                   
                   <FormControl>
                     <FormLabel>Minimum Reviews</FormLabel>
