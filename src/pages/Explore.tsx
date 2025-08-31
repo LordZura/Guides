@@ -179,6 +179,20 @@ const Explore = () => {
             phone: null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
+          },
+          {
+            id: '4',
+            full_name: 'Alex Thompson',
+            role: 'guide' as const,
+            bio: 'Adventure guide in New York',
+            location: 'New York',
+            languages: ['English'],
+            average_rating: 3.0,
+            reviews_count: 12,
+            avatar_url: null,
+            phone: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
         ];
         
@@ -853,6 +867,7 @@ const Explore = () => {
                       value={selectedRating}
                       onChange={(e) => setSelectedRating(Number(e.target.value))}
                     >
+                      <option value={5}>5+ stars</option>
                       <option value={4}>4+ stars</option>
                       <option value={3}>3+ stars</option>
                       <option value={2}>2+ stars</option>
@@ -884,6 +899,7 @@ const Explore = () => {
                       value={selectedRating}
                       onChange={(e) => setSelectedRating(Number(e.target.value))}
                     >
+                      <option value={5}>5+ stars</option>
                       <option value={4}>4+ stars</option>
                       <option value={3}>3+ stars</option>
                       <option value={2}>2+ stars</option>
