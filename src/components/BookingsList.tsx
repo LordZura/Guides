@@ -103,7 +103,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
       case 'cancel':
         return 'Are you sure you want to cancel this booking? This action cannot be undone.';
       case 'complete':
-        return 'Are you sure you want to mark this tour as completed?';
+        return 'Are you sure you want to mark this tour as completed? This will release payment to the guide.';
       default:
         return '';
     }
@@ -166,8 +166,8 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
         success = await updateBookingStatus(selectedBooking.id, newStatus);
         if (success) {
           toast({
-            title: 'Tour marked as completed',
-            description: 'The tour has been marked as completed',
+            title: 'Tour completed',
+            description: 'The tour has been marked as completed and payment has been released to the guide',
             status: 'success',
             duration: 3000,
             isClosable: true,

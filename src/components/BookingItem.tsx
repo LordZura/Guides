@@ -86,7 +86,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
       case 'requested': return 'Your booking request is waiting for guide approval';
       case 'offered': return 'A guide has offered to provide your requested tour';
       case 'accepted': return 'The guide has accepted your booking. Payment is required to confirm.';
-      case 'paid': return 'Your booking is confirmed and paid. Enjoy your tour!';
+      case 'paid': return 'Your booking is confirmed and paid. You can mark it as completed after the tour.';
       case 'completed': return 'This tour has been completed.';
       case 'declined': return 'The guide has declined this booking request.';
       case 'cancelled': return 'This booking has been cancelled.';
@@ -108,7 +108,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   const showAcceptDeclineOffer = !isGuide && booking.status === 'offered'; // Tourist can accept/decline offers
   const showCancel = !isGuide && ['requested', 'accepted'].includes(booking.status);
   const showPayment = !isGuide && booking.status === 'accepted';
-  const showComplete = isGuide && booking.status === 'paid';
+  const showComplete = !isGuide && booking.status === 'paid'; // Tourist marks tour as completed
   const showReview = !isGuide && booking.status === 'completed';
 
   return (
@@ -242,7 +242,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
               onClick={onComplete}
               isLoading={isProcessing}
             >
-              Mark Completed
+              Complete Tour
             </Button>
           )}
 

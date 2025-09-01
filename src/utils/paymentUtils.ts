@@ -49,7 +49,7 @@ export const validatePaymentTiming = (bookingDate: string, preferredTime?: strin
 
 /**
  * Checks if a tour should be automatically completed
- * Tours are auto-completed 48 hours after the booking date if not manually completed
+ * Tours are auto-completed 24 hours after the booking date if not manually completed
  */
 export const shouldAutoComplete = (bookingDate: string, status: string, preferredTime?: string): boolean => {
   if (status !== 'paid') return false;
@@ -67,8 +67,8 @@ export const shouldAutoComplete = (bookingDate: string, status: string, preferre
     tourEndTime.setHours(23, 59, 59, 999);
   }
   
-  // Add 48 hours to tour end time
-  const autoCompleteTime = addHours(tourEndTime, 48);
+  // Add 24 hours to tour end time
+  const autoCompleteTime = addHours(tourEndTime, 24);
   
   return isBefore(autoCompleteTime, now);
 };
@@ -104,7 +104,7 @@ export const getCompletionDeadlineMessage = (bookingDate: string, preferredTime?
     tourEndTime.setHours(23, 59, 59, 999);
   }
   
-  const autoCompleteTime = addHours(tourEndTime, 48);
+  const autoCompleteTime = addHours(tourEndTime, 24);
   
   return `Tour will be automatically completed on ${format(autoCompleteTime, 'MMM dd, yyyy \'at\' h:mm a')} if not confirmed earlier`;
 };

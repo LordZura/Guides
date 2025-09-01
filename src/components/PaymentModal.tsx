@@ -207,7 +207,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   <ListItem>Your payment is processed immediately but held securely</ListItem>
                   <ListItem>Funds are not released to the guide until tour completion</ListItem>
                   <ListItem>You confirm tour completion, then payment is released</ListItem>
-                  <ListItem>If you don't confirm, payment is automatically released after 48 hours</ListItem>
+                  <ListItem>If you don't confirm, payment is automatically released after 24 hours</ListItem>
                 </UnorderedList>
               </Box>
 
