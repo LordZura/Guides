@@ -49,7 +49,7 @@ export const validatePaymentTiming = (bookingDate: string, preferredTime?: strin
 
 /**
  * Checks if a tour should be automatically completed
- * Tours are auto-completed 48 hours after the booking date if not manually completed
+ * Tours are auto-completed 24 hours after the tour start time if not manually completed
  */
 export const shouldAutoComplete = (bookingDate: string, status: string, preferredTime?: string): boolean => {
   if (status !== 'paid') return false;
@@ -57,18 +57,18 @@ export const shouldAutoComplete = (bookingDate: string, status: string, preferre
   const now = new Date();
   const tourDate = new Date(bookingDate);
   
-  let tourEndTime = new Date(tourDate);
+  let tourStartTime = new Date(tourDate);
   
   if (preferredTime) {
     const [hours, minutes] = preferredTime.split(':').map(Number);
-    tourEndTime.setHours(hours, minutes || 0, 0, 0);
+    tourStartTime.setHours(hours, minutes || 0, 0, 0);
   } else {
-    // Default to end of day if no time specified
-    tourEndTime.setHours(23, 59, 59, 999);
+    // Default to start of day if no time specified
+    tourStartTime.setHours(0, 0, 0, 0);
   }
   
-  // Add 48 hours to tour end time
-  const autoCompleteTime = addHours(tourEndTime, 48);
+  // Add 24 hours to tour start time
+  const autoCompleteTime = addHours(tourStartTime, 24);
   
   return isBefore(autoCompleteTime, now);
 };
@@ -95,16 +95,17 @@ export const getPaymentDeadlineMessage = (bookingDate: string, preferredTime?: s
  */
 export const getCompletionDeadlineMessage = (bookingDate: string, preferredTime?: string): string => {
   const tourDate = new Date(bookingDate);
-  let tourEndTime = new Date(tourDate);
+  let tourStartTime = new Date(tourDate);
   
   if (preferredTime) {
     const [hours, minutes] = preferredTime.split(':').map(Number);
-    tourEndTime.setHours(hours, minutes || 0, 0, 0);
+    tourStartTime.setHours(hours, minutes || 0, 0, 0);
   } else {
-    tourEndTime.setHours(23, 59, 59, 999);
+    // Default to start of day if no time specified
+    tourStartTime.setHours(0, 0, 0, 0);
   }
   
-  const autoCompleteTime = addHours(tourEndTime, 48);
+  const autoCompleteTime = addHours(tourStartTime, 24);
   
   return `Tour will be automatically completed on ${format(autoCompleteTime, 'MMM dd, yyyy \'at\' h:mm a')} if not confirmed earlier`;
 };

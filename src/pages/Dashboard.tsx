@@ -36,11 +36,13 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthProvider';
 import { ToursProvider } from '../contexts/ToursContext';
 import { BookingProvider } from '../contexts/BookingContext';
+import { PaymentStatsProvider } from '../contexts/PaymentStatsContext';
 import { DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import ProfileEditor from '../components/ProfileEditor';
 import TourForm from '../components/TourForm';
 import ToursList from '../components/ToursList';
 import BookingsList from '../components/BookingsList';
+import PaymentTracker from '../components/PaymentTracker';
 
 const Dashboard = () => {
   const { profile } = useAuth();
@@ -94,7 +96,8 @@ const Dashboard = () => {
   return (
     <ToursProvider>
       <BookingProvider>
-        <Container maxW="container.xl" p={6}>
+        <PaymentStatsProvider>
+          <Container maxW="container.xl" p={6}>
           <Grid 
             templateColumns={{ base: "1fr", lg: "320px 1fr" }}
             gap={8}
@@ -238,6 +241,9 @@ const Dashboard = () => {
                     <TabList borderBottomColor="gray.200">
                       <Tab fontWeight="semibold" py={4} px={6} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }}>My {profile.role === 'guide' ? 'Tours' : 'Tour Requests'}</Tab>
                       <Tab fontWeight="semibold" py={4} px={6} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }}>My Bookings</Tab>
+                      {profile.role === 'guide' && (
+                        <Tab fontWeight="semibold" py={4} px={6} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }}>Payment Tracking</Tab>
+                      )}
                     </TabList>
                     
                     <TabPanels>
@@ -250,6 +256,13 @@ const Dashboard = () => {
                       <TabPanel p={6}>
                         {activeTabIndex === 1 && <BookingsList showTitle={false} />}
                       </TabPanel>
+                      
+                      {/* Payment Tracking Panel - Guide Only */}
+                      {profile.role === 'guide' && (
+                        <TabPanel p={6}>
+                          {activeTabIndex === 2 && <PaymentTracker />}
+                        </TabPanel>
+                      )}
                     </TabPanels>
                   </Tabs>
                 </Box>
@@ -268,6 +281,7 @@ const Dashboard = () => {
             </ModalBody>
           </ModalContent>
         </Modal>
+        </PaymentStatsProvider>
       </BookingProvider>
     </ToursProvider>
   );
