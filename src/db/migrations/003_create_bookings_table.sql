@@ -53,7 +53,8 @@ CREATE POLICY "Tourists can create bookings"
 CREATE POLICY "Users can update relevant bookings" 
   ON public.bookings 
   FOR UPDATE 
-  USING (auth.uid() = tourist_id OR auth.uid() = guide_id);
+  USING (auth.uid() = tourist_id OR auth.uid() = guide_id)
+  WITH CHECK (auth.uid() = tourist_id OR auth.uid() = guide_id);
 
 -- Create indexes for performance
 CREATE INDEX idx_bookings_tourist_id ON public.bookings(tourist_id);
