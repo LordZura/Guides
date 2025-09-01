@@ -108,7 +108,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   const showAcceptDeclineOffer = !isGuide && booking.status === 'offered'; // Tourist can accept/decline offers
   const showCancel = !isGuide && ['requested', 'accepted'].includes(booking.status);
   const showPayment = !isGuide && booking.status === 'accepted';
-  const showComplete = isGuide && booking.status === 'paid';
+  const showComplete = !isGuide && booking.status === 'paid';
   const showReview = !isGuide && booking.status === 'completed';
 
   return (
