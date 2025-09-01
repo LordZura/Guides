@@ -311,6 +311,17 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
               message: `Your booking for '${(bookingData as any).tours?.title || 'tour'}' has been declined`,
               action_url: '/dashboard/my-bookings'
             });
+          } else if (status === 'completed') {
+            // Notify guide when tourist marks tour as completed
+            await createNotification({
+              type: 'booking_completed',
+              actor_id: bookingData.tourist_id,
+              recipient_id: bookingData.guide_id,
+              target_type: 'booking',
+              target_id: bookingId,
+              message: `Your tour '${(bookingData as any).tours?.title || 'tour'}' has been marked as completed`,
+              action_url: '/dashboard/my-bookings'
+            });
           }
         }
       } catch (notificationError) {
