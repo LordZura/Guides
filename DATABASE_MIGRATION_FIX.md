@@ -92,9 +92,12 @@ If you still see errors:
 
 ### Payment/Booking Update Errors
 If you see "Tourist is not allowed to perform this update" errors:
-1. Ensure migration `012_fix_bookings_update_policy.sql` has been applied
-2. Verify the UPDATE policy exists with both USING and WITH CHECK clauses:
+1. **IMMEDIATE FIX**: Run the provided `apply_booking_fix.sql` script in your Supabase SQL Editor
+2. Alternatively, ensure migration `012_fix_bookings_update_policy.sql` has been applied
+3. Verify the UPDATE policy exists with both USING and WITH CHECK clauses:
    ```sql
    SELECT * FROM pg_policies WHERE tablename = 'bookings' AND policyname = 'Users can update relevant bookings';
    ```
-3. If the policy still doesn't work, try recreating it manually in the Supabase SQL Editor
+4. If the policy still doesn't work, try recreating it manually in the Supabase SQL Editor
+
+**Quick Fix Script**: Use `apply_booking_fix.sql` which includes verification queries to confirm the fix is applied correctly.
