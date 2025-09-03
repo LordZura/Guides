@@ -243,7 +243,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Update booking status
+  // Update booking status - FIXED with better error handling and debugging
   const updateBookingStatus = async (bookingId: string, status: BookingStatus) => {
     if (!user) {
       toast({
@@ -256,17 +256,70 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
 
+    if (!bookingId) {
+      console.error('Invalid booking ID: empty or undefined');
+      toast({
+        title: 'Error updating booking',
+        description: 'Invalid booking ID',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+
     try {
-      // Remove manual timestamp setting - let database trigger handle it
+      console.log(`Updating booking ${bookingId} to status: ${status}`);
+      console.log(`Current user: ${user.id}, Role: ${profile?.role}`);
+      
+      // For debugging: verify the booking exists and the user has permission
+      const { data: bookingCheck, error: checkError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', bookingId)
+        .single();
+        
+      if (checkError) {
+        console.error('Error verifying booking:', checkError);
+        throw new Error(`Booking verification failed: ${checkError.message}`);
+      }
+      
+      if (!bookingCheck) {
+        throw new Error(`Booking with ID ${bookingId} not found`);
+      }
+      
+      console.log('Booking to update:', bookingCheck);
+      
+      // Check role-based permissions to give more specific error messages
+      if (profile?.role === 'tourist' && bookingCheck.tourist_id !== user.id) {
+        throw new Error('You do not have permission to update this booking');
+      }
+      
+      if (profile?.role === 'guide' && bookingCheck.guide_id !== user.id) {
+        throw new Error('You do not have permission to update this booking');
+      }
+      
+      // Additional validation for status transitions
+      if (profile?.role === 'tourist' && status === 'completed' && bookingCheck.status !== 'paid') {
+        throw new Error('Only paid bookings can be marked as completed');
+      }
+
+      // Now perform the actual update
       const { error } = await supabase
         .from('bookings')
-        .update({ 
-          status
-          // Remove updated_at - database trigger will handle this
-        })
+        .update({ status })
         .eq('id', bookingId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        
+        // Provide more specific error messages based on error codes
+        if (error.code === 'P0001' && error.message.includes('not allowed')) {
+          throw new Error('Permission denied: You do not have the required permissions to update this booking');
+        }
+        
+        throw error;
+      }
 
       // Create notifications for status changes
       try {
@@ -343,13 +396,27 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } catch (err: any) {
       console.error('Error updating booking status:', err);
+      
+      // Provide a more user-friendly error message
+      let errorMessage = 'An unexpected error occurred while updating the booking';
+      
+      if (err.message) {
+        errorMessage = err.message;
+        
+        // Special case for the specific error we're fixing
+        if (err.message.includes('Tourist is not allowed')) {
+          errorMessage = 'Permission denied: Tourists can only mark paid bookings as completed';
+        }
+      }
+      
       toast({
         title: 'Error updating booking',
-        description: err.message || 'An unexpected error occurred',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
+      
       return false;
     }
   };
@@ -513,6 +580,18 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
   const updateBookingStatusWithValidation = async (bookingId: string, newStatus: BookingStatus): Promise<boolean> => {
     if (!user || !profile) return false;
 
+    // Validate the booking ID is valid
+    if (!bookingId || typeof bookingId !== 'string' || !bookingId.trim()) {
+      toast({
+        title: 'Invalid booking ID',
+        description: 'A valid booking ID is required',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+
     // If status is changing to paid, validate payment timing
     if (newStatus === 'paid') {
       const booking = [...incomingBookings, ...outgoingBookings].find(b => b.id === bookingId);
@@ -528,6 +607,32 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
           });
           return false;
         }
+      }
+    }
+
+    // If status is changing to completed by a tourist, ensure it's in paid status
+    if (newStatus === 'completed' && profile.role === 'tourist') {
+      const booking = [...incomingBookings, ...outgoingBookings].find(b => b.id === bookingId);
+      if (!booking) {
+        toast({
+          title: 'Booking not found',
+          description: 'Could not find the specified booking',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return false;
+      }
+      
+      if (booking.status !== 'paid') {
+        toast({
+          title: 'Invalid status change',
+          description: 'Only paid bookings can be marked as completed',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return false;
       }
     }
 
