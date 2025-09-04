@@ -113,8 +113,9 @@ const Explore = () => {
         const minRatingThreshold = filters.rating;
         
         filteredGuides = filteredGuides.filter(guide => 
-          // Only include guides with numeric rating that meets or exceeds the threshold
-          typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold
+          // Include guides without rating data (undefined, null, non-numeric) since we can't know their rating yet
+          // Only exclude guides that have numeric rating data but don't meet the threshold
+          typeof guide.average_rating !== 'number' || guide.average_rating >= minRatingThreshold
         );
       }
       
@@ -206,7 +207,9 @@ const Explore = () => {
           const minRatingThreshold = filters.rating;
           
           filteredGuides = filteredGuides.filter(guide => 
-            typeof guide.average_rating === 'number' && guide.average_rating >= minRatingThreshold
+            // Include guides without rating data (undefined, null, non-numeric) since we can't know their rating yet
+            // Only exclude guides that have numeric rating data but don't meet the threshold
+            typeof guide.average_rating !== 'number' || guide.average_rating >= minRatingThreshold
           );
         }
         
