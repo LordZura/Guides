@@ -96,34 +96,66 @@ const Explore = () => {
       
       // Note: Location filtering is not applied to guides, only to tours
       
-      // For rating and review count filters, we'll need to filter client-side
-      // since these may be calculated fields or from related tables
-      
       const { data, error } = await query;
       
       if (error) {
         throw error;
       }
       
-      let filteredGuides = data || [];
+      let guides = data || [];
+      
+      // Fetch rating data for all guides
+      const guidesWithRatings = await Promise.all(
+        guides.map(async (guide) => {
+          try {
+            const { data: ratingData, error: ratingError } = await supabase
+              .rpc('get_review_summary', { 
+                target_id_param: guide.id, 
+                target_type_param: 'guide' 
+              });
+            
+            if (ratingError) {
+              console.warn(`Error fetching rating for guide ${guide.id}:`, ratingError);
+              return {
+                ...guide,
+                average_rating: 0,
+                reviews_count: 0,
+              };
+            }
+            
+            return {
+              ...guide,
+              average_rating: ratingData?.average_rating || 0,
+              reviews_count: ratingData?.total_reviews || 0,
+            };
+          } catch (err) {
+            console.warn(`Error fetching rating for guide ${guide.id}:`, err);
+            return {
+              ...guide,
+              average_rating: 0,
+              reviews_count: 0,
+            };
+          }
+        })
+      );
       
       // Apply client-side filters for rating and review count
+      let filteredGuides = guidesWithRatings;
+      
       if (filters.rating && filters.rating > 0) {
         // Use consistent filter logic - ratings are now exact thresholds (4 stars means 4.0+)
         const minRatingThreshold = filters.rating;
         
         filteredGuides = filteredGuides.filter(guide => 
-          // Include guides without rating data (undefined, null, non-numeric) since we can't know their rating yet
-          // Only exclude guides that have numeric rating data but don't meet the threshold
-          typeof guide.average_rating !== 'number' || guide.average_rating >= minRatingThreshold
+          // Only exclude guides that don't meet the rating threshold
+          // Include guides with 0 rating if they also have 0 reviews (no ratings yet)
+          guide.average_rating >= minRatingThreshold || (guide.average_rating === 0 && guide.reviews_count === 0)
         );
       }
       
       if (filters.reviewCount && filters.reviewCount > 0) {
         filteredGuides = filteredGuides.filter(guide => 
-          // Include guides without review count data (undefined, null, non-numeric)
-          // Only filter out guides that have numeric review counts below the threshold
-          typeof guide.reviews_count !== 'number' || guide.reviews_count >= filters.reviewCount!
+          guide.reviews_count >= filters.reviewCount!
         );
       }
       

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode, use
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '@chakra-ui/react';
 import { useNotifications } from './NotificationContext';
+import { triggerGuideRatingUpdate } from '../hooks/useGuideRating';
 
 export interface Review {
   id: string;
@@ -261,6 +262,11 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       // Refresh reviews
       if (targetId && targetType) {
         await loadReviews(targetId, targetType, 0);
+      }
+      
+      // Trigger rating update event for guide cards to refresh
+      if (reviewData.target_type === 'guide') {
+        triggerGuideRatingUpdate(reviewData.target_id);
       }
       
       toast({
