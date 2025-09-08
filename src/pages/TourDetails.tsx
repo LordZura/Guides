@@ -91,11 +91,11 @@ const TourDetail = () => {
           
           setGuide(guideData || null);
           
-          // Fetch guide rating summary
+          // Fetch tour review summary
           const { data: summaryData, error: summaryError } = await supabase
             .rpc('get_review_summary', { 
-              target_id_param: tourData.creator_id, 
-              target_type_param: 'guide' 
+              target_id_param: id, 
+              target_type_param: 'tour' 
             });
           
           if (!summaryError && summaryData) {
@@ -297,7 +297,7 @@ const TourDetail = () => {
               {/* Only show guide reviews section if this is a guide's tour */}
               {isGuide && guide && (
                 <Box mt={8}>
-                  <Heading as="h2" size="lg" mb={4}>Guide Reviews</Heading>
+                  <Heading as="h2" size="lg" mb={4}>Tour Reviews</Heading>
                   
                   <ReviewsProvider>
                     <ReviewsSummary 
@@ -307,16 +307,16 @@ const TourDetail = () => {
                     />
                     
                     <ReviewForm 
-                      targetId={tour.creator_id || ''}
-                      targetType="guide"
+                      targetId={id || ''}
+                      targetType="tour"
                       tourId={id || ''}
                     />
                     
                     <Box mt={6}>
                       <ReviewsList 
-                        targetId={tour.creator_id || ''}
-                        targetType="guide"
-                        showTourInfo={true}
+                        targetId={id || ''}
+                        targetType="tour"
+                        showTourInfo={false}
                       />
                     </Box>
                   </ReviewsProvider>

@@ -416,8 +416,8 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
           <ModalBody>
             {selectedBooking && (
               <ReviewForm
-                targetId={selectedBooking.guide_id}
-                targetType="guide"
+                targetId={selectedBooking.tour_id}
+                targetType="tour"
                 tourId={selectedBooking.tour_id}
                 onSuccess={handleReviewSuccess}
               />

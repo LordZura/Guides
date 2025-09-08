@@ -80,15 +80,33 @@ export const getGuideProfile = async (guideId: string): Promise<{
     
     if (toursError) throw toursError;
     
-    // Fetch reviews for this guide without using foreign key relationships
-    const { data: reviewsData, error: reviewsError } = await supabase
+    // Fetch reviews for this guide - both direct guide reviews and tour reviews
+    const { data: directReviewsData, error: directReviewsError } = await supabase
       .from('reviews')
       .select('*')
       .eq('target_id', guideId)
       .eq('target_type', 'guide')
       .order('created_at', { ascending: false });
     
-    if (reviewsError) throw reviewsError;
+    if (directReviewsError) throw directReviewsError;
+    
+    // Also fetch reviews for all tours created by this guide
+    let tourReviewsData: any[] = [];
+    if (toursData && toursData.length > 0) {
+      const tourIds = toursData.map(tour => tour.id);
+      const { data: tourReviews, error: tourReviewsError } = await supabase
+        .from('reviews')
+        .select('*')
+        .in('target_id', tourIds)
+        .eq('target_type', 'tour')
+        .order('created_at', { ascending: false });
+      
+      if (tourReviewsError) throw tourReviewsError;
+      tourReviewsData = tourReviews || [];
+    }
+    
+    // Combine all reviews
+    const allReviewsData = [...(directReviewsData || []), ...tourReviewsData];
     
     // Get review summary
     const { data: summaryData, error: summaryError } = await supabase
@@ -102,9 +120,9 @@ export const getGuideProfile = async (guideId: string): Promise<{
     // Fetch reviewer information separately
     let reviews: Review[] = [];
     
-    if (reviewsData && reviewsData.length > 0) {
+    if (allReviewsData && allReviewsData.length > 0) {
       // Get unique reviewer IDs
-      const reviewerIds = [...new Set(reviewsData.map(review => review.reviewer_id))];
+      const reviewerIds = [...new Set(allReviewsData.map(review => review.reviewer_id))];
       
       // Fetch reviewer profiles
       const { data: reviewerProfiles, error: reviewerError } = await supabase
@@ -123,7 +141,7 @@ export const getGuideProfile = async (guideId: string): Promise<{
       }
       
       // Fetch tour information separately
-      const tourIds = [...new Set(reviewsData.filter(review => review.tour_id).map(review => review.tour_id))];
+      const tourIds = [...new Set(allReviewsData.filter(review => review.tour_id).map(review => review.tour_id))];
       
       let tourMap = new Map();
       if (tourIds.length > 0) {
@@ -142,7 +160,7 @@ export const getGuideProfile = async (guideId: string): Promise<{
       }
       
       // Transform reviews data
-      reviews = reviewsData.map((item): Review => {
+      reviews = allReviewsData.map((item): Review => {
         const reviewer = reviewerMap.get(item.reviewer_id);
         const tour = item.tour_id ? tourMap.get(item.tour_id) : null;
         
