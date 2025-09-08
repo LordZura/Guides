@@ -243,7 +243,30 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Create notification for guide when tourist rates a tour
-      if (reviewData.target_type === 'guide') {
+      if (reviewData.target_type === 'tour' && reviewData.tour_id) {
+        try {
+          // Get the tour to find the guide
+          const { data: tourData, error: tourError } = await supabase
+            .from('tours')
+            .select('creator_id, title')
+            .eq('id', reviewData.target_id)
+            .single();
+          
+          if (!tourError && tourData) {
+            await createNotification({
+              type: 'tour_rated',
+              actor_id: reviewData.reviewer_id,
+              recipient_id: tourData.creator_id,
+              target_type: 'tour',
+              target_id: reviewData.target_id,
+              message: `Someone rated your tour "${tourData.title}" ${reviewData.rating} stars`,
+              action_url: null // As per requirements, rating notifications should not have jump actions
+            });
+          }
+        } catch (notificationError) {
+          console.warn('Failed to create review notification:', notificationError);
+        }
+      } else if (reviewData.target_type === 'guide') {
         try {
           await createNotification({
             type: 'tour_rated',
@@ -251,7 +274,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
             recipient_id: reviewData.target_id,
             target_type: 'tour',
             target_id: reviewData.tour_id || reviewData.target_id,
-            message: `Someone rated your tour ${reviewData.rating} stars`,
+            message: `Someone rated your guide services ${reviewData.rating} stars`,
             action_url: null // As per requirements, rating notifications should not have jump actions
           });
         } catch (notificationError) {
@@ -267,6 +290,21 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       // Trigger rating update event for guide cards to refresh
       if (reviewData.target_type === 'guide') {
         triggerGuideRatingUpdate(reviewData.target_id);
+      } else if (reviewData.target_type === 'tour') {
+        // For tour reviews, also trigger guide rating update since tour reviews affect guide ratings
+        try {
+          const { data: tourData, error: tourError } = await supabase
+            .from('tours')
+            .select('creator_id')
+            .eq('id', reviewData.target_id)
+            .single();
+          
+          if (!tourError && tourData) {
+            triggerGuideRatingUpdate(tourData.creator_id);
+          }
+        } catch (error) {
+          console.warn('Failed to trigger guide rating update for tour review:', error);
+        }
       }
       
       toast({
