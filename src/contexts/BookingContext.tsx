@@ -480,13 +480,20 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     if (!user || !profile) return;
 
     try {
-      // Fetch paid bookings that might need auto-completion
-      const { data: paidBookings, error } = await supabase
+      // Build query based on user role to avoid empty UUID filters
+      let query = supabase
         .from('bookings')
         .select('*')
-        .eq('status', 'paid')
-        .filter('guide_id', 'eq', profile.role === 'guide' ? user.id : '')
-        .filter('tourist_id', 'eq', profile.role === 'tourist' ? user.id : '');
+        .eq('status', 'paid');
+
+      // Apply role-specific filters to avoid empty string UUIDs
+      if (profile.role === 'guide') {
+        query = query.eq('guide_id', user.id);
+      } else if (profile.role === 'tourist') {
+        query = query.eq('tourist_id', user.id);
+      }
+
+      const { data: paidBookings, error } = await query;
 
       if (error) {
         console.warn('Error fetching paid bookings for auto-completion:', error);
