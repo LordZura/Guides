@@ -19,7 +19,12 @@ export const useGuideRating = (guideId: string, existingData?: GuideData) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchRatingData = useCallback(async () => {
-    if (!guideId) return;
+    if (!guideId) {
+      console.log('useGuideRating - Early return: No guideId provided');
+      return;
+    }
+    
+    console.log(`useGuideRating - Fetching rating data for guide: ${guideId}`);
     
     // Only fetch if we don't have data or we're forcing a refresh
     setIsLoading(true);
@@ -35,10 +40,15 @@ export const useGuideRating = (guideId: string, existingData?: GuideData) => {
         throw error;
       }
       
+      console.log('Summary data:', data); // Debug: Add console.log as requested
       if (data) {
+        console.log(`Raw data received for guide ${guideId}:`, data);
+        console.log(`Data types - average_rating: ${typeof data.average_rating}, total_reviews: ${typeof data.total_reviews}`);
         setAverageRating(data.average_rating || 0);
         setReviewCount(data.total_reviews || 0);
         console.log(`Updated rating for guide ${guideId}:`, data.average_rating, data.total_reviews);
+      } else {
+        console.log(`No data returned for guide ${guideId}`);
       }
     } catch (err) {
       console.error('Error in fetchRatingData:', err);
@@ -52,9 +62,13 @@ export const useGuideRating = (guideId: string, existingData?: GuideData) => {
   useEffect(() => {
     const handleRatingUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
+      console.log('Event received:', customEvent.type, 'for guide:', customEvent.detail?.guideId);
+      console.log('Event detail:', customEvent.detail); // Debug: Add console.log as requested
       if (customEvent.detail && customEvent.detail.guideId === guideId) {
         console.log(`Guide rating update event received for ${guideId}`);
         fetchRatingData();
+      } else {
+        console.log(`Event ignored - target guide: ${customEvent.detail?.guideId}, current guide: ${guideId}`);
       }
     };
 
@@ -81,9 +95,10 @@ export const useGuideRating = (guideId: string, existingData?: GuideData) => {
 export const triggerGuideRatingUpdate = (guideId: string) => {
   if (!guideId) return;
   
-  console.log(`Triggering guide rating update for ${guideId}`);
+  console.log('Dispatching event for guide:', guideId); // Debug: Add console.log as requested
   const event = new CustomEvent('guideRatingUpdated', {
     detail: { guideId }
   });
+  console.log('Event detail:', event.detail); // Debug: Add console.log as requested
   window.dispatchEvent(event);
 };
