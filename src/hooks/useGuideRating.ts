@@ -35,7 +35,10 @@ export const useGuideRating = (guideId: string, existingData?: GuideData) => {
         throw error;
       }
       
+      console.log('Summary data:', data); // Debug: Add console.log as requested
       if (data) {
+        console.log(`Raw data received for guide ${guideId}:`, data);
+        console.log(`Data types - average_rating: ${typeof data.average_rating}, total_reviews: ${typeof data.total_reviews}`);
         setAverageRating(data.average_rating || 0);
         setReviewCount(data.total_reviews || 0);
         console.log(`Updated rating for guide ${guideId}:`, data.average_rating, data.total_reviews);
@@ -81,9 +84,10 @@ export const useGuideRating = (guideId: string, existingData?: GuideData) => {
 export const triggerGuideRatingUpdate = (guideId: string) => {
   if (!guideId) return;
   
-  console.log(`Triggering guide rating update for ${guideId}`);
+  console.log('Dispatching event for guide:', guideId); // Debug: Add console.log as requested
   const event = new CustomEvent('guideRatingUpdated', {
     detail: { guideId }
   });
+  console.log('Event detail:', event.detail); // Debug: Add console.log as requested
   window.dispatchEvent(event);
 };

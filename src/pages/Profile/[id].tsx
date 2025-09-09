@@ -48,6 +48,11 @@ const ProfilePage = () => {
   // Use the live rating hook to get up-to-date rating data
   const { averageRating, reviewCount } = useGuideRating(id || '', guideProfile || undefined);
   
+  // Debug: Add console.log to track Profile rating state
+  useEffect(() => {
+    console.log('Profile rating state:', averageRating, reviewCount);
+  }, [averageRating, reviewCount]);
+  
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!id) return;

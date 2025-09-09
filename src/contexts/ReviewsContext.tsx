@@ -120,6 +120,13 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       
       if (summaryError) throw summaryError;
       
+      console.log('ReviewsContext - Raw summary data:', summaryData);
+      console.log('ReviewsContext - Data types:', {
+        average_rating: typeof summaryData?.average_rating,
+        total_reviews: typeof summaryData?.total_reviews,
+        rating_counts: typeof summaryData?.rating_counts
+      });
+      
       // Get all reviewer IDs to fetch their profiles
       const reviewerIds = reviewsData.map(review => review.reviewer_id);
       
@@ -189,6 +196,11 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       
       // Update summary
       if (summaryData) {
+        console.log('ReviewsContext - Updating summary with:', {
+          averageRating: summaryData.average_rating || 0,
+          totalReviews: summaryData.total_reviews || 0,
+          ratingCounts: summaryData.rating_counts || {}
+        });
         setAverageRating(summaryData.average_rating || 0);
         setTotalReviews(summaryData.total_reviews || 0);
         setRatingCounts(summaryData.rating_counts || {});
