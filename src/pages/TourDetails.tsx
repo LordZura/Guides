@@ -58,6 +58,7 @@ const TourDetail = () => {
     ratingCounts: {}
   });
   
+  // Update the useEffect that fetches tour details in TourDetails.tsx
   useEffect(() => {
     const fetchTourDetails = async () => {
       if (!id) return;
@@ -91,18 +92,41 @@ const TourDetail = () => {
           
           setGuide(guideData || null);
           
-          // Fetch tour review summary
-          const { data: summaryData, error: summaryError } = await supabase
-            .rpc('get_review_summary', { 
-              target_id_param: id, 
-              target_type_param: 'tour' 
-            });
-          
-          if (!summaryError && summaryData) {
+          // Fetch tour review summary - add more detailed error handling
+          try {
+            const { data: summaryData, error: summaryError } = await supabase
+              .rpc('get_review_summary', { 
+                target_id_param: id, 
+                target_type_param: 'tour' 
+              });
+            
+            if (summaryError) {
+              console.error('Error fetching tour review summary:', summaryError);
+              throw summaryError;
+            }
+            
+            if (summaryData) {
+              console.log('Tour review summary:', summaryData);
+              setReviewSummary({
+                averageRating: summaryData.average_rating || 0,
+                totalReviews: summaryData.total_reviews || 0,
+                ratingCounts: summaryData.rating_counts || {}
+              });
+            } else {
+              console.log('No review summary data returned');
+              setReviewSummary({
+                averageRating: 0,
+                totalReviews: 0,
+                ratingCounts: {}
+              });
+            }
+          } catch (summaryErr) {
+            console.error('Failed to fetch review summary:', summaryErr);
+            // Don't throw, just use default values
             setReviewSummary({
-              averageRating: summaryData.average_rating || 0,
-              totalReviews: summaryData.total_reviews || 0,
-              ratingCounts: summaryData.rating_counts || {}
+              averageRating: 0,
+              totalReviews: 0,
+              ratingCounts: {}
             });
           }
         }

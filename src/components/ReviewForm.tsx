@@ -105,6 +105,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
   
+  // Only updating the handleSubmit function in ReviewForm.tsx
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -134,7 +135,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       return;
     }
     
-    // Prepare review data using 'comment' instead of 'content'
+    // Prepare review data
     const reviewData = {
       reviewer_id: user.id,
       target_id: targetId,
@@ -147,6 +148,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     if (tourId) {
       (reviewData as any).tour_id = tourId;
     }
+    
+    console.log("Submitting review:", reviewData);
     
     await addReview(reviewData);
     

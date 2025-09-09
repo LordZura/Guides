@@ -214,6 +214,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Add a new review
+  // Only updating the relevant part of this file
   const addReview = async (reviewData: ReviewData) => {
     try {
       setIsLoading(true);
@@ -233,17 +234,21 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Insert the review
-      const { error } = await supabase
+      const { data: insertedReview, error } = await supabase
         .from('reviews')
-        .insert([dataToInsert]);
+        .insert([dataToInsert])
+        .select()
+        .single();
       
       if (error) {
         console.error('Supabase insert error:', error);
         throw error;
       }
       
+      console.log('Review inserted successfully:', insertedReview);
+      
       // Create notification for guide when tourist rates a tour
-      if (reviewData.target_type === 'tour' && reviewData.tour_id) {
+      if (reviewData.target_type === 'tour') {
         try {
           // Get the tour to find the guide
           const { data: tourData, error: tourError } = await supabase
@@ -260,8 +265,11 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
               target_type: 'tour',
               target_id: reviewData.target_id,
               message: `Someone rated your tour "${tourData.title}" ${reviewData.rating} stars`,
-              action_url: null // As per requirements, rating notifications should not have jump actions
+              action_url: null
             });
+            
+            // Also trigger guide rating update
+            triggerGuideRatingUpdate(tourData.creator_id);
           }
         } catch (notificationError) {
           console.warn('Failed to create review notification:', notificationError);
@@ -272,11 +280,14 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
             type: 'tour_rated',
             actor_id: reviewData.reviewer_id,
             recipient_id: reviewData.target_id,
-            target_type: 'tour',
-            target_id: reviewData.tour_id || reviewData.target_id,
+            target_type: 'guide',
+            target_id: reviewData.target_id,
             message: `Someone rated your guide services ${reviewData.rating} stars`,
-            action_url: null // As per requirements, rating notifications should not have jump actions
+            action_url: null
           });
+          
+          // Trigger guide rating update
+          triggerGuideRatingUpdate(reviewData.target_id);
         } catch (notificationError) {
           console.warn('Failed to create review notification:', notificationError);
         }
@@ -285,26 +296,6 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       // Refresh reviews
       if (targetId && targetType) {
         await loadReviews(targetId, targetType, 0);
-      }
-      
-      // Trigger rating update event for guide cards to refresh
-      if (reviewData.target_type === 'guide') {
-        triggerGuideRatingUpdate(reviewData.target_id);
-      } else if (reviewData.target_type === 'tour') {
-        // For tour reviews, also trigger guide rating update since tour reviews affect guide ratings
-        try {
-          const { data: tourData, error: tourError } = await supabase
-            .from('tours')
-            .select('creator_id')
-            .eq('id', reviewData.target_id)
-            .single();
-          
-          if (!tourError && tourData) {
-            triggerGuideRatingUpdate(tourData.creator_id);
-          }
-        } catch (error) {
-          console.warn('Failed to trigger guide rating update for tour review:', error);
-        }
       }
       
       toast({

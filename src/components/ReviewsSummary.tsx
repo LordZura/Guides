@@ -1,4 +1,5 @@
-import React from 'react';
+// Enhance the ReviewsSummary component
+import React, { useEffect } from 'react';
 import {
   Box,
   Flex,
@@ -30,6 +31,11 @@ const ReviewsSummary: React.FC<ReviewsSummaryProps> = ({
   
   // Create an array with ratings from 5 to 1
   const ratings = [5, 4, 3, 2, 1];
+  
+  // Log the summary data when it changes
+  useEffect(() => {
+    console.log('ReviewsSummary rendered with:', { averageRating, totalReviews, ratingCounts });
+  }, [averageRating, totalReviews, ratingCounts]);
   
   // Calculate the percentage for each rating
   const calculatePercentage = (count: number) => {

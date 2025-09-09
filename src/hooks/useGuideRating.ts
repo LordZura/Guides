@@ -10,19 +10,18 @@ type GuideData = {
 
 // Custom hook to manage guide rating data with refresh capability
 export const useGuideRating = (guideId: string, existingData?: GuideData) => {
-  const [averageRating, setAverageRating] = useState<number>(0);
-  const [reviewCount, setReviewCount] = useState<number>(0);
+  const [averageRating, setAverageRating] = useState<number>(
+    existingData?.average_rating || 0
+  );
+  const [reviewCount, setReviewCount] = useState<number>(
+    existingData?.reviews_count || 0
+  );
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchRatingData = useCallback(async () => {
-    // If we have existing rating data in the guide object, use it
-    if (existingData && 'average_rating' in existingData && 'reviews_count' in existingData) {
-      setAverageRating(existingData.average_rating || 0);
-      setReviewCount(existingData.reviews_count || 0);
-      return;
-    }
-
-    // Otherwise fetch from database
+    if (!guideId) return;
+    
+    // Only fetch if we don't have data or we're forcing a refresh
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -31,36 +30,42 @@ export const useGuideRating = (guideId: string, existingData?: GuideData) => {
           target_type_param: 'guide' 
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching guide rating:", error);
+        throw error;
+      }
       
       if (data) {
         setAverageRating(data.average_rating || 0);
         setReviewCount(data.total_reviews || 0);
+        console.log(`Updated rating for guide ${guideId}:`, data.average_rating, data.total_reviews);
       }
     } catch (err) {
-      console.error('Error fetching guide rating:', err);
+      console.error('Error in fetchRatingData:', err);
       // Keep existing values on error
     } finally {
       setIsLoading(false);
     }
-  }, [guideId, existingData]);
+  }, [guideId]);
 
   // Listen for rating update events
   useEffect(() => {
-    const handleRatingUpdate = (event: CustomEvent) => {
-      if (event.detail.guideId === guideId) {
-        // Refresh rating data when this guide's rating is updated
+    const handleRatingUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && customEvent.detail.guideId === guideId) {
+        console.log(`Guide rating update event received for ${guideId}`);
         fetchRatingData();
       }
     };
 
-    window.addEventListener('guideRatingUpdated', handleRatingUpdate as EventListener);
+    // Add event listener with correct type casting
+    window.addEventListener('guideRatingUpdated', handleRatingUpdate);
     
     // Initial fetch
     fetchRatingData();
 
     return () => {
-      window.removeEventListener('guideRatingUpdated', handleRatingUpdate as EventListener);
+      window.removeEventListener('guideRatingUpdated', handleRatingUpdate);
     };
   }, [guideId, fetchRatingData]);
 
@@ -74,6 +79,9 @@ export const useGuideRating = (guideId: string, existingData?: GuideData) => {
 
 // Utility function to trigger rating update events
 export const triggerGuideRatingUpdate = (guideId: string) => {
+  if (!guideId) return;
+  
+  console.log(`Triggering guide rating update for ${guideId}`);
   const event = new CustomEvent('guideRatingUpdated', {
     detail: { guideId }
   });
