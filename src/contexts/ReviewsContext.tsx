@@ -305,9 +305,13 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // Refresh reviews
+      // Refresh reviews - ensure this happens for all review types
+      console.log('ReviewsContext - Refreshing reviews after submission');
       if (targetId && targetType) {
         await loadReviews(targetId, targetType, 0);
+        console.log('ReviewsContext - Reviews refreshed successfully');
+      } else {
+        console.warn('ReviewsContext - Cannot refresh reviews: missing targetId or targetType', { targetId, targetType });
       }
       
       toast({
