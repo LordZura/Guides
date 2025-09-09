@@ -32,6 +32,7 @@ import { useAuth } from '../../contexts/AuthProvider';
 import { DEFAULT_AVATAR_URL } from '../../lib/supabaseClient';
 import StarRating from '../../components/StarRating';
 import ReviewItem from '../../components/ReviewItem';
+import { useGuideRating } from '../../hooks/useGuideRating';
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +44,9 @@ const ProfilePage = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use the live rating hook to get up-to-date rating data
+  const { averageRating, reviewCount } = useGuideRating(id || '', guideProfile || undefined);
   
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -132,10 +136,10 @@ const ProfilePage = () => {
                 {guideProfile.role.charAt(0).toUpperCase() + guideProfile.role.slice(1)}
               </Badge>
               
-              <StarRating rating={guideProfile.average_rating} size={24} />
+              <StarRating rating={averageRating} size={24} />
               
               <Text fontSize="sm" color="gray.600">
-                {guideProfile.reviews_count} {guideProfile.reviews_count === 1 ? 'review' : 'reviews'}
+                {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
               </Text>
               
               {guideProfile.completed_tours_count > 0 && (
@@ -214,7 +218,7 @@ const ProfilePage = () => {
           <Tabs colorScheme="primary" variant="enclosed" bg="white" boxShadow="sm" borderRadius="md">
             <TabList>
               <Tab fontWeight="medium">Tours</Tab>
-              <Tab fontWeight="medium">Reviews ({guideProfile.reviews_count || 0})</Tab>
+              <Tab fontWeight="medium">Reviews ({reviewCount || 0})</Tab>
             </TabList>
             
             <TabPanels>
