@@ -144,14 +144,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       comment: content, // Map 'content' from form to 'comment' for database
     };
     
-    console.log("ReviewForm - Submitting review with rating type:", typeof reviewData.rating, "value:", reviewData.rating);
-    
     // Only add tour_id if it exists and is not undefined
     if (tourId) {
       (reviewData as any).tour_id = tourId;
     }
-    
-    console.log("Submitting review:", reviewData);
     
     await addReview(reviewData);
     
