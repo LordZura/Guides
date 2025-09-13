@@ -25,7 +25,7 @@ const GuideCard = ({ guide }: GuideCardProps) => {
   const cardBg = useColorModeValue('white', 'gray.700');
   
   // Use the custom hook for rating management
-  const { averageRating, reviewCount } = useGuideRating(guide.id, guide);
+  const { averageRating, reviewCount } = useGuideRating(guide.id);
   
   return (
     <Box

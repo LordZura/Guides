@@ -25,7 +25,15 @@ const ReviewsList: React.FC<ReviewsListProps> = ({
   showTourInfo = false,
   maxItems,
 }) => {
-  const { reviews, isLoading, error, loadMoreReviews, hasMoreReviews } = useReviews(targetId, targetType);
+  const { reviews, isLoading, error, hasMoreReviews, loadReviews } = useReviews(targetId, targetType);
+
+  // Handle loading more reviews
+  const handleLoadMore = () => {
+    if (targetId && targetType && !isLoading) {
+      const nextPage = Math.floor(reviews.length / 10); // 10 is PAGE_SIZE
+      loadReviews(targetId, targetType, nextPage);
+    }
+  };
   
   if (isLoading && reviews.length === 0) {
     return (
@@ -72,7 +80,7 @@ const ReviewsList: React.FC<ReviewsListProps> = ({
       
       {(hasMoreReviews && !maxItems) && (
         <Button 
-          onClick={loadMoreReviews} 
+          onClick={handleLoadMore}
           variant="outline" 
           size="sm" 
           alignSelf="center"

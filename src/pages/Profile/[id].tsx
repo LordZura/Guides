@@ -46,17 +46,19 @@ const ProfilePage = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Use the live rating hook to get up-to-date rating data
-  const { averageRating, reviewCount, isLoading: ratingLoading } = useGuideRating(id || '', guideProfile || undefined);
+  const { averageRating, reviewCount, isLoading: ratingLoading } = useGuideRating(id || '');
   
   // Debug: Add console.log to track Profile rating state
   useEffect(() => {
-    console.log('Profile rating state updated:', { 
-      guideId: id, 
-      averageRating, 
-      reviewCount, 
-      ratingLoading,
-      hasGuideProfile: !!guideProfile 
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Profile rating state updated:', { 
+        guideId: id, 
+        averageRating, 
+        reviewCount, 
+        ratingLoading,
+        hasGuideProfile: !!guideProfile 
+      });
+    }
   }, [id, averageRating, reviewCount, ratingLoading, guideProfile]);
   
   useEffect(() => {
