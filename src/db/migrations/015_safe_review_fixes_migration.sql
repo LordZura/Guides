@@ -46,7 +46,8 @@ $$;
 CREATE OR REPLACE FUNCTION get_review_summary(target_id_param UUID, target_type_param TEXT)
 RETURNS TABLE(
   average_rating NUMERIC,
-  total_reviews INTEGER
+  total_reviews INTEGER,
+  rating_counts JSONB
 ) AS $$
 BEGIN
   -- If requesting guide summary, aggregate from tours plus direct guide reviews
@@ -63,20 +64,46 @@ BEGIN
       WHERE t.creator_id = target_id_param 
         AND r.target_type = 'tour'
         AND t.creator_role = 'guide'
+    ),
+    rating_distribution AS (
+      SELECT 
+        rating,
+        COUNT(*) as count
+      FROM guide_reviews
+      GROUP BY rating
     )
     SELECT 
-      COALESCE(AVG(rating::NUMERIC), 0) as average_rating,
-      COUNT(*)::INTEGER as total_reviews
-    FROM guide_reviews;
+      COALESCE(AVG(gr.rating::NUMERIC), 0) as average_rating,
+      COUNT(gr.*)::INTEGER as total_reviews,
+      COALESCE(
+        jsonb_object_agg(rd.rating::text, rd.count), 
+        '{}'::jsonb
+      ) as rating_counts
+    FROM guide_reviews gr
+    LEFT JOIN rating_distribution rd ON TRUE;
   ELSE
     -- For tours and other targets, use the original logic
     RETURN QUERY
+    WITH rating_distribution AS (
+      SELECT 
+        rating,
+        COUNT(*) as count
+      FROM public.reviews
+      WHERE target_id = target_id_param 
+        AND target_type = target_type_param
+      GROUP BY rating
+    )
     SELECT 
-      COALESCE(AVG(rating::NUMERIC), 0) as average_rating,
-      COUNT(*)::INTEGER as total_reviews
-    FROM public.reviews 
-    WHERE target_id = target_id_param 
-      AND target_type = target_type_param;
+      COALESCE(AVG(r.rating::NUMERIC), 0) as average_rating,
+      COUNT(r.*)::INTEGER as total_reviews,
+      COALESCE(
+        jsonb_object_agg(rd.rating::text, rd.count), 
+        '{}'::jsonb
+      ) as rating_counts
+    FROM public.reviews r
+    LEFT JOIN rating_distribution rd ON TRUE
+    WHERE r.target_id = target_id_param 
+      AND r.target_type = target_type_param;
   END IF;
 END;
 $$ LANGUAGE plpgsql;
