@@ -91,44 +91,44 @@ const TourDetail = () => {
           }
           
           setGuide(guideData || null);
+        }
+        
+        // Fetch tour review summary for ALL tours - moved outside guide-specific condition
+        try {
+          const { data: summaryData, error: summaryError } = await supabase
+            .rpc('get_review_summary', { 
+              target_id_param: id, 
+              target_type_param: 'tour' 
+            });
           
-          // Fetch tour review summary - add more detailed error handling
-          try {
-            const { data: summaryData, error: summaryError } = await supabase
-              .rpc('get_review_summary', { 
-                target_id_param: id, 
-                target_type_param: 'tour' 
-              });
-            
-            if (summaryError) {
-              console.error('Error fetching tour review summary:', summaryError);
-              throw summaryError;
-            }
-            
-            if (summaryData) {
-              console.log('Tour review summary:', summaryData);
-              setReviewSummary({
-                averageRating: summaryData.average_rating || 0,
-                totalReviews: summaryData.total_reviews || 0,
-                ratingCounts: summaryData.rating_counts || {}
-              });
-            } else {
-              console.log('No review summary data returned');
-              setReviewSummary({
-                averageRating: 0,
-                totalReviews: 0,
-                ratingCounts: {}
-              });
-            }
-          } catch (summaryErr) {
-            console.error('Failed to fetch review summary:', summaryErr);
-            // Don't throw, just use default values
+          if (summaryError) {
+            console.error('Error fetching tour review summary:', summaryError);
+            throw summaryError;
+          }
+          
+          if (summaryData) {
+            console.log('Tour review summary:', summaryData);
+            setReviewSummary({
+              averageRating: summaryData.average_rating || 0,
+              totalReviews: summaryData.total_reviews || 0,
+              ratingCounts: summaryData.rating_counts || {}
+            });
+          } else {
+            console.log('No review summary data returned');
             setReviewSummary({
               averageRating: 0,
               totalReviews: 0,
               ratingCounts: {}
             });
           }
+        } catch (summaryErr) {
+          console.error('Failed to fetch review summary:', summaryErr);
+          // Don't throw, just use default values
+          setReviewSummary({
+            averageRating: 0,
+            totalReviews: 0,
+            ratingCounts: {}
+          });
         }
       } catch (err) {
         console.error('Error fetching tour details:', err);
@@ -318,34 +318,32 @@ const TourDetail = () => {
                 </Box>
               )}
               
-              {/* Only show guide reviews section if this is a guide's tour */}
-              {isGuide && guide && (
-                <Box mt={8}>
-                  <Heading as="h2" size="lg" mb={4}>Tour Reviews</Heading>
+              {/* Show reviews section for ALL tours */}
+              <Box mt={8}>
+                <Heading as="h2" size="lg" mb={4}>Tour Reviews</Heading>
+                
+                <ReviewsProvider>
+                  <ReviewsSummary 
+                    averageRating={reviewSummary.averageRating} 
+                    totalReviews={reviewSummary.totalReviews} 
+                    ratingCounts={reviewSummary.ratingCounts}
+                  />
                   
-                  <ReviewsProvider>
-                    <ReviewsSummary 
-                      averageRating={reviewSummary.averageRating} 
-                      totalReviews={reviewSummary.totalReviews} 
-                      ratingCounts={reviewSummary.ratingCounts}
-                    />
-                    
-                    <ReviewForm 
+                  <ReviewForm 
+                    targetId={id || ''}
+                    targetType="tour"
+                    tourId={id || ''}
+                  />
+                  
+                  <Box mt={6}>
+                    <ReviewsList 
                       targetId={id || ''}
                       targetType="tour"
-                      tourId={id || ''}
+                      showTourInfo={false}
                     />
-                    
-                    <Box mt={6}>
-                      <ReviewsList 
-                        targetId={id || ''}
-                        targetType="tour"
-                        showTourInfo={false}
-                      />
-                    </Box>
-                  </ReviewsProvider>
-                </Box>
-              )}
+                  </Box>
+                </ReviewsProvider>
+              </Box>
             </GridItem>
             
             <GridItem>
