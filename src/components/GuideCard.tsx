@@ -17,15 +17,23 @@ import { Profile, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import StarRating from './StarRating';
 import { useGuideRating } from '../hooks/useGuideRating';
 
+interface GuideWithRating extends Profile {
+  average_rating?: number;
+  reviews_count?: number;
+}
+
 interface GuideCardProps {
-  guide: Profile;
+  guide: GuideWithRating;
 }
 
 const GuideCard = ({ guide }: GuideCardProps) => {
   const cardBg = useColorModeValue('white', 'gray.700');
   
-  // Use the custom hook for rating management
-  const { averageRating, reviewCount } = useGuideRating(guide.id);
+  // Use the custom hook for rating management, passing initial data from guide object
+  const { averageRating, reviewCount } = useGuideRating(guide.id, {
+    averageRating: guide.average_rating || 0,
+    reviewCount: guide.reviews_count || 0,
+  });
   
   return (
     <Box
