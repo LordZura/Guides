@@ -273,14 +273,14 @@ const Explore = () => {
   
   // Fetch tours
   const fetchTours = async (filters: FilterOptions = {}) => {
-    if (!profile) return;
-    
     setIsLoadingTours(true);
     setError(null);
     
     try {
+      // If no profile, assume guide role for demonstration purposes
+      const userRole = profile?.role || 'guide';
       // Tourists see tours from guides, guides see tours from tourists
-      const oppositeRole = profile.role === 'guide' ? 'tourist' : 'guide';
+      const oppositeRole = userRole === 'guide' ? 'tourist' : 'guide';
       
       // Build the query - get more fields to enable client-side filtering
       let query = supabase
@@ -813,7 +813,7 @@ const Explore = () => {
                 {/* Tours Tab */}
                 <TabPanel p={{ base: 4, sm: 6, md: 8 }}>
                   <Text color="gray.600" mb={{ base: 4, md: 8 }} fontSize={{ base: "md", md: "lg" }}>
-                    {profile?.role === 'tourist' 
+                    {(profile?.role || 'guide') === 'tourist' 
                       ? "Discover amazing tours curated by our expert guides."
                       : "Browse tour requests from tourists looking for guides."}
                   </Text>
@@ -844,7 +844,7 @@ const Explore = () => {
                       <Box textAlign="center">
                         <Icon as={FaMap} w={12} h={12} color="gray.400" mb={4} />
                         <Text color="gray.500" fontWeight="medium">
-                          No {profile?.role === 'tourist' ? 'tours' : 'tour requests'} available yet.
+                          No {(profile?.role || 'guide') === 'tourist' ? 'tours' : 'tour requests'} available yet.
                         </Text>
                         <Text color="gray.400" fontSize="sm" mt={2}>
                           Check back later or try different search criteria.
