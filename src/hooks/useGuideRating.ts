@@ -12,12 +12,17 @@ interface RatingHookResult extends RatingData {
   refreshRating: () => Promise<void>;
 }
 
+interface InitialRatingData {
+  averageRating?: number;
+  reviewCount?: number;
+}
+
 /**
  * Hook to manage guide rating data - completely recreated with clean logic
  */
-export const useGuideRating = (guideId: string): RatingHookResult => {
-  const [averageRating, setAverageRating] = useState<number>(0);
-  const [reviewCount, setReviewCount] = useState<number>(0);
+export const useGuideRating = (guideId: string, initialData?: InitialRatingData): RatingHookResult => {
+  const [averageRating, setAverageRating] = useState<number>(initialData?.averageRating || 0);
+  const [reviewCount, setReviewCount] = useState<number>(initialData?.reviewCount || 0);
   const [ratingCounts, setRatingCounts] = useState<Record<number, number>>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -39,6 +44,12 @@ export const useGuideRating = (guideId: string): RatingHookResult => {
 
       if (error) {
         console.error('Error fetching guide rating:', error);
+        // Use initial data when database fails
+        if (initialData) {
+          setAverageRating(initialData.averageRating || 0);
+          setReviewCount(initialData.reviewCount || 0);
+          setRatingCounts({});
+        }
         return;
       }
 
@@ -76,17 +87,23 @@ export const useGuideRating = (guideId: string): RatingHookResult => {
         setReviewCount(totalReviews);
         setRatingCounts(counts);
       } else {
-        // No data - reset to defaults
-        setAverageRating(0);
-        setReviewCount(0);
+        // No data from database - use initial data if available, otherwise reset to defaults
+        setAverageRating(initialData?.averageRating || 0);
+        setReviewCount(initialData?.reviewCount || 0);
         setRatingCounts({});
       }
     } catch (error) {
       console.error('Error in fetchRatingData:', error);
+      // On error, use initial data if available
+      if (initialData) {
+        setAverageRating(initialData.averageRating || 0);
+        setReviewCount(initialData.reviewCount || 0);
+        setRatingCounts({});
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [guideId]);
+  }, [guideId, initialData]);
 
   /**
    * Handle rating update events
