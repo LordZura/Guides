@@ -95,7 +95,7 @@ const TourCard = ({ tourId }: TourCardProps) => {
         }
         
         // Fetch tour ratings - get ratings specific to this tour, not the guide
-        console.warn('TourCard: Fetching rating for tour:', tourData.id, 'created by:', tourData.creator_id, 'role:', tourData.creator_role);
+        console.log('🎯 TourCard: Fetching rating for tour:', tourData.id, 'created by:', tourData.creator_id, 'role:', tourData.creator_role);
         
         const { data: ratingData, error: ratingError } = await supabase
           .rpc('get_review_summary', {
@@ -103,27 +103,25 @@ const TourCard = ({ tourId }: TourCardProps) => {
             target_type_param: 'tour'
           });
         
-        console.warn('TourCard: Tour rating response:', { 
-          tourId: tourData.id,
+        console.log('📊 TourCard: Tour rating response for', tourData.id, ':', { 
           ratingData, 
           ratingError,
           dataType: typeof ratingData,
           dataIsArray: Array.isArray(ratingData),
           dataLength: ratingData?.length,
           firstItem: ratingData?.[0],
-          rawResponse: JSON.stringify(ratingData)
+          rawResponse: ratingData ? JSON.stringify(ratingData) : null
         });
         
         // Handle the response - PostgreSQL functions should always return an array with at least one row
         if (ratingError) {
-          console.error('TourCard: RPC error for tour', tourData.id, ':', ratingError);
+          console.error('❌ TourCard: RPC error for tour', tourData.id, ':', ratingError);
           setAverageRating(0);
           setReviewCount(0);
         } else if (ratingData && Array.isArray(ratingData)) {
           if (ratingData.length > 0) {
             const summary = ratingData[0]; // RPC functions return arrays, take first item
-            console.warn('TourCard: Setting tour rating from summary:', {
-              tourId: tourData.id,
+            console.log('✅ TourCard: Setting tour rating from summary for', tourData.id, ':', {
               average_rating: summary.average_rating,
               total_reviews: summary.total_reviews,
               rating_counts: summary.rating_counts,
@@ -133,12 +131,12 @@ const TourCard = ({ tourId }: TourCardProps) => {
             setAverageRating(summary.average_rating || 0);
             setReviewCount(summary.total_reviews || 0);
           } else {
-            console.warn('TourCard: Empty array returned from RPC for tour', tourData.id);
+            console.warn('⚠️  TourCard: Empty array returned from RPC for tour', tourData.id, '- no reviews found');
             setAverageRating(0);
             setReviewCount(0);
           }
         } else {
-          console.warn('TourCard: Unexpected response format from RPC for tour', tourData.id, '. Response:', ratingData);
+          console.warn('⚠️  TourCard: Unexpected response format from RPC for tour', tourData.id, '. Response:', ratingData);
           setAverageRating(0);
           setReviewCount(0);
         }
@@ -243,11 +241,11 @@ const TourCard = ({ tourId }: TourCardProps) => {
             
             const tourRating = tourRatingData[tourId];
             if (tourRating) {
-              console.warn('TourCard: Using fallback tour rating for', tourId, ':', tourRating);
+              console.log('🔄 TourCard: Using fallback tour rating for', tourId, ':', tourRating);
               setAverageRating(tourRating.rating);
               setReviewCount(tourRating.reviews);
             } else {
-              console.warn('TourCard: No fallback rating data for tour', tourId);
+              console.warn('⚠️  TourCard: No fallback rating data for tour', tourId);
               setAverageRating(0);
               setReviewCount(0);
             }
