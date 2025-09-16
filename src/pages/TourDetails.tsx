@@ -109,10 +109,33 @@ const TourDetail = () => {
           if (summaryData && summaryData.length > 0) {
             // console.log('Tour review summary:', summaryData); // Debug only
             const summary = summaryData[0]; // RPC functions return arrays, take first item
+            
+            // Parse rating counts from JSONB - convert string keys to numeric keys
+            let ratingCounts: Record<number, number> = {};
+            if (summary.rating_counts) {
+              try {
+                // rating_counts is JSONB with string keys like {"1": 2, "4": 3, "5": 8}
+                const rawCounts = typeof summary.rating_counts === 'string' 
+                  ? JSON.parse(summary.rating_counts)
+                  : summary.rating_counts;
+                
+                // Convert string keys to numbers and ensure numeric values
+                Object.entries(rawCounts || {}).forEach(([key, value]) => {
+                  const numKey = parseInt(key, 10);
+                  const numValue = Number(value) || 0;
+                  if (numKey >= 1 && numKey <= 5) {
+                    ratingCounts[numKey] = numValue;
+                  }
+                });
+              } catch (e) {
+                console.warn('Failed to parse rating_counts:', e);
+              }
+            }
+            
             setReviewSummary({
               averageRating: summary.average_rating || 0,
               totalReviews: summary.total_reviews || 0,
-              ratingCounts: summary.rating_counts || {}
+              ratingCounts
             });
           } else {
             // console.log('No review summary data returned'); // Debug only
