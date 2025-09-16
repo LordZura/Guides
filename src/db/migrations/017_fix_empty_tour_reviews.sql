@@ -36,7 +36,8 @@ BEGIN
           FROM guide_reviews
           GROUP BY rating
         ) rating_breakdown
-      ) as rating_counts;
+      ) as rating_counts
+    FROM guide_reviews;
   ELSE
     -- For tours and other targets, use aggregation with dummy table to ensure we always get a row
     RETURN QUERY
