@@ -107,7 +107,7 @@ const TourDetail = () => {
           }
           
           if (summaryData && summaryData.length > 0) {
-            console.log('Tour review summary:', summaryData);
+            // console.log('Tour review summary:', summaryData); // Debug only
             const summary = summaryData[0]; // RPC functions return arrays, take first item
             setReviewSummary({
               averageRating: summary.average_rating || 0,
@@ -115,7 +115,7 @@ const TourDetail = () => {
               ratingCounts: summary.rating_counts || {}
             });
           } else {
-            console.log('No review summary data returned');
+            // console.log('No review summary data returned'); // Debug only
             setReviewSummary({
               averageRating: 0,
               totalReviews: 0,

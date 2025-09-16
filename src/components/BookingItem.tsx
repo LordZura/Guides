@@ -61,7 +61,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'MMMM d, yyyy');
-    } catch (_e) {
+    } catch {
       return dateString;
     }
   };

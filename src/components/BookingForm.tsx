@@ -22,7 +22,7 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthProvider';
-import { useBookings, BookingStatus } from '../contexts/BookingContext';
+import { useBookings, BookingStatus, Booking } from '../contexts/BookingContext';
 
 interface BookingFormProps {
   tourId: string;
@@ -137,7 +137,7 @@ const BookingForm = ({
       }));
     } else {
       setErrors(prev => {
-        const { bookingDate: _, ...rest } = prev;
+        const { bookingDate, ...rest } = prev;
         return rest;
       });
     }
@@ -202,7 +202,7 @@ const BookingForm = ({
       const result = await Promise.race([bookingPromise, timeoutPromise]) as {
         success: boolean;
         error?: string;
-        booking?: any;
+        booking?: Booking;
       };
 
       clearInterval(progressInterval);
@@ -223,12 +223,13 @@ const BookingForm = ({
       });
 
       onSuccess();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error in submit handler:', err);
-      setSubmitError(err.message || 'An unexpected error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setSubmitError(errorMessage);
       toast({
         title: 'Error creating booking',
-        description: err.message || 'An unexpected error occurred',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,

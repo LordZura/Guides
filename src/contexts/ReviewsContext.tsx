@@ -32,8 +32,8 @@ interface ReviewsContextType {
   isLoading: boolean;
   error: string | null;
   hasMoreReviews: boolean;
-  loadReviews: (id: string, type: 'guide' | 'tour', page?: number) => Promise<void>;
-  addReview: (review: ReviewData) => Promise<void>;
+  loadReviews: (targetId: string, targetType: 'guide' | 'tour', page?: number) => Promise<void>;
+  addReview: (reviewData: ReviewData) => Promise<void>;
   deleteReview: (reviewId: string) => Promise<void>;
   refreshReviews: () => Promise<void>;
 }
@@ -138,9 +138,10 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         setReviews([]);
         setHasMoreReviews(false);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading reviews:', err);
-      setError(err.message || 'Failed to load reviews');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load reviews';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -211,11 +212,12 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error adding review:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       toast({
         title: 'Failed to submit review',
-        description: err.message || 'An unexpected error occurred',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -247,11 +249,12 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error deleting review:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       toast({
         title: 'Failed to delete review',
-        description: err.message || 'An unexpected error occurred',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,

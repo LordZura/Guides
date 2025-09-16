@@ -27,9 +27,9 @@ interface ToursContextType {
   isLoading: boolean;
   error: string | null;
   refreshTours: () => Promise<void>;
-  deleteTour: (_id: string) => Promise<void>;
-  updateTourStatus: (_id: string, _isActive: boolean) => Promise<void>;
-  updateTour: (_id: string, _updates: Partial<Tour>) => Promise<void>;
+  deleteTour: (tourId: string) => Promise<void>;
+  updateTourStatus: (tourId: string, isActive: boolean) => Promise<void>;
+  updateTour: (tourId: string, updates: Partial<Tour>) => Promise<void>;
 }
 
 const ToursContext = createContext<ToursContextType | undefined>(undefined);
@@ -62,12 +62,12 @@ export const ToursProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       setTours(data || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching tours:', err);
-      setError(err.message || 'Failed to load tours');
+      setError(err instanceof Error ? err.message : 'Failed to load tours');
       toast({
         title: 'Error loading tours',
-        description: err.message || 'An unexpected error occurred',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -136,11 +136,11 @@ export const ToursProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error deleting tour:', err);
       toast({
         title: 'Error deleting tour',
-        description: err.message || 'An unexpected error occurred',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -208,11 +208,11 @@ export const ToursProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating tour status:', err);
       toast({
         title: 'Error updating tour',
-        description: err.message || 'An unexpected error occurred',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -274,11 +274,11 @@ export const ToursProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating tour:', err);
       toast({
         title: 'Error updating tour',
-        description: err.message || 'An unexpected error occurred',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
