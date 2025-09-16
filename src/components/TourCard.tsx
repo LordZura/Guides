@@ -95,7 +95,7 @@ const TourCard = ({ tourId }: TourCardProps) => {
         }
         
         // Fetch tour ratings - get ratings specific to this tour, not the guide
-        console.log('TourCard: Fetching rating for tour:', tourData.id, 'created by:', tourData.creator_id, 'role:', tourData.creator_role);
+        console.warn('TourCard: Fetching rating for tour:', tourData.id, 'created by:', tourData.creator_id, 'role:', tourData.creator_role);
         
         const { data: ratingData, error: ratingError } = await supabase
           .rpc('get_review_summary', {
@@ -103,26 +103,42 @@ const TourCard = ({ tourId }: TourCardProps) => {
             target_type_param: 'tour'
           });
         
-        console.log('TourCard: Tour rating response:', { 
+        console.warn('TourCard: Tour rating response:', { 
           tourId: tourData.id,
           ratingData, 
           ratingError,
+          dataType: typeof ratingData,
+          dataIsArray: Array.isArray(ratingData),
           dataLength: ratingData?.length,
-          firstItem: ratingData?.[0]
+          firstItem: ratingData?.[0],
+          rawResponse: JSON.stringify(ratingData)
         });
         
-        if (!ratingError && ratingData && ratingData.length > 0) {
-          const summary = ratingData[0]; // RPC functions return arrays, take first item
-          console.log('TourCard: Setting tour rating from summary:', {
-            tourId: tourData.id,
-            average_rating: summary.average_rating,
-            total_reviews: summary.total_reviews,
-            rating_counts: summary.rating_counts
-          });
-          setAverageRating(summary.average_rating || 0);
-          setReviewCount(summary.total_reviews || 0);
+        // Handle the response - PostgreSQL functions should always return an array with at least one row
+        if (ratingError) {
+          console.error('TourCard: RPC error for tour', tourData.id, ':', ratingError);
+          setAverageRating(0);
+          setReviewCount(0);
+        } else if (ratingData && Array.isArray(ratingData)) {
+          if (ratingData.length > 0) {
+            const summary = ratingData[0]; // RPC functions return arrays, take first item
+            console.warn('TourCard: Setting tour rating from summary:', {
+              tourId: tourData.id,
+              average_rating: summary.average_rating,
+              total_reviews: summary.total_reviews,
+              rating_counts: summary.rating_counts,
+              finalAverageRating: summary.average_rating || 0,
+              finalReviewCount: summary.total_reviews || 0
+            });
+            setAverageRating(summary.average_rating || 0);
+            setReviewCount(summary.total_reviews || 0);
+          } else {
+            console.warn('TourCard: Empty array returned from RPC for tour', tourData.id);
+            setAverageRating(0);
+            setReviewCount(0);
+          }
         } else {
-          console.log('TourCard: No rating data found for tour, using defaults. Error:', ratingError);
+          console.warn('TourCard: Unexpected response format from RPC for tour', tourData.id, '. Response:', ratingData);
           setAverageRating(0);
           setReviewCount(0);
         }
@@ -218,19 +234,22 @@ const TourCard = ({ tourId }: TourCardProps) => {
           
           const fallbackTour = fallbackTours[tourId];
           if (fallbackTour) {
-            // Set fallback rating data for guide tours
-            if (fallbackTour.creator_role === 'guide') {
-              const ratingData: { [key: string]: { rating: number, reviews: number } } = {
-                '1': { rating: 4.5, reviews: 25 },
-                '2': { rating: 4.8, reviews: 42 },
-                '3': { rating: 4.2, reviews: 18 }
-              };
-              
-              const creatorRating = ratingData[fallbackTour.creator_id];
-              if (creatorRating) {
-                setAverageRating(creatorRating.rating);
-                setReviewCount(creatorRating.reviews);
-              }
+            // Set fallback rating data for specific tours (not guide ratings)
+            const tourRatingData: { [key: string]: { rating: number, reviews: number } } = {
+              'tour1': { rating: 4.3, reviews: 15 },  // London Historical Walking Tour
+              'tour2': { rating: 4.7, reviews: 28 },  // Barcelona Tapas Tour  
+              'tour3': { rating: 4.1, reviews: 12 }   // Tokyo Cherry Blossom Experience
+            };
+            
+            const tourRating = tourRatingData[tourId];
+            if (tourRating) {
+              console.warn('TourCard: Using fallback tour rating for', tourId, ':', tourRating);
+              setAverageRating(tourRating.rating);
+              setReviewCount(tourRating.reviews);
+            } else {
+              console.warn('TourCard: No fallback rating data for tour', tourId);
+              setAverageRating(0);
+              setReviewCount(0);
             }
             
             setTour(fallbackTour);
