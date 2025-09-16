@@ -18,7 +18,7 @@ export interface Review {
   tour_name?: string;
 }
 
-interface ReviewData {
+export interface ReviewData {
   reviewer_id: string;
   target_id: string;
   target_type: 'guide' | 'tour';

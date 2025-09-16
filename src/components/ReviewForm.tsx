@@ -15,7 +15,7 @@ import {
   AlertDescription,
 } from '@chakra-ui/react';
 import StarRating from './StarRating';
-import { useReviews } from '../contexts/ReviewsContext';
+import { useReviews, ReviewData } from '../contexts/ReviewsContext';
 import { useAuth } from '../contexts/AuthProvider';
 import { useBookings } from '../contexts/BookingContext';
 
@@ -136,18 +136,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     }
     
     // Prepare review data
-    const reviewData = {
+    const reviewData: ReviewData = {
       reviewer_id: user.id,
       target_id: targetId,
       target_type: targetType,
       rating: Number(rating), // Ensure rating is stored as a number
       comment: content, // Map 'content' from form to 'comment' for database
+      tour_id: tourId, // Optional tour_id, already in interface
     };
-    
-    // Only add tour_id if it exists and is not undefined
-    if (tourId) {
-      (reviewData as any).tour_id = tourId;
-    }
     
     await addReview(reviewData);
     
