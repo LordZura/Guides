@@ -202,35 +202,6 @@ src/
 4. **Language Data**: Seed the languages table for proper filtering
 5. **File Uploads**: Configure Supabase storage for profile pictures
 
-## 🌐 Deployment
-
-### GitHub Pages (Recommended)
-The application is configured for automatic GitHub Pages deployment:
-
-1. **Configure GitHub Pages**:
-   - Go to Repository Settings → Pages
-   - Set Source to "GitHub Actions" (not "Deploy from a branch")
-
-2. **Automatic Deployment**:
-   - GitHub Actions automatically builds and deploys on every push to main
-   - Production builds are optimized and served from `dist/` folder
-   - Available at: `https://yourusername.github.io/Guides/`
-
-3. **Manual Deployment** (Alternative):
-   ```bash
-   npm run deploy
-   ```
-
-### Development vs Production
-- **Development**: `npm run dev` serves source files at `http://localhost:5173/Guides/`
-- **Production**: GitHub Actions builds optimized bundles and deploys to GitHub Pages
-
-### Troubleshooting Deployment
-- Ensure GitHub Pages source is set to "GitHub Actions"
-- Check Actions tab for deployment status and errors
-- Clear browser cache if seeing old version
-- Wait a few minutes for CDN updates after deployment
-
 ## 📞 Support
 
 For development issues:
