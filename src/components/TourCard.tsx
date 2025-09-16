@@ -109,10 +109,11 @@ const TourCard = ({ tourId }: TourCardProps) => {
         }
         
         // Combine the data
+        const profile = profileData as { full_name?: string; avatar_url?: string } | null;
         setTour({
           ...tourData,
-          creator_name: (profileData as any)?.full_name || 'Unknown Guide',
-          creator_avatar: (profileData as any)?.avatar_url || null
+          creator_name: profile?.full_name || 'Unknown Guide',
+          creator_avatar: profile?.avatar_url || null
         });
       } catch (err) {
         console.error('Error fetching tour:', err);

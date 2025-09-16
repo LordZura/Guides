@@ -26,7 +26,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 interface NotificationItemProps {
   notification: Notification;
-  onMarkAsRead: (_id: string) => void;
+  onMarkAsRead: (id: string) => void;
 }
 
 const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps) => {

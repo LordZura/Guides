@@ -50,8 +50,8 @@ const ProfilePage = () => {
   
   // Debug: Add console.log to track Profile rating state
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Profile rating state updated:', { 
+    if (import.meta.env.DEV) {
+      console.warn('Profile rating state updated:', { 
         guideId: id, 
         averageRating, 
         reviewCount, 

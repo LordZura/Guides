@@ -39,7 +39,7 @@ export type FilterMode = "guides" | "tours";
 
 interface FiltersProps {
   mode: FilterMode;
-  onFilterChange: (_filters: FilterOptions) => void;
+  onFilterChange: (filters: FilterOptions) => void;
   languages: { id: number; name: string; code: string }[];
 }
 

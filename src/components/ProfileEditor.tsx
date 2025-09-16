@@ -23,7 +23,7 @@ import { useAuth } from '../contexts/AuthProvider';
 import SearchableLanguageSelector from './SearchableLanguageSelector';
 
 interface ProfileEditorProps {
-  onSave: (updatedProfile: Profile) => void;
+  onSave: (profile: Profile) => void;
 }
 
 interface FormData {
@@ -244,11 +244,12 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
       
       // Return the updated profile to parent component
       onSave(data as Profile);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving profile:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
       toast({
         title: 'Error saving profile',
-        description: err.message || 'An unexpected error occurred. Please try again.',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
