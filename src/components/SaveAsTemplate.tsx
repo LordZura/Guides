@@ -91,7 +91,7 @@ const SaveAsTemplate = ({ tourData, buttonProps = {} }: SaveAsTemplateProps) => 
         });
         setErrors({});
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error saving template',
         description: 'An unexpected error occurred. Please try again.',
