@@ -305,12 +305,67 @@ const Explore = () => {
       
       if (error) throw error;
       
-      let filteredTours = data || [];
+      let tours = data || [];
+      
+      // Fetch rating data for all tours
+      const toursWithRatings = await Promise.all(
+        tours.map(async (tour) => {
+          try {
+            const { data: ratingData, error: ratingError } = await supabase
+              .rpc('get_review_summary', { 
+                target_id_param: tour.id, 
+                target_type_param: 'tour' 
+              });
+            
+            if (ratingError) {
+              console.warn(`Error fetching rating for tour ${tour.id}:`, ratingError);
+              return {
+                ...tour,
+                average_rating: 0,
+                reviews_count: 0,
+              };
+            }
+            
+            return {
+              ...tour,
+              average_rating: ratingData?.average_rating || 0,
+              reviews_count: ratingData?.total_reviews || 0,
+            };
+          } catch (err) {
+            console.warn(`Error fetching rating for tour ${tour.id}:`, err);
+            return {
+              ...tour,
+              average_rating: 0,
+              reviews_count: 0,
+            };
+          }
+        })
+      );
+      
+      let filteredTours = toursWithRatings;
       
       // Apply client-side filters
       if (filters.language && filters.language.trim() !== '') {
         filteredTours = filteredTours.filter(tour => 
           tour.languages && tour.languages.includes(filters.language!)
+        );
+      }
+      
+      // Apply rating filter for tours
+      if (filters.rating && filters.rating > 0) {
+        const minRatingThreshold = filters.rating;
+        
+        filteredTours = filteredTours.filter(tour => 
+          // Only exclude tours that don't meet the rating threshold
+          // Include tours with 0 rating if they also have 0 reviews (no ratings yet)
+          tour.average_rating >= minRatingThreshold || (tour.average_rating === 0 && tour.reviews_count === 0)
+        );
+      }
+      
+      // Apply review count filter for tours
+      if (filters.reviewCount && filters.reviewCount > 0) {
+        filteredTours = filteredTours.filter(tour => 
+          tour.reviews_count >= filters.reviewCount!
         );
       }
       
@@ -344,7 +399,9 @@ const Explore = () => {
             is_active: true,
             creator_role: 'guide' as const,
             creator_id: '1',
-            days_available: [true, true, true, false, false, true, true]
+            days_available: [true, true, true, false, false, true, true],
+            average_rating: 4.3,
+            reviews_count: 15
           },
           {
             id: 'tour2',
@@ -359,7 +416,9 @@ const Explore = () => {
             is_active: true,
             creator_role: 'guide' as const,
             creator_id: '2',
-            days_available: [false, true, true, true, true, false, true]
+            days_available: [false, true, true, true, true, false, true],
+            average_rating: 4.7,
+            reviews_count: 28
           },
           {
             id: 'tour3',
@@ -374,7 +433,9 @@ const Explore = () => {
             is_active: true,
             creator_role: 'guide' as const,
             creator_id: '3',
-            days_available: [true, false, true, true, false, true, true]
+            days_available: [true, false, true, true, false, true, true],
+            average_rating: 4.1,
+            reviews_count: 12
           }
         ];
         
@@ -399,6 +460,24 @@ const Explore = () => {
           const [min, max] = filters.priceRange;
           filteredTours = filteredTours.filter(tour => 
             tour.price >= min && tour.price <= max
+          );
+        }
+        
+        // Apply rating filter
+        if (filters.rating && filters.rating > 0) {
+          const minRatingThreshold = filters.rating;
+          
+          filteredTours = filteredTours.filter(tour => 
+            // Only exclude tours that don't meet the rating threshold
+            // Include tours with 0 rating if they also have 0 reviews (no ratings yet)
+            tour.average_rating >= minRatingThreshold || (tour.average_rating === 0 && tour.reviews_count === 0)
+          );
+        }
+        
+        // Apply review count filter
+        if (filters.reviewCount && filters.reviewCount > 0) {
+          filteredTours = filteredTours.filter(tour => 
+            tour.reviews_count >= filters.reviewCount!
           );
         }
         
@@ -500,9 +579,9 @@ const Explore = () => {
       if (selectedRating > 0) filters.rating = selectedRating;
       if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
     } else if (tabIndex === 1) {
-      // Tours tab filters: languages, location, days available, price range, and rating/review filters only for tourists
-      if (selectedRating > 0 && profile?.role === 'tourist') filters.rating = selectedRating;
-      if (selectedReviewCount > 0 && profile?.role === 'tourist') filters.reviewCount = selectedReviewCount;
+      // Tours tab filters: languages, location, days available, price range, rating and review count
+      if (selectedRating > 0) filters.rating = selectedRating;
+      if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
       if (priceRange.every(val => val !== 0)) filters.priceRange = priceRange;
       if (selectedDaysAvailable.length > 0) filters.daysAvailable = selectedDaysAvailable;
     }
@@ -639,38 +718,34 @@ const Explore = () => {
                     </FormControl>
                   </>
                 ) : tabIndex === 1 ? (
-                  /* Tours filters: price range, days available, and rating/review filters only for tourists */
+                  /* Tours filters: price range, days available, rating and review count */
                   <>
-                    {/* Rating and review filters only available for tourists */}
-                    {profile?.role === 'tourist' && (
-                      <>
-                        <RatingFilter
-                          selectedRating={selectedRating}
-                          onChange={setSelectedRating}
-                          label="Minimum Rating"
-                          showClear={true}
-                        />
-                        
-                        <FormControl>
-                          <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
-                          <Select 
-                            placeholder="Any review count"
-                            value={selectedReviewCount}
-                            onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
-                            borderRadius="lg"
-                            border="2px"
-                            borderColor="gray.200"
-                            _hover={{ borderColor: 'primary.300' }}
-                            _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
-                          >
-                            <option value={50}>50+ reviews</option>
-                            <option value={20}>20+ reviews</option>
-                            <option value={10}>10+ reviews</option>
-                            <option value={5}>5+ reviews</option>
-                          </Select>
-                        </FormControl>
-                      </>
-                    )}
+                    {/* Rating and review filters available for all users */}
+                    <RatingFilter
+                      selectedRating={selectedRating}
+                      onChange={setSelectedRating}
+                      label="Minimum Rating"
+                      showClear={true}
+                    />
+                    
+                    <FormControl>
+                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
+                      <Select 
+                        placeholder="Any review count"
+                        value={selectedReviewCount}
+                        onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
+                        borderRadius="lg"
+                        border="2px"
+                        borderColor="gray.200"
+                        _hover={{ borderColor: 'primary.300' }}
+                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
+                      >
+                        <option value={50}>50+ reviews</option>
+                        <option value={20}>20+ reviews</option>
+                        <option value={10}>10+ reviews</option>
+                        <option value={5}>5+ reviews</option>
+                      </Select>
+                    </FormControl>
                     
                     <FormControl>
                       <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Price Range</FormLabel>
@@ -946,33 +1021,29 @@ const Explore = () => {
                   </FormControl>
                 </>
               ) : tabIndex === 1 ? (
-                /* Tours filters: price range, days available, and rating/review filters only for tourists */
+                /* Tours filters: price range, days available, rating and review count */
                 <>
-                  {/* Rating and review filters only available for tourists */}
-                  {profile?.role === 'tourist' && (
-                    <>
-                      <RatingFilter
-                        selectedRating={selectedRating}
-                        onChange={setSelectedRating}
-                        label="Minimum Rating"
-                        showClear={false}
-                      />
-                      
-                      <FormControl>
-                        <FormLabel>Minimum Reviews</FormLabel>
-                        <Select 
-                          placeholder="Any review count"
-                          value={selectedReviewCount}
-                          onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
-                        >
-                          <option value={50}>50+ reviews</option>
-                          <option value={20}>20+ reviews</option>
-                          <option value={10}>10+ reviews</option>
-                          <option value={5}>5+ reviews</option>
-                        </Select>
-                      </FormControl>
-                    </>
-                  )}
+                  {/* Rating and review filters available for all users */}
+                  <RatingFilter
+                    selectedRating={selectedRating}
+                    onChange={setSelectedRating}
+                    label="Minimum Rating"
+                    showClear={false}
+                  />
+                  
+                  <FormControl>
+                    <FormLabel>Minimum Reviews</FormLabel>
+                    <Select 
+                      placeholder="Any review count"
+                      value={selectedReviewCount}
+                      onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
+                    >
+                      <option value={50}>50+ reviews</option>
+                      <option value={20}>20+ reviews</option>
+                      <option value={10}>10+ reviews</option>
+                      <option value={5}>5+ reviews</option>
+                    </Select>
+                  </FormControl>
                   
                   <FormControl>
                     <FormLabel>Price Range</FormLabel>
