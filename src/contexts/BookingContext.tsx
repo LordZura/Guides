@@ -304,6 +304,15 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Only paid bookings can be marked as completed');
       }
 
+      // Special handling for tourists accepting offered bookings
+      if (profile?.role === 'tourist' && bookingCheck.status === 'offered' && status === 'accepted') {
+        console.log('Tourist accepting an offered booking - this should be allowed');
+        // Verify this is indeed an offered booking for this tourist
+        if (bookingCheck.tourist_id !== user.id) {
+          throw new Error('You can only accept bookings offered to you');
+        }
+      }
+
       // Now perform the actual update
       const { error } = await supabase
         .from('bookings')
@@ -312,9 +321,26 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Supabase update error:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          bookingId,
+          status,
+          userId: user.id,
+          userRole: profile?.role,
+          bookingTouristId: bookingCheck.tourist_id,
+          bookingGuideId: bookingCheck.guide_id,
+          currentStatus: bookingCheck.status
+        });
         
         // Provide more specific error messages based on error codes
         if (error.code === 'P0001' && error.message.includes('not allowed')) {
+          // Check if this is specifically about tourist accepting offers
+          if (profile?.role === 'tourist' && bookingCheck.status === 'offered' && status === 'accepted') {
+            throw new Error('Unable to accept offer: Database permission error. This may be due to Row Level Security policies. Please contact support.');
+          }
           throw new Error('Permission denied: You do not have the required permissions to update this booking');
         }
         
