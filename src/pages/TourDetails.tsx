@@ -31,12 +31,8 @@ import { MdAccessTime, MdCalendarToday, MdGroup, MdLanguage, MdLocationOn } from
 import { Tour } from '../lib/types';
 import { supabase, DEFAULT_AVATAR_URL, Profile } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
-import { ReviewsProvider } from '../contexts/ReviewsContext';
 import { BookingProvider } from '../contexts/BookingContext';
 import { getLocationsDisplayString, sortLocationsByOrder } from '../utils/tourLocations';
-import ReviewsList from '../components/ReviewsList';
-import ReviewForm from '../components/ReviewForm';
-import ReviewsSummary from '../components/ReviewsSummary';
 import StarRating from '../components/StarRating';
 import BookingForm from '../components/BookingForm';
 
@@ -52,10 +48,9 @@ const TourDetail = () => {
   const [guide, setGuide] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [reviewSummary, setReviewSummary] = useState({
+  const [guideReviewSummary, setGuideReviewSummary] = useState({
     averageRating: 0,
     totalReviews: 0,
-    ratingCounts: {}
   });
   
   // Update the useEffect that fetches tour details in TourDetails.tsx
@@ -91,68 +86,29 @@ const TourDetail = () => {
           }
           
           setGuide(guideData || null);
-        }
-        
-        // Fetch tour review summary for ALL tours - moved outside guide-specific condition
-        try {
-          const { data: summaryData, error: summaryError } = await supabase
-            .rpc('get_review_summary', { 
-              target_id_param: id, 
-              target_type_param: 'tour' 
-            });
           
-          if (summaryError) {
-            console.error('Error fetching tour review summary:', summaryError);
-            throw summaryError;
-          }
-          
-          if (summaryData && summaryData.length > 0) {
-            // console.log('Tour review summary:', summaryData); // Debug only
-            const summary = summaryData[0]; // RPC functions return arrays, take first item
-            
-            // Parse rating counts from JSONB - convert string keys to numeric keys
-            let ratingCounts: Record<number, number> = {};
-            if (summary.rating_counts) {
-              try {
-                // rating_counts is JSONB with string keys like {"1": 2, "4": 3, "5": 8}
-                const rawCounts = typeof summary.rating_counts === 'string' 
-                  ? JSON.parse(summary.rating_counts)
-                  : summary.rating_counts;
-                
-                // Convert string keys to numbers and ensure numeric values
-                Object.entries(rawCounts || {}).forEach(([key, value]) => {
-                  const numKey = parseInt(key, 10);
-                  const numValue = Number(value) || 0;
-                  if (numKey >= 1 && numKey <= 5) {
-                    ratingCounts[numKey] = numValue;
-                  }
+          // If we have guide data, fetch their review summary
+          if (guideData) {
+            try {
+              const { data: guideSummaryData, error: guideSummaryError } = await supabase
+                .rpc('get_review_summary', { 
+                  target_id_param: guideData.id, 
+                  target_type_param: 'guide' 
                 });
-              } catch (e) {
-                console.warn('Failed to parse rating_counts:', e);
+              
+              if (guideSummaryError) {
+                console.error('Error fetching guide review summary:', guideSummaryError);
+              } else if (guideSummaryData && guideSummaryData.length > 0) {
+                const summary = guideSummaryData[0];
+                setGuideReviewSummary({
+                  averageRating: summary.average_rating || 0,
+                  totalReviews: summary.total_reviews || 0,
+                });
               }
+            } catch (summaryErr) {
+              console.error('Failed to fetch guide review summary:', summaryErr);
             }
-            
-            setReviewSummary({
-              averageRating: summary.average_rating || 0,
-              totalReviews: summary.total_reviews || 0,
-              ratingCounts
-            });
-          } else {
-            // console.log('No review summary data returned'); // Debug only
-            setReviewSummary({
-              averageRating: 0,
-              totalReviews: 0,
-              ratingCounts: {}
-            });
           }
-        } catch (summaryErr) {
-          console.error('Failed to fetch review summary:', summaryErr);
-          // Don't throw, just use default values
-          setReviewSummary({
-            averageRating: 0,
-            totalReviews: 0,
-            ratingCounts: {}
-          });
         }
       } catch (err) {
         console.error('Error fetching tour details:', err);
@@ -341,33 +297,6 @@ const TourDetail = () => {
                   </VStack>
                 </Box>
               )}
-              
-              {/* Show reviews section for ALL tours */}
-              <Box mt={8}>
-                <Heading as="h2" size="lg" mb={4}>Tour Reviews</Heading>
-                
-                <ReviewsProvider>
-                  <ReviewsSummary 
-                    averageRating={reviewSummary.averageRating} 
-                    totalReviews={reviewSummary.totalReviews} 
-                    ratingCounts={reviewSummary.ratingCounts}
-                  />
-                  
-                  <ReviewForm 
-                    targetId={id || ''}
-                    targetType="tour"
-                    tourId={id || ''}
-                  />
-                  
-                  <Box mt={6}>
-                    <ReviewsList 
-                      targetId={id || ''}
-                      targetType="tour"
-                      showTourInfo={false}
-                    />
-                  </Box>
-                </ReviewsProvider>
-              </Box>
             </GridItem>
             
             <GridItem>
@@ -395,9 +324,9 @@ const TourDetail = () => {
                       <Text fontWeight="bold">{guide.full_name}</Text>
                       
                       <HStack mt={1}>
-                        <StarRating rating={reviewSummary.averageRating} size={16} />
+                        <StarRating rating={guideReviewSummary.averageRating} size={16} />
                         <Text fontSize="sm" color="gray.500">
-                          ({reviewSummary.totalReviews})
+                          ({guideReviewSummary.totalReviews})
                         </Text>
                       </HStack>
                       

@@ -94,34 +94,33 @@ const TourCard = ({ tourId }: TourCardProps) => {
           profileData = { full_name: 'Unknown Guide', avatar_url: null };
         }
         
-        // Fetch tour ratings - get ratings specific to this tour, not the guide
-        console.log('🎯 TourCard: Fetching rating for tour:', tourData.id, 'created by:', tourData.creator_id, 'role:', tourData.creator_role);
+        // Fetch guide ratings instead of tour ratings
+        console.log('🎯 TourCard: Fetching rating for guide:', tourData.creator_id, 'role:', tourData.creator_role);
         
         const { data: ratingData, error: ratingError } = await supabase
           .rpc('get_review_summary', {
-            target_id_param: tourData.id,
-            target_type_param: 'tour'
+            target_id_param: tourData.creator_id,
+            target_type_param: 'guide'
           });
         
-        console.log('📊 TourCard: Tour rating response for', tourData.id, ':', { 
+        console.log('📊 TourCard: Guide rating response for', tourData.creator_id, ':', { 
           ratingData, 
           ratingError,
           dataType: typeof ratingData,
           dataIsArray: Array.isArray(ratingData),
           dataLength: ratingData?.length,
-          firstItem: ratingData?.[0],
-          rawResponse: ratingData ? JSON.stringify(ratingData) : null
+          firstItem: ratingData?.[0]
         });
         
         // Handle the response - PostgreSQL functions should always return an array with at least one row
         if (ratingError) {
-          console.error('❌ TourCard: RPC error for tour', tourData.id, ':', ratingError);
+          console.error('❌ TourCard: RPC error for guide', tourData.creator_id, ':', ratingError);
           setAverageRating(0);
           setReviewCount(0);
         } else if (ratingData && Array.isArray(ratingData)) {
           if (ratingData.length > 0) {
             const summary = ratingData[0]; // RPC functions return arrays, take first item
-            console.log('✅ TourCard: Setting tour rating from summary for', tourData.id, ':', {
+            console.log('✅ TourCard: Setting guide rating from summary for', tourData.creator_id, ':', {
               average_rating: summary.average_rating,
               total_reviews: summary.total_reviews,
               rating_counts: summary.rating_counts,
@@ -131,12 +130,12 @@ const TourCard = ({ tourId }: TourCardProps) => {
             setAverageRating(summary.average_rating || 0);
             setReviewCount(summary.total_reviews || 0);
           } else {
-            console.warn('⚠️  TourCard: Empty array returned from RPC for tour', tourData.id, '- no reviews found');
+            console.warn('⚠️  TourCard: Empty array returned from RPC for guide', tourData.creator_id, '- no reviews found');
             setAverageRating(0);
             setReviewCount(0);
           }
         } else {
-          console.warn('⚠️  TourCard: Unexpected response format from RPC for tour', tourData.id, '. Response:', ratingData);
+          console.warn('⚠️  TourCard: Unexpected response format from RPC for guide', tourData.creator_id, '. Response:', ratingData);
           setAverageRating(0);
           setReviewCount(0);
         }
@@ -232,20 +231,20 @@ const TourCard = ({ tourId }: TourCardProps) => {
           
           const fallbackTour = fallbackTours[tourId];
           if (fallbackTour) {
-            // Set fallback rating data for specific tours (not guide ratings)
-            const tourRatingData: { [key: string]: { rating: number, reviews: number } } = {
-              'tour1': { rating: 4.3, reviews: 15 },  // London Historical Walking Tour
-              'tour2': { rating: 4.7, reviews: 28 },  // Barcelona Tapas Tour  
-              'tour3': { rating: 4.1, reviews: 12 }   // Tokyo Cherry Blossom Experience
+            // Set fallback rating data for guides (not tours)
+            const guideRatingData: { [key: string]: { rating: number, reviews: number } } = {
+              'tour1': { rating: 4.3, reviews: 15 },  // Guide for London Historical Walking Tour
+              'tour2': { rating: 4.7, reviews: 28 },  // Guide for Barcelona Tapas Tour  
+              'tour3': { rating: 4.1, reviews: 12 }   // Guide for Tokyo Cherry Blossom Experience
             };
             
-            const tourRating = tourRatingData[tourId];
-            if (tourRating) {
-              console.log('🔄 TourCard: Using fallback tour rating for', tourId, ':', tourRating);
-              setAverageRating(tourRating.rating);
-              setReviewCount(tourRating.reviews);
+            const guideRating = guideRatingData[tourId];
+            if (guideRating) {
+              console.log('🔄 TourCard: Using fallback guide rating for', tourId, ':', guideRating);
+              setAverageRating(guideRating.rating);
+              setReviewCount(guideRating.reviews);
             } else {
-              console.warn('⚠️  TourCard: No fallback rating data for tour', tourId);
+              console.warn('⚠️  TourCard: No fallback rating data for guide of tour', tourId);
               setAverageRating(0);
               setReviewCount(0);
             }
@@ -334,7 +333,7 @@ const TourCard = ({ tourId }: TourCardProps) => {
           />
           <Box>
             <Text fontSize="sm" fontWeight="semibold" color="gray.700">{tour.creator_name}</Text>
-            {/* Show tour ratings for all tours */}
+            {/* Show guide ratings for all tours */}
             <Flex align="center" mt={1}>
               <StarRating rating={averageRating} size={14} />
               <Text fontSize="xs" ml={2} color="gray.500" fontWeight="medium">
