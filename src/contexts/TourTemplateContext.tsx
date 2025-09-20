@@ -12,7 +12,7 @@ interface TourTemplateContextType {
   error: string | null;
   categories: string[];
   selectedCategory: string;
-  setSelectedCategory: (category: string) => void;
+  setSelectedCategory: (_category: string) => void;
   refreshTemplates: () => Promise<void>;
   createTemplate: (templateData: Partial<TourTemplate>) => Promise<boolean>;
   updateTemplate: (templateId: string, templateData: Partial<TourTemplate>) => Promise<boolean>;

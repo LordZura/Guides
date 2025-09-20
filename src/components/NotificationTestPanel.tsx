@@ -193,7 +193,7 @@ const TestNotificationDisplay = ({
 }: {
   notifications: Notification[];
   unreadCount: number;
-  markAsRead: (id: string) => void;
+  markAsRead: (_id: string) => void;
   markAllAsRead: () => Promise<boolean>;
 }) => {
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
@@ -246,7 +246,7 @@ const TestNotificationItem = ({
   onMarkAsRead 
 }: {
   notification: Notification;
-  onMarkAsRead: (id: string) => void;
+  onMarkAsRead: (_id: string) => void;
 }) => {
   const bgColor = notification.is_read ? 'gray.50' : 'blue.50';
   const borderColor = notification.is_read ? 'gray.200' : 'blue.200';

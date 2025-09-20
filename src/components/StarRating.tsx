@@ -10,7 +10,7 @@ export interface StarRatingProps {
   spacing?: number;
   interactive?: boolean;
   showTooltip?: boolean;
-  onChange?: (value: number) => void;
+  onChange?: (_value: number) => void;
 }
 
 const StarRating: React.FC<StarRatingProps> = ({

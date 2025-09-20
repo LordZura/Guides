@@ -27,7 +27,7 @@ interface ToursContextType {
   isLoading: boolean;
   error: string | null;
   refreshTours: () => Promise<void>;
-  deleteTour: (tourId: string) => Promise<void>;
+  deleteTour: (_tourId: string) => Promise<void>;
   updateTourStatus: (tourId: string, isActive: boolean) => Promise<void>;
   updateTour: (tourId: string, updates: Partial<Tour>) => Promise<void>;
 }

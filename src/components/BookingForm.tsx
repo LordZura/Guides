@@ -137,7 +137,8 @@ const BookingForm = ({
       }));
     } else {
       setErrors(prev => {
-        const { bookingDate: _, ...rest } = prev;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { bookingDate, ...rest } = prev;
         return rest;
       });
     }

@@ -35,7 +35,7 @@ interface BookingContextType {
   outgoingBookings: Booking[];
   isLoading: boolean;
   error: string | null;
-  createBooking: (bookingData: Partial<Booking>) => Promise<{ success: boolean; error?: string; booking?: Booking }>;
+  createBooking: (_bookingData: Partial<Booking>) => Promise<{ success: boolean; error?: string; booking?: Booking }>;
   updateBookingStatus: (bookingId: string, status: BookingStatus) => Promise<boolean>;
   refreshBookings: () => Promise<void>;
   hasCompletedTour: (tourId: string) => Promise<boolean>;

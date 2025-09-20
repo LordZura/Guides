@@ -17,7 +17,7 @@ export interface LanguageOption {
 
 interface SearchableLanguageSelectorProps {
   selectedLanguages: string[];
-  onChange: (languages: string[]) => void;
+  onChange: (_languages: string[]) => void;
   isRequired?: boolean;
   isInvalid?: boolean;
   errorMessage?: string;

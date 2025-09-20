@@ -32,7 +32,7 @@ interface ReviewsContextType {
   isLoading: boolean;
   error: string | null;
   hasMoreReviews: boolean;
-  loadReviews: (targetId: string, targetType: 'guide' | 'tour', page?: number) => Promise<void>;
+  loadReviews: (_targetId: string, _targetType: 'guide' | 'tour', _page?: number) => Promise<void>;
   addReview: (reviewData: ReviewData) => Promise<void>;
   deleteReview: (reviewId: string) => Promise<void>;
   refreshReviews: () => Promise<void>;

@@ -10,7 +10,7 @@ import StarRating from './StarRating';
 
 interface RatingFilterProps {
   selectedRating: number;
-  onChange: (value: number) => void;
+  onChange: (_value: number) => void;
   label?: string;
   showClear?: boolean;
 }
