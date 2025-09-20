@@ -25,7 +25,7 @@ import {
 
 interface TourLocationManagerProps {
   locations: TourLocation[];
-  onChange: (locations: TourLocation[]) => void;
+  onChange: (_locations: TourLocation[]) => void;
   error?: string;
 }
 

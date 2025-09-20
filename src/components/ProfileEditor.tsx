@@ -23,7 +23,7 @@ import { useAuth } from '../contexts/AuthProvider';
 import SearchableLanguageSelector from './SearchableLanguageSelector';
 
 interface ProfileEditorProps {
-  onSave: (profile: Profile) => void;
+  onSave: (_profile: Profile) => void;
 }
 
 interface FormData {

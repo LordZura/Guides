@@ -31,7 +31,7 @@ import { TourTemplateData } from '../lib/types';
 import { getLocationsDisplayString } from '../utils/tourLocations';
 
 interface TourTemplatePickerProps {
-  onSelectTemplate: (templateData: TourTemplateData) => void;
+  onSelectTemplate: (_templateData: TourTemplateData) => void;
   onSkip: () => void;
 }
 
