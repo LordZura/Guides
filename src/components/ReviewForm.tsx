@@ -23,6 +23,7 @@ interface ReviewFormProps {
   targetId: string;
   targetType: 'guide' | 'tour';
   tourId?: string;
+  bookingStatus?: string; // Add booking status prop
   onSuccess?: () => void;
 }
 
@@ -30,6 +31,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   targetId,
   targetType,
   tourId,
+  bookingStatus,
   onSuccess,
 }) => {
   const { addReview, isLoading } = useReviews();
@@ -51,6 +53,13 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     const checkCompletionStatus = async () => {
       if (!user) {
         setHasCompletedBooking(false);
+        setIsCheckingCompletion(false);
+        return;
+      }
+      
+      // If we have the booking status and it's completed, skip the database check
+      if (bookingStatus === 'completed') {
+        setHasCompletedBooking(true);
         setIsCheckingCompletion(false);
         return;
       }
@@ -83,7 +92,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       setHasCompletedBooking(false);
       setIsCheckingCompletion(false);
     }
-  }, [user, targetId, targetType, tourId]);
+  }, [user, targetId, targetType, tourId, bookingStatus]);
   
   const validateForm = () => {
     const newErrors: {
@@ -176,12 +185,16 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   }
   
   if (!hasCompletedBooking) {
+    const alertMessage = targetType === 'guide' 
+      ? 'You need to complete a booking with this guide before you can leave a review.'
+      : 'You need to book and complete this tour before you can leave a review.';
+      
     return (
       <Alert status="warning" borderRadius="md">
         <AlertIcon />
         <AlertTitle>Booking required</AlertTitle>
         <AlertDescription>
-          You need to book and complete this tour before you can leave a review.
+          {alertMessage}
         </AlertDescription>
       </Alert>
     );
