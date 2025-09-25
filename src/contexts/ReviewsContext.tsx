@@ -154,12 +154,29 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
   const addReview = async (reviewData: ReviewData) => {
     setIsLoading(true);
     try {
+      // Check if user has already reviewed this target to prevent duplicates
+      const alreadyReviewed = await hasUserReviewed(
+        reviewData.reviewer_id, 
+        reviewData.target_id, 
+        reviewData.target_type
+      );
+      
+      if (alreadyReviewed) {
+        const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
+        toast({
+          title: 'Review already exists',
+          description: `You have already reviewed this ${targetLabel}. You can only submit one review per ${targetLabel}.`,
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
+
       // Insert review
       const { error } = await supabase
         .from('reviews')
-        .insert([reviewData])
-        .select()
-        .single();
+        .insert([reviewData]);
 
       if (error) throw error;
 
@@ -220,12 +237,16 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       const isDuplicateReview = err instanceof Error && 
         (err.message.includes('already reviewed') || 
          err.message.includes('duplicate key value') ||
-         (err as any)?.code === 'P0001');
+         err.message.includes('unique constraint') ||
+         err.message.includes('idx_reviews_unique_reviewer_target') ||
+         (err as any)?.code === 'P0001' ||
+         (err as any)?.code === '23505'); // PostgreSQL unique violation error code
       
       if (isDuplicateReview) {
+        const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
         toast({
           title: 'Review already exists',
-          description: 'You have already reviewed this tour. You can only submit one review per tour.',
+          description: `You have already reviewed this ${targetLabel}. You can only submit one review per ${targetLabel}.`,
           status: 'warning',
           duration: 5000,
           isClosable: true,
@@ -296,6 +317,12 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
    */
   const hasUserReviewed = async (userId: string, targetId: string, targetType: 'guide' | 'tour'): Promise<boolean> => {
     try {
+      // Validate input parameters
+      if (!userId || !targetId || !targetType) {
+        console.warn('hasUserReviewed called with invalid parameters:', { userId, targetId, targetType });
+        return false;
+      }
+
       const { data, error } = await supabase
         .from('reviews')
         .select('id')
@@ -304,12 +331,17 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         .eq('target_type', targetType)
         .limit(1);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error checking if user has reviewed:', error);
+        throw error;
+      }
       
       return data && data.length > 0;
     } catch (err) {
       console.error('Error checking if user has reviewed:', err);
-      return false; // Default to false to allow review attempt
+      // In case of network issues or other errors, default to false to allow the attempt
+      // This prevents the user from being completely blocked due to temporary issues
+      return false;
     }
   };
 
