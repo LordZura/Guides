@@ -23,6 +23,7 @@ interface ReviewFormProps {
   targetId: string;
   targetType: 'guide' | 'tour';
   tourId?: string;
+  bookingStatus?: string; // Add booking status prop
   onSuccess?: () => void;
 }
 
@@ -30,6 +31,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   targetId,
   targetType,
   tourId,
+  bookingStatus,
   onSuccess,
 }) => {
   const { addReview, isLoading } = useReviews();
@@ -51,6 +53,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     const checkCompletionStatus = async () => {
       if (!user) {
         setHasCompletedBooking(false);
+        setIsCheckingCompletion(false);
+        return;
+      }
+      
+      // If we have the booking status and it's completed, skip the database check
+      if (bookingStatus === 'completed') {
+        console.log('ReviewForm: Booking status is completed, skipping database check');
+        setHasCompletedBooking(true);
         setIsCheckingCompletion(false);
         return;
       }
@@ -83,7 +93,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       setHasCompletedBooking(false);
       setIsCheckingCompletion(false);
     }
-  }, [user, targetId, targetType, tourId]);
+  }, [user, targetId, targetType, tourId, bookingStatus]);
   
   const validateForm = () => {
     const newErrors: {

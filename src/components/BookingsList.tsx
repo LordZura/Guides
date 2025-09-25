@@ -419,6 +419,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
                 targetId={selectedBooking.guide_id}
                 targetType="guide"
                 tourId={selectedBooking.tour_id}
+                bookingStatus={selectedBooking.status}
                 onSuccess={handleReviewSuccess}
               />
             )}

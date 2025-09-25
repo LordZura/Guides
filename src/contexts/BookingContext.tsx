@@ -489,7 +489,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       // First, let's check ALL completed bookings for this user to debug
-      const { data: allCompleted, error: allError } = await supabase
+      const { data: allCompleted } = await supabase
         .from('bookings')
         .select('id, status, tourist_id, guide_id, tour_id')
         .eq('tourist_id', user.id)
