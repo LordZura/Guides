@@ -59,7 +59,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       
       // If we have the booking status and it's completed, skip the database check
       if (bookingStatus === 'completed') {
-        console.log('ReviewForm: Booking status is completed, skipping database check');
         setHasCompletedBooking(true);
         setIsCheckingCompletion(false);
         return;
@@ -186,12 +185,16 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   }
   
   if (!hasCompletedBooking) {
+    const alertMessage = targetType === 'guide' 
+      ? 'You need to complete a booking with this guide before you can leave a review.'
+      : 'You need to book and complete this tour before you can leave a review.';
+      
     return (
       <Alert status="warning" borderRadius="md">
         <AlertIcon />
         <AlertTitle>Booking required</AlertTitle>
         <AlertDescription>
-          You need to book and complete this tour before you can leave a review.
+          {alertMessage}
         </AlertDescription>
       </Alert>
     );
