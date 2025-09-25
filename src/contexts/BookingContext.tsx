@@ -476,16 +476,37 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
   // Check if user has completed a tour with a specific guide
   const hasCompletedGuideBooking = useCallback(async (guideId: string): Promise<boolean> => {
-    if (!user || !guideId) return false;
+    if (!user || !guideId) {
+      console.warn('hasCompletedGuideBooking: Missing user or guideId', { user: !!user, guideId });
+      return false;
+    }
+
+    console.log('hasCompletedGuideBooking: Checking completion for', { 
+      touristId: user.id, 
+      guideId, 
+      userRole: user.role 
+    });
 
     try {
+      // First, let's check ALL completed bookings for this user to debug
+      const { data: allCompleted, error: allError } = await supabase
+        .from('bookings')
+        .select('id, status, tourist_id, guide_id, tour_id')
+        .eq('tourist_id', user.id)
+        .eq('status', 'completed');
+
+      console.log('hasCompletedGuideBooking: All completed bookings for user', allCompleted);
+
+      // Now check the specific guide booking
       const { data, error } = await supabase
         .from('bookings')
-        .select('id')
+        .select('id, status, tourist_id, guide_id, tour_id')
         .eq('tourist_id', user.id)
         .eq('guide_id', guideId)
         .eq('status', 'completed')
         .maybeSingle();
+
+      console.log('hasCompletedGuideBooking: Query result for specific guide', { data, error, guideId });
 
       if (error) {
         // Log the error but don't throw to prevent UI crashes
@@ -493,7 +514,9 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      return !!data;
+      const result = !!data;
+      console.log('hasCompletedGuideBooking: Returning', result);
+      return result;
     } catch (err) {
       // Silently handle any unexpected errors and return false
       console.warn('Error checking guide tour completion:', err);
