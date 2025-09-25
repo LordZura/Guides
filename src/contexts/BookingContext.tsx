@@ -24,6 +24,7 @@ export interface Booking {
   // Joined fields
   tour_title?: string;
   tour_location?: string;
+  tour_creator_role?: string;
   tourist_name?: string;
   tourist_avatar?: string;
   guide_name?: string;
@@ -80,7 +81,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
           .from('bookings')
           .select(`
             *,
-            tours!tour_id(title, location),
+            tours!tour_id(title, location, creator_role),
             profiles!tourist_id(full_name, avatar_url)
           `)
           .eq('guide_id', user.id)
@@ -93,6 +94,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
           ...booking,
           tour_title: booking.tours?.title || 'Unknown Tour',
           tour_location: booking.tours?.location || 'Unknown Location',
+          tour_creator_role: booking.tours?.creator_role || 'guide',
           tourist_name: booking.profiles?.full_name || 'Unknown Tourist',
           tourist_avatar: booking.profiles?.avatar_url || null
         })) || [];
@@ -118,6 +120,7 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
           ...booking,
           tour_title: booking.tours?.title || 'Unknown Tour',
           tour_location: booking.tours?.location || 'Unknown Location',
+          tour_creator_role: booking.tours?.creator_role || 'guide',
           guide_name: booking.profiles?.full_name || 'Unknown Guide',
           guide_avatar: booking.profiles?.avatar_url || null
         })) || [];

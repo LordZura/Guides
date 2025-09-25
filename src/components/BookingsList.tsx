@@ -411,13 +411,15 @@ const BookingsList: React.FC<BookingsListProps> = ({ showTitle = true }) => {
       <Modal isOpen={isReviewOpen} onClose={onReviewClose} size="lg">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Review Your Guide</ModalHeader>
+          <ModalHeader>
+            {selectedBooking?.tour_creator_role === 'guide' ? 'Review This Tour' : 'Review Your Guide'}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {selectedBooking && (
               <ReviewForm
-                targetId={selectedBooking.guide_id}
-                targetType="guide"
+                targetId={selectedBooking.tour_creator_role === 'guide' ? selectedBooking.tour_id : selectedBooking.guide_id}
+                targetType={selectedBooking.tour_creator_role === 'guide' ? 'tour' : 'guide'}
                 tourId={selectedBooking.tour_id}
                 bookingStatus={selectedBooking.status}
                 onSuccess={handleReviewSuccess}

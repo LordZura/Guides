@@ -94,4 +94,72 @@ describe('BookingsList Logic', () => {
     // Guides should not see 'offered' bookings as pending (they created them)
     expect(pendingBookings).toHaveLength(0);
   });
+
+  it('should show correct review modal header based on tour creator role', () => {
+    // Test guide-created tour booking (should target tour)
+    const guideCreatedTourBooking: Booking = {
+      id: '3',
+      tour_id: 'tour3',
+      tourist_id: 'tourist1',
+      guide_id: 'guide1',
+      status: 'completed',
+      party_size: 1,
+      booking_date: '2024-01-15',
+      preferred_time: '10:00',
+      notes: null,
+      total_price: 50,
+      created_at: '2024-01-10T00:00:00Z',
+      updated_at: '2024-01-10T00:00:00Z',
+      tour_creator_role: 'guide'
+    };
+
+    // Test tourist-created tour booking (should target guide)
+    const touristCreatedTourBooking: Booking = {
+      id: '4',
+      tour_id: 'tour4',
+      tourist_id: 'tourist1',
+      guide_id: 'guide1',
+      status: 'completed',
+      party_size: 1,
+      booking_date: '2024-01-15',
+      preferred_time: '10:00',
+      notes: null,
+      total_price: 50,
+      created_at: '2024-01-10T00:00:00Z',
+      updated_at: '2024-01-10T00:00:00Z',
+      tour_creator_role: 'tourist'
+    };
+
+    // Test header logic for guide-created tour
+    const guideCreatedHeader = guideCreatedTourBooking.tour_creator_role === 'guide' 
+      ? 'Review This Tour' 
+      : 'Review Your Guide';
+    expect(guideCreatedHeader).toBe('Review This Tour');
+
+    // Test header logic for tourist-created tour
+    const touristCreatedHeader = touristCreatedTourBooking.tour_creator_role === 'guide' 
+      ? 'Review This Tour' 
+      : 'Review Your Guide';
+    expect(touristCreatedHeader).toBe('Review Your Guide');
+
+    // Test target selection for guide-created tour
+    const guideCreatedTargetId = guideCreatedTourBooking.tour_creator_role === 'guide' 
+      ? guideCreatedTourBooking.tour_id 
+      : guideCreatedTourBooking.guide_id;
+    const guideCreatedTargetType = guideCreatedTourBooking.tour_creator_role === 'guide' 
+      ? 'tour' 
+      : 'guide';
+    expect(guideCreatedTargetId).toBe('tour3');
+    expect(guideCreatedTargetType).toBe('tour');
+
+    // Test target selection for tourist-created tour
+    const touristCreatedTargetId = touristCreatedTourBooking.tour_creator_role === 'guide' 
+      ? touristCreatedTourBooking.tour_id 
+      : touristCreatedTourBooking.guide_id;
+    const touristCreatedTargetType = touristCreatedTourBooking.tour_creator_role === 'guide' 
+      ? 'tour' 
+      : 'guide';
+    expect(touristCreatedTargetId).toBe('guide1');
+    expect(touristCreatedTargetType).toBe('guide');
+  });
 });
