@@ -1,12 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import ReviewForm from './ReviewForm';
 
 // Mock dependencies
 vi.mock('../contexts/ReviewsContext', () => ({
   useReviews: () => ({
     addReview: vi.fn(),
-    isLoading: false
+    isLoading: false,
+    hasUserReviewed: vi.fn().mockResolvedValue(false)
   })
 }));
 
@@ -56,6 +57,11 @@ describe('ReviewForm', () => {
       />
     );
 
+    // Wait for async checks to complete
+    await waitFor(() => {
+      expect(screen.queryByText('Checking if you can review...')).not.toBeInTheDocument();
+    });
+
     // Should show the review form, not the "booking required" message
     expect(screen.queryByText('Booking required')).not.toBeInTheDocument();
     expect(screen.getByText('Your Rating')).toBeInTheDocument();
@@ -73,26 +79,13 @@ describe('ReviewForm', () => {
       />
     );
 
-    // Should show checking message initially, then booking required
-    // Wait a bit for the useEffect to run
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for async checks to complete with a longer timeout
+    await waitFor(() => {
+      expect(screen.queryByText('Checking if you can review...')).not.toBeInTheDocument();
+    }, { timeout: 3000 });
     
-    // We might still see the checking message, but the important thing is that
-    // hasCompletedGuideBooking will be called since bookingStatus is not "completed"
-  });
-
-  it('should show booking required when booking status is not completed', async () => {
-    render(
-      <ReviewForm
-        targetId="guide-123"
-        targetType="guide"
-        tourId="tour-456"
-        bookingStatus="paid"
-      />
-    );
-
-    // Should show checking message initially
-    expect(screen.getByText('Checking if you can review...')).toBeInTheDocument();
+    // Should show booking required since hasCompletedGuideBooking returns false
+    expect(screen.getByText('Booking required')).toBeInTheDocument();
   });
 
   it('should show checking message when no booking status is provided', () => {
