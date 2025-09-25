@@ -36,6 +36,7 @@ interface ReviewsContextType {
   addReview: (reviewData: ReviewData) => Promise<void>;
   deleteReview: (reviewId: string) => Promise<void>;
   refreshReviews: () => Promise<void>;
+  hasUserReviewed: (userId: string, targetId: string, targetType: 'guide' | 'tour') => Promise<boolean>;
 }
 
 const ReviewsContext = createContext<ReviewsContextType | undefined>(undefined);
@@ -214,14 +215,31 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (err) {
       console.error('Error adding review:', err);
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      toast({
-        title: 'Failed to submit review',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // Handle duplicate review error specifically
+      const isDuplicateReview = err instanceof Error && 
+        (err.message.includes('already reviewed') || 
+         err.message.includes('duplicate key value') ||
+         (err as any)?.code === 'P0001');
+      
+      if (isDuplicateReview) {
+        toast({
+          title: 'Review already exists',
+          description: 'You have already reviewed this tour. You can only submit one review per tour.',
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+        toast({
+          title: 'Failed to submit review',
+          description: errorMessage,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -273,6 +291,28 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  /**
+   * Check if a user has already reviewed a specific target
+   */
+  const hasUserReviewed = async (userId: string, targetId: string, targetType: 'guide' | 'tour'): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('id')
+        .eq('reviewer_id', userId)
+        .eq('target_id', targetId)
+        .eq('target_type', targetType)
+        .limit(1);
+
+      if (error) throw error;
+      
+      return data && data.length > 0;
+    } catch (err) {
+      console.error('Error checking if user has reviewed:', err);
+      return false; // Default to false to allow review attempt
+    }
+  };
+
   const value = {
     reviews,
     isLoading,
@@ -282,6 +322,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
     addReview,
     deleteReview,
     refreshReviews,
+    hasUserReviewed,
   };
 
   return <ReviewsContext.Provider value={value}>{children}</ReviewsContext.Provider>;

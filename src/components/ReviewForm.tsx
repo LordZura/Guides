@@ -34,7 +34,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   bookingStatus,
   onSuccess,
 }) => {
-  const { addReview, isLoading } = useReviews();
+  const { addReview, isLoading, hasUserReviewed } = useReviews();
   const { profile, user } = useAuth();
   const { hasCompletedTour, hasCompletedGuideBooking } = useBookings();
   const toast = useToast();
@@ -43,6 +43,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   const [content, setContent] = useState<string>('');
   const [hasCompletedBooking, setHasCompletedBooking] = useState<boolean>(false);
   const [isCheckingCompletion, setIsCheckingCompletion] = useState<boolean>(true);
+  const [hasAlreadyReviewed, setHasAlreadyReviewed] = useState<boolean>(false);
   const [errors, setErrors] = useState<{
     rating?: string;
     content?: string;
@@ -53,6 +54,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     const checkCompletionStatus = async () => {
       if (!user) {
         setHasCompletedBooking(false);
+        setHasAlreadyReviewed(false);
         setIsCheckingCompletion(false);
         return;
       }
@@ -60,6 +62,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       // If we have the booking status and it's completed, skip the database check
       if (bookingStatus === 'completed') {
         setHasCompletedBooking(true);
+        // Still need to check if already reviewed
+        const alreadyReviewed = await hasUserReviewed(user.id, targetId, targetType);
+        setHasAlreadyReviewed(alreadyReviewed);
         setIsCheckingCompletion(false);
         return;
       }
@@ -77,9 +82,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         }
         
         setHasCompletedBooking(completed);
+        
+        // Check if user has already reviewed this target
+        const alreadyReviewed = await hasUserReviewed(user.id, targetId, targetType);
+        setHasAlreadyReviewed(alreadyReviewed);
       } catch (error) {
         console.error('Error checking completion status:', error);
         setHasCompletedBooking(false); // Set to false on error to be safe
+        setHasAlreadyReviewed(false);
       } finally {
         setIsCheckingCompletion(false);
       }
@@ -90,9 +100,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       checkCompletionStatus();
     } else {
       setHasCompletedBooking(false);
+      setHasAlreadyReviewed(false);
       setIsCheckingCompletion(false);
     }
-  }, [user, targetId, targetType, tourId, bookingStatus]);
+  }, [user, targetId, targetType, tourId, bookingStatus, hasUserReviewed]);
   
   const validateForm = () => {
     const newErrors: {
@@ -193,6 +204,22 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       <Alert status="warning" borderRadius="md">
         <AlertIcon />
         <AlertTitle>Booking required</AlertTitle>
+        <AlertDescription>
+          {alertMessage}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (hasAlreadyReviewed) {
+    const alertMessage = targetType === 'guide' 
+      ? 'You have already reviewed this guide. You can only submit one review per guide.'
+      : 'You have already reviewed this tour. You can only submit one review per tour.';
+      
+    return (
+      <Alert status="info" borderRadius="md">
+        <AlertIcon />
+        <AlertTitle>Review already submitted</AlertTitle>
         <AlertDescription>
           {alertMessage}
         </AlertDescription>
