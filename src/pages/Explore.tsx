@@ -44,6 +44,34 @@ import RatingFilter from '../components/RatingFilter';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+// Type definitions for database function responses
+interface GuideWithReviews extends Profile {
+  average_rating: number;
+  total_reviews: number;
+  rating_counts: Record<string, number>;
+}
+
+interface TourWithReviews {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  price: number;
+  duration: number;
+  capacity: number;
+  languages: string[];
+  is_private: boolean;
+  is_active: boolean;
+  creator_role: string;
+  creator_id: string;
+  days_available: boolean[];
+  created_at: string;
+  updated_at: string;
+  average_rating: number;
+  total_reviews: number;
+  rating_counts: Record<string, number>;
+}
+
 interface FilterOptions {
   language?: string;
   location?: string;
@@ -95,7 +123,7 @@ const Explore = () => {
       }
       
       // Convert the data to match the expected format
-      const guides = (data || []).map((guide: any) => ({
+      const guides = (data || []).map((guide: GuideWithReviews) => ({
         ...guide,
         reviews_count: guide.total_reviews // Map total_reviews to reviews_count for consistency
       }));
@@ -239,12 +267,12 @@ const Explore = () => {
       if (error) throw error;
       
       // Convert the data to match the expected format and extract just the IDs
-      const tours = (data || []).map((tour: any) => ({
+      const tours = (data || []).map((tour: TourWithReviews) => ({
         ...tour,
         reviews_count: tour.total_reviews // Map total_reviews to reviews_count for consistency
       }));
       
-      setTours(tours.map((tour: any) => tour.id));
+      setTours(tours.map((tour: TourWithReviews) => tour.id));
     } catch (err) {
       console.error("Error fetching tours:", err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tours';
