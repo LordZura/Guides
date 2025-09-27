@@ -333,13 +333,15 @@ const TourCard = ({ tourId }: TourCardProps) => {
           />
           <Box>
             <Text fontSize="sm" fontWeight="semibold" color="gray.700">{tour.creator_name}</Text>
-            {/* Show tour-specific ratings */}
-            <Flex align="center" mt={1}>
-              <StarRating rating={averageRating} size={14} />
-              <Text fontSize="xs" ml={2} color="gray.500" fontWeight="medium">
-                ({reviewCount} reviews)
-              </Text>
-            </Flex>
+            {/* Show tour-specific ratings only for guide-created tours */}
+            {isGuide && (
+              <Flex align="center" mt={1}>
+                <StarRating rating={averageRating} size={14} />
+                <Text fontSize="xs" ml={2} color="gray.500" fontWeight="medium">
+                  ({reviewCount} reviews)
+                </Text>
+              </Flex>
+            )}
           </Box>
         </Flex>
         

@@ -498,9 +498,12 @@ const Explore = () => {
       if (selectedRating > 0) filters.rating = selectedRating;
       if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
     } else if (tabIndex === 1) {
-      // Tours tab filters: languages, location, days available, price range, rating and review count
-      if (selectedRating > 0) filters.rating = selectedRating;
-      if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
+      // Tours tab filters: languages, location, days available, price range
+      // Rating and review count filters only for tourists viewing guide tours
+      if ((profile?.role || 'guide') === 'tourist') {
+        if (selectedRating > 0) filters.rating = selectedRating;
+        if (selectedReviewCount > 0) filters.reviewCount = selectedReviewCount;
+      }
       if (priceRange.every(val => val !== 0)) filters.priceRange = priceRange;
       if (selectedDaysAvailable.length > 0) filters.daysAvailable = selectedDaysAvailable;
     }
@@ -639,32 +642,37 @@ const Explore = () => {
                 ) : tabIndex === 1 ? (
                   /* Tours filters: price range, days available, rating and review count */
                   <>
-                    {/* Rating and review filters available for all users */}
-                    <RatingFilter
-                      selectedRating={selectedRating}
-                      onChange={setSelectedRating}
-                      label="Minimum Rating"
-                      showClear={true}
-                    />
-                    
-                    <FormControl>
-                      <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
-                      <NumberInput 
-                        min={0}
-                        max={10000}
-                        value={selectedReviewCount || ''}
-                        onChange={(_, value) => setSelectedReviewCount(value || 0)}
-                      >
-                        <NumberInputField 
-                          placeholder="Enter minimum reviews"
-                          borderRadius="lg"
-                          border="2px"
-                          borderColor="gray.200"
-                          _hover={{ borderColor: 'primary.300' }}
-                          _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
+                    {/* Rating and review filters should NOT be shown when guides search for tourist tours */}
+                    {/* Only show rating filters when tourists view guide tours (who have ratings) */}
+                    {(profile?.role || 'guide') === 'tourist' && (
+                      <>
+                        <RatingFilter
+                          selectedRating={selectedRating}
+                          onChange={setSelectedRating}
+                          label="Minimum Rating"
+                          showClear={true}
                         />
-                      </NumberInput>
-                    </FormControl>
+                        
+                        <FormControl>
+                          <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
+                          <NumberInput 
+                            min={0}
+                            max={10000}
+                            value={selectedReviewCount || ''}
+                            onChange={(_, value) => setSelectedReviewCount(value || 0)}
+                          >
+                            <NumberInputField 
+                              placeholder="Enter minimum reviews"
+                              borderRadius="lg"
+                              border="2px"
+                              borderColor="gray.200"
+                              _hover={{ borderColor: 'primary.300' }}
+                              _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
+                            />
+                          </NumberInput>
+                        </FormControl>
+                      </>
+                    )}
                     
                     <FormControl>
                       <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Price Range</FormLabel>
@@ -940,25 +948,30 @@ const Explore = () => {
               ) : tabIndex === 1 ? (
                 /* Tours filters: price range, days available, rating and review count */
                 <>
-                  {/* Rating and review filters available for all users */}
-                  <RatingFilter
-                    selectedRating={selectedRating}
-                    onChange={setSelectedRating}
-                    label="Minimum Rating"
-                    showClear={false}
-                  />
-                  
-                  <FormControl>
-                    <FormLabel>Minimum Reviews</FormLabel>
-                    <NumberInput 
-                      min={0}
-                      max={10000}
-                      value={selectedReviewCount || ''}
-                      onChange={(_, value) => setSelectedReviewCount(value || 0)}
-                    >
-                      <NumberInputField placeholder="Enter minimum reviews" />
-                    </NumberInput>
-                  </FormControl>
+                  {/* Rating and review filters should NOT be shown when guides search for tourist tours */}
+                  {/* Only show rating filters when tourists view guide tours (who have ratings) */}
+                  {(profile?.role || 'guide') === 'tourist' && (
+                    <>
+                      <RatingFilter
+                        selectedRating={selectedRating}
+                        onChange={setSelectedRating}
+                        label="Minimum Rating"
+                        showClear={false}
+                      />
+                      
+                      <FormControl>
+                        <FormLabel>Minimum Reviews</FormLabel>
+                        <NumberInput 
+                          min={0}
+                          max={10000}
+                          value={selectedReviewCount || ''}
+                          onChange={(_, value) => setSelectedReviewCount(value || 0)}
+                        >
+                          <NumberInputField placeholder="Enter minimum reviews" />
+                        </NumberInput>
+                      </FormControl>
+                    </>
+                  )}
                   
                   <FormControl>
                     <FormLabel>Price Range</FormLabel>
