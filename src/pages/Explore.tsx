@@ -123,10 +123,24 @@ const Explore = () => {
       }
       
       // Convert the data to match the expected format
-      const guides = (data || []).map((guide: GuideWithReviews) => ({
+      let guides = (data || []).map((guide: GuideWithReviews) => ({
         ...guide,
         reviews_count: guide.total_reviews // Map total_reviews to reviews_count for consistency
       }));
+      
+      // Apply additional client-side filtering to ensure rating filter works correctly
+      // This fixes the issue where guides with 0 reviews pass through rating filters
+      if (filters.rating && filters.rating > 0) {
+        guides = guides.filter((guide: GuideWithReviews) => 
+          guide.average_rating >= filters.rating! && guide.total_reviews > 0
+        );
+      }
+      
+      if (filters.reviewCount && filters.reviewCount > 0) {
+        guides = guides.filter((guide: GuideWithReviews) => 
+          guide.total_reviews >= filters.reviewCount!
+        );
+      }
       
       setGuides(guides);
     } catch (err) {
@@ -213,7 +227,7 @@ const Explore = () => {
         
         if (filters.rating && filters.rating > 0) {
           filteredGuides = filteredGuides.filter(guide => 
-            guide.average_rating >= filters.rating! || (guide.average_rating === 0 && guide.reviews_count === 0)
+            guide.average_rating >= filters.rating! && guide.total_reviews > 0
           );
         }
         
@@ -267,10 +281,24 @@ const Explore = () => {
       if (error) throw error;
       
       // Convert the data to match the expected format and extract just the IDs
-      const tours = (data || []).map((tour: TourWithReviews) => ({
+      let tours = (data || []).map((tour: TourWithReviews) => ({
         ...tour,
         reviews_count: tour.total_reviews // Map total_reviews to reviews_count for consistency
       }));
+      
+      // Apply additional client-side filtering to ensure rating filter works correctly
+      // This fixes the issue where tours with 0 reviews pass through rating filters
+      if (filters.rating && filters.rating > 0) {
+        tours = tours.filter((tour: TourWithReviews) => 
+          tour.average_rating >= filters.rating! && tour.total_reviews > 0
+        );
+      }
+      
+      if (filters.reviewCount && filters.reviewCount > 0) {
+        tours = tours.filter((tour: TourWithReviews) => 
+          tour.total_reviews >= filters.reviewCount!
+        );
+      }
       
       setTours(tours.map((tour: TourWithReviews) => tour.id));
     } catch (err) {
@@ -363,7 +391,7 @@ const Explore = () => {
         
         if (filters.rating && filters.rating > 0) {
           filteredTours = filteredTours.filter(tour => 
-            tour.average_rating >= filters.rating! || (tour.average_rating === 0 && tour.reviews_count === 0)
+            tour.average_rating >= filters.rating! && tour.total_reviews > 0
           );
         }
         
@@ -591,21 +619,21 @@ const Explore = () => {
                     
                     <FormControl>
                       <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
-                      <Select 
-                        placeholder="Any review count"
-                        value={selectedReviewCount}
-                        onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
-                        borderRadius="lg"
-                        border="2px"
-                        borderColor="gray.200"
-                        _hover={{ borderColor: 'primary.300' }}
-                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
+                      <NumberInput 
+                        min={0}
+                        max={10000}
+                        value={selectedReviewCount || ''}
+                        onChange={(_, value) => setSelectedReviewCount(value || 0)}
                       >
-                        <option value={50}>50+ reviews</option>
-                        <option value={20}>20+ reviews</option>
-                        <option value={10}>10+ reviews</option>
-                        <option value={5}>5+ reviews</option>
-                      </Select>
+                        <NumberInputField 
+                          placeholder="Enter minimum reviews"
+                          borderRadius="lg"
+                          border="2px"
+                          borderColor="gray.200"
+                          _hover={{ borderColor: 'primary.300' }}
+                          _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
+                        />
+                      </NumberInput>
                     </FormControl>
                   </>
                 ) : tabIndex === 1 ? (
@@ -621,21 +649,21 @@ const Explore = () => {
                     
                     <FormControl>
                       <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Minimum Reviews</FormLabel>
-                      <Select 
-                        placeholder="Any review count"
-                        value={selectedReviewCount}
-                        onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
-                        borderRadius="lg"
-                        border="2px"
-                        borderColor="gray.200"
-                        _hover={{ borderColor: 'primary.300' }}
-                        _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
+                      <NumberInput 
+                        min={0}
+                        max={10000}
+                        value={selectedReviewCount || ''}
+                        onChange={(_, value) => setSelectedReviewCount(value || 0)}
                       >
-                        <option value={50}>50+ reviews</option>
-                        <option value={20}>20+ reviews</option>
-                        <option value={10}>10+ reviews</option>
-                        <option value={5}>5+ reviews</option>
-                      </Select>
+                        <NumberInputField 
+                          placeholder="Enter minimum reviews"
+                          borderRadius="lg"
+                          border="2px"
+                          borderColor="gray.200"
+                          _hover={{ borderColor: 'primary.300' }}
+                          _focus={{ borderColor: 'primary.500', boxShadow: '0 0 0 1px var(--chakra-colors-primary-500)' }}
+                        />
+                      </NumberInput>
                     </FormControl>
                     
                     <FormControl>
@@ -899,16 +927,14 @@ const Explore = () => {
                   
                   <FormControl>
                     <FormLabel>Minimum Reviews</FormLabel>
-                    <Select 
-                      placeholder="Any review count"
-                      value={selectedReviewCount}
-                      onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
+                    <NumberInput 
+                      min={0}
+                      max={10000}
+                      value={selectedReviewCount || ''}
+                      onChange={(_, value) => setSelectedReviewCount(value || 0)}
                     >
-                      <option value={50}>50+ reviews</option>
-                      <option value={20}>20+ reviews</option>
-                      <option value={10}>10+ reviews</option>
-                      <option value={5}>5+ reviews</option>
-                    </Select>
+                      <NumberInputField placeholder="Enter minimum reviews" />
+                    </NumberInput>
                   </FormControl>
                 </>
               ) : tabIndex === 1 ? (
@@ -924,16 +950,14 @@ const Explore = () => {
                   
                   <FormControl>
                     <FormLabel>Minimum Reviews</FormLabel>
-                    <Select 
-                      placeholder="Any review count"
-                      value={selectedReviewCount}
-                      onChange={(e) => setSelectedReviewCount(Number(e.target.value))}
+                    <NumberInput 
+                      min={0}
+                      max={10000}
+                      value={selectedReviewCount || ''}
+                      onChange={(_, value) => setSelectedReviewCount(value || 0)}
                     >
-                      <option value={50}>50+ reviews</option>
-                      <option value={20}>20+ reviews</option>
-                      <option value={10}>10+ reviews</option>
-                      <option value={5}>5+ reviews</option>
-                    </Select>
+                      <NumberInputField placeholder="Enter minimum reviews" />
+                    </NumberInput>
                   </FormControl>
                   
                   <FormControl>
