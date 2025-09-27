@@ -154,6 +154,12 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
   const addReview = async (reviewData: ReviewData) => {
     setIsLoading(true);
     try {
+      // Enhanced debug logging for review submission
+      console.log('📝 Attempting to add review:', {
+        reviewData,
+        timestamp: new Date().toISOString()
+      });
+
       // Check if user has already reviewed this target to prevent duplicates
       const alreadyReviewed = await hasUserReviewed(
         reviewData.reviewer_id, 
@@ -163,6 +169,10 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       
       if (alreadyReviewed) {
         const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
+        console.warn('⚠️ Review already exists, preventing duplicate:', {
+          reviewData,
+          targetLabel
+        });
         toast({
           title: 'Review already exists',
           description: `You have already reviewed this ${targetLabel}. You can only submit one review per ${targetLabel}.`,
@@ -173,12 +183,25 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      console.log('✨ Proceeding with review insertion...');
+
       // Insert review
       const { error } = await supabase
         .from('reviews')
         .insert([reviewData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('💥 Database error inserting review:', {
+          error,
+          reviewData,
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorDetails: error.details
+        });
+        throw error;
+      }
+
+      console.log('✅ Review successfully inserted');
 
       // Send notification
       if (reviewData.target_type === 'tour') {
@@ -231,7 +254,16 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         isClosable: true,
       });
     } catch (err) {
-      console.error('Error adding review:', err);
+      console.error('💥 Error adding review:', {
+        error: err,
+        reviewData,
+        errorType: typeof err,
+        errorCode: (err as any)?.code,
+        errorMessage: (err as any)?.message,
+        errorDetails: (err as any)?.details,
+        errorHint: (err as any)?.hint,
+        stack: (err as any)?.stack
+      });
       
       // Handle duplicate review error specifically
       const isDuplicateReview = err instanceof Error && 
@@ -242,20 +274,48 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
          (err as any)?.code === 'P0001' ||
          (err as any)?.code === '23505'); // PostgreSQL unique violation error code
       
+      console.log('🔍 Duplicate review check:', {
+        isDuplicateReview,
+        errorCode: (err as any)?.code,
+        errorMessage: (err as any)?.message,
+        reviewData
+      });
+      
       if (isDuplicateReview) {
         const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
+        
+        // Enhanced error message with debugging info
+        const errorDetails = (err as any)?.code === 'P0001' 
+          ? `Database constraint error (${(err as any)?.code}): ${(err as any)?.message}`
+          : 'Duplicate review detected';
+        
+        console.warn('⚠️ Showing duplicate review error to user:', {
+          targetLabel,
+          errorDetails,
+          reviewData
+        });
+        
         toast({
           title: 'Review already exists',
-          description: `You have already reviewed this ${targetLabel}. You can only submit one review per ${targetLabel}.`,
+          description: `You have already reviewed this ${targetLabel}. Each ${targetLabel} can only be reviewed once per user.`,
           status: 'warning',
           duration: 5000,
           isClosable: true,
         });
       } else {
         const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+        
+        // Enhanced error reporting for debugging
+        console.error('🚨 Non-duplicate error:', {
+          errorMessage,
+          reviewData,
+          errorType: typeof err,
+          fullError: err
+        });
+        
         toast({
           title: 'Failed to submit review',
-          description: errorMessage,
+          description: `${errorMessage}${import.meta.env.DEV ? ` (Code: ${(err as any)?.code || 'unknown'})` : ''}`,
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -323,22 +383,46 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
+      // Enhanced debug logging
+      console.log('🔍 Checking if user has reviewed:', {
+        userId,
+        targetId,
+        targetType,
+        timestamp: new Date().toISOString()
+      });
+
       const { data, error } = await supabase
         .from('reviews')
-        .select('id')
+        .select('id, reviewer_id, target_id, target_type, created_at')
         .eq('reviewer_id', userId)
         .eq('target_id', targetId)
         .eq('target_type', targetType)
         .limit(1);
 
       if (error) {
-        console.error('Database error checking if user has reviewed:', error);
+        console.error('❌ Database error checking if user has reviewed:', {
+          error,
+          query: { userId, targetId, targetType }
+        });
         throw error;
       }
+
+      const hasReviewed = data && data.length > 0;
       
-      return data && data.length > 0;
+      console.log('✅ Review check result:', {
+        hasReviewed,
+        existingReviews: data,
+        query: { userId, targetId, targetType }
+      });
+      
+      return hasReviewed;
     } catch (err) {
-      console.error('Error checking if user has reviewed:', err);
+      console.error('💥 Error checking if user has reviewed:', {
+        error: err,
+        userId,
+        targetId,
+        targetType
+      });
       // In case of network issues or other errors, default to false to allow the attempt
       // This prevents the user from being completely blocked due to temporary issues
       return false;

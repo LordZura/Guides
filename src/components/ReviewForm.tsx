@@ -52,7 +52,17 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   // Check if the user has completed a tour before allowing review
   useEffect(() => {
     const checkCompletionStatus = async () => {
+      console.log('🔍 ReviewForm: Checking completion status:', {
+        user: user?.id,
+        targetId,
+        targetType,
+        tourId,
+        bookingStatus,
+        timestamp: new Date().toISOString()
+      });
+
       if (!user) {
+        console.log('❌ ReviewForm: No user, skipping checks');
         setHasCompletedBooking(false);
         setHasAlreadyReviewed(false);
         setIsCheckingCompletion(false);
@@ -61,6 +71,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       
       // If we have the booking status and it's completed, skip the database check
       if (bookingStatus === 'completed') {
+        console.log('✅ ReviewForm: Booking status is completed, checking if already reviewed');
         setHasCompletedBooking(true);
         // Still need to check if already reviewed
         const alreadyReviewed = await hasUserReviewed(user.id, targetId, targetType);
@@ -75,19 +86,33 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       try {
         let completed = false;
         
+        console.log('🔄 ReviewForm: Checking booking completion...');
+        
         if (targetType === 'tour' && tourId) {
+          console.log('🎫 Checking tour completion for tourId:', tourId);
           completed = await hasCompletedTour(tourId);
         } else if (targetType === 'guide') {
+          console.log('👤 Checking guide booking completion for targetId:', targetId);
           completed = await hasCompletedGuideBooking(targetId);
         }
         
+        console.log('📊 Booking completion result:', completed);
         setHasCompletedBooking(completed);
         
         // Check if user has already reviewed this target
+        console.log('🔄 Checking if user has already reviewed...');
         const alreadyReviewed = await hasUserReviewed(user.id, targetId, targetType);
+        console.log('📊 Already reviewed result:', alreadyReviewed);
         setHasAlreadyReviewed(alreadyReviewed);
       } catch (error) {
-        console.error('Error checking completion status:', error);
+        console.error('💥 Error checking completion status:', {
+          error,
+          user: user?.id,
+          targetId,
+          targetType,
+          tourId,
+          bookingStatus
+        });
         setHasCompletedBooking(false); // Set to false on error to be safe
         setHasAlreadyReviewed(false);
       } finally {
@@ -129,11 +154,24 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('📝 ReviewForm: Form submission started:', {
+      user: user?.id,
+      targetId,
+      targetType,
+      tourId,
+      rating,
+      hasCompletedBooking,
+      hasAlreadyReviewed,
+      timestamp: new Date().toISOString()
+    });
+    
     if (!validateForm()) {
+      console.log('❌ ReviewForm: Form validation failed');
       return;
     }
     
     if (!user || !profile) {
+      console.log('❌ ReviewForm: No user or profile');
       toast({
         title: 'Authentication required',
         description: 'Please sign in to submit a review',
@@ -145,6 +183,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     }
     
     if (!hasCompletedBooking) {
+      console.log('❌ ReviewForm: Booking not completed');
       toast({
         title: 'Cannot submit review',
         description: 'You must complete a booking before leaving a review',
@@ -165,11 +204,15 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       tour_id: tourId, // Optional tour_id, already in interface
     };
     
+    console.log('🚀 ReviewForm: Submitting review data:', reviewData);
+    
     await addReview(reviewData);
     
     // Reset form
     setRating(0);
     setContent('');
+    
+    console.log('✅ ReviewForm: Form reset after submission');
     
     // Call success callback if provided
     if (onSuccess) {
