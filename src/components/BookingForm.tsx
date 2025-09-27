@@ -243,47 +243,48 @@ const BookingForm = ({
   return (
     <Box>
       <form onSubmit={handleSubmit}>
-        <VStack spacing={4} align="stretch">
-          <Text fontWeight="bold" fontSize="lg">{tourTitle}</Text>
+        <VStack spacing={{ base: 3, md: 4 }} align="stretch">
+          <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }}>{tourTitle}</Text>
           
           {isOffer && (
-            <Text fontSize="sm" color="orange.600" fontStyle="italic">
+            <Text fontSize={{ base: "xs", md: "sm" }} color="orange.600" fontStyle="italic">
               You are offering to provide this tour to the tourist who requested it.
             </Text>
           )}
           
           {availableDayIndexes.length > 0 ? (
-            <Text fontSize="sm">
+            <Text fontSize={{ base: "xs", md: "sm" }}>
               Available on: {availableDayIndexes.map(i => daysOfWeek[i]).join(', ')}
             </Text>
           ) : (
             <Alert status="warning">
               <AlertIcon />
-              No available days specified for this tour.
+              <Text fontSize={{ base: "xs", md: "sm" }}>No available days specified for this tour.</Text>
             </Alert>
           )}
 
           {submitError && (
             <Alert status="error">
               <AlertIcon />
-              {submitError}
+              <Text fontSize={{ base: "xs", md: "sm" }}>{submitError}</Text>
             </Alert>
           )}
 
           <FormControl isRequired isInvalid={!!errors.bookingDate}>
-            <FormLabel>Date</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Date</FormLabel>
             <Input
               type="date"
               value={bookingDate}
               onChange={handleDateChange}
               min={minDate}
+              size={{ base: "md", md: "lg" }}
               bg="white"
               border="2px"
               borderColor="gray.200"
               borderRadius="md"
-              px={4}
-              py={3}
-              fontSize="md"
+              px={{ base: 3, md: 4 }}
+              py={{ base: 2, md: 3 }}
+              fontSize={{ base: "sm", md: "md" }}
               _hover={{
                 borderColor: "primary.300",
                 bg: "gray.50"
@@ -311,22 +312,23 @@ const BookingForm = ({
                 }
               }}
             />
-            <FormErrorMessage>{errors.bookingDate}</FormErrorMessage>
+            <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>{errors.bookingDate}</FormErrorMessage>
           </FormControl>
 
           <FormControl isRequired isInvalid={!!errors.preferredTime}>
-            <FormLabel>Preferred Time</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Preferred Time</FormLabel>
             <Select
               placeholder="Select time"
               value={preferredTime}
               onChange={(e) => setPreferredTime(e.target.value)}
+              size={{ base: "md", md: "lg" }}
               bg="white"
               border="2px"
               borderColor="gray.200"
               borderRadius="md"
-              px={4}
-              py={3}
-              fontSize="md"
+              px={{ base: 3, md: 4 }}
+              py={{ base: 2, md: 3 }}
+              fontSize={{ base: "sm", md: "md" }}
               _hover={{
                 borderColor: "primary.300",
                 bg: "gray.50"
@@ -345,16 +347,17 @@ const BookingForm = ({
                 <option key={time} value={time}>{time}</option>
               ))}
             </Select>
-            <FormErrorMessage>{errors.preferredTime}</FormErrorMessage>
+            <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>{errors.preferredTime}</FormErrorMessage>
           </FormControl>
 
           <FormControl isRequired isInvalid={!!errors.partySize}>
-            <FormLabel>Number of People</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Number of People</FormLabel>
             <NumberInput
               min={1}
               max={maxCapacity}
               value={partySize}
               onChange={(_, valueAsNumber) => setPartySize(valueAsNumber)}
+              size={{ base: "md", md: "lg" }}
             >
               <NumberInputField />
               <NumberInputStepper>
@@ -362,26 +365,28 @@ const BookingForm = ({
                 <NumberDecrementStepper />
               </NumberInputStepper>
             </NumberInput>
-            <FormErrorMessage>{errors.partySize}</FormErrorMessage>
+            <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>{errors.partySize}</FormErrorMessage>
           </FormControl>
 
           <FormControl>
-            <FormLabel>Special Requests or Notes</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Special Requests or Notes</FormLabel>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any special requests or additional information for the guide..."
               rows={3}
+              size={{ base: "md", md: "lg" }}
+              fontSize={{ base: "sm", md: "md" }}
             />
           </FormControl>
 
-          <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
-            <Text fontWeight="medium">Price Summary</Text>
+          <Box p={{ base: 3, md: 4 }} borderWidth="1px" borderRadius="md" bg="gray.50">
+            <Text fontWeight="medium" fontSize={{ base: "sm", md: "md" }}>Price Summary</Text>
             <HStack justify="space-between" mt={2}>
-              <Text>${pricePerPerson} × {partySize} {partySize === 1 ? 'person' : 'people'}</Text>
-              <Text>${totalPrice.toFixed(2)}</Text>
+              <Text fontSize={{ base: "sm", md: "md" }}>${pricePerPerson} × {partySize} {partySize === 1 ? 'person' : 'people'}</Text>
+              <Text fontSize={{ base: "sm", md: "md" }} fontWeight="bold">${totalPrice.toFixed(2)}</Text>
             </HStack>
-            <Text fontSize="xs" color="gray.500" mt={2}>
+            <Text fontSize={{ base: "xs", md: "xs" }} color="gray.500" mt={2}>
               {isOffer 
                 ? 'The tourist will be notified of your offer and can accept or decline.' 
                 : 'Payment will be processed after the guide accepts your booking request.'
@@ -403,8 +408,8 @@ const BookingForm = ({
             </Box>
           )}
 
-          <HStack justify="flex-end" spacing={3} pt={2}>
-            <Button variant="outline" onClick={onCancel} isDisabled={isSubmitting}>
+          <HStack justify="flex-end" spacing={{ base: 2, md: 3 }} pt={2} direction={{ base: "column", sm: "row" }} w="full">
+            <Button variant="outline" onClick={onCancel} isDisabled={isSubmitting} size={{ base: "md", md: "lg" }} w={{ base: "full", sm: "auto" }}>
               Cancel
             </Button>
             <Button
@@ -412,6 +417,8 @@ const BookingForm = ({
               colorScheme="primary"
               isLoading={isSubmitting}
               loadingText={isOffer ? "Sending Offer..." : "Submitting..."}
+              size={{ base: "md", md: "lg" }}
+              w={{ base: "full", sm: "auto" }}
             >
               {isOffer ? "Send Offer" : "Submit Request"}
             </Button>
