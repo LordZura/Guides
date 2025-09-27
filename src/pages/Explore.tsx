@@ -227,7 +227,7 @@ const Explore = () => {
         
         if (filters.rating && filters.rating > 0) {
           filteredGuides = filteredGuides.filter(guide => 
-            guide.average_rating >= filters.rating!
+            guide.average_rating >= filters.rating! && guide.total_reviews > 0
           );
         }
         
@@ -391,7 +391,7 @@ const Explore = () => {
         
         if (filters.rating && filters.rating > 0) {
           filteredTours = filteredTours.filter(tour => 
-            tour.average_rating >= filters.rating!
+            tour.average_rating >= filters.rating! && tour.total_reviews > 0
           );
         }
         
