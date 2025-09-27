@@ -131,12 +131,12 @@ const TourDetail = () => {
   
   if (isLoading) {
     return (
-      <Container maxW="container.xl" py={8}>
-        <Box bg="white" p={6} borderRadius="lg" boxShadow="md">
-          <Skeleton height="40px" width="60%" mb={4} />
-          <Skeleton height="20px" width="40%" mb={6} />
+      <Container maxW="container.xl" py={{ base: 4, md: 8 }} px={{ base: 3, md: 4 }}>
+        <Box bg="white" p={{ base: 4, md: 6 }} borderRadius="lg" boxShadow="md">
+          <Skeleton height={{ base: "30px", md: "40px" }} width="60%" mb={4} />
+          <Skeleton height={{ base: "16px", md: "20px" }} width="40%" mb={6} />
           
-          <Grid templateColumns={{ base: "1fr", md: "2fr 1fr" }} gap={8}>
+          <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={{ base: 6, md: 8 }}>
             <GridItem>
               <Skeleton height="300px" mb={6} />
               <Skeleton height="20px" width="100%" mb={2} />
@@ -156,7 +156,7 @@ const TourDetail = () => {
   
   if (error || !tour) {
     return (
-      <Container maxW="container.xl" py={8}>
+      <Container maxW="container.xl" py={{ base: 4, md: 8 }} px={{ base: 3, md: 4 }}>
         <Alert status="error" borderRadius="lg">
           <AlertIcon />
           {error || 'Tour not found'}
@@ -262,16 +262,16 @@ const TourDetail = () => {
               
               {/* Show detailed itinerary if multiple locations */}
               {tour.locations && tour.locations.length > 1 && (
-                <Box mb={8}>
-                  <Heading as="h3" size="md" mb={4} color="gray.800">Tour Itinerary</Heading>
-                  <Text fontSize="sm" color="gray.600" mb={4}>
+                <Box mb={{ base: 6, md: 8 }}>
+                  <Heading as="h3" size={{ base: "sm", md: "md" }} mb={4} color="gray.800">Tour Itinerary</Heading>
+                  <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" mb={4}>
                     You will be guided through these locations in the following order:
                   </Text>
                   <VStack spacing={3} align="stretch">
                     {sortLocationsByOrder(tour.locations).map((location, index) => (
                       <Box 
                         key={location.id}
-                        p={4} 
+                        p={{ base: 3, md: 4 }}
                         bg="gray.50" 
                         borderRadius="md" 
                         border="1px solid" 
@@ -305,39 +305,39 @@ const TourDetail = () => {
                 borderWidth="1px"
                 borderRadius="lg"
                 overflow="hidden"
-                p={6}
+                p={{ base: 4, md: 6 }}
                 boxShadow="sm"
-                position="sticky"
+                position={{ base: "relative", lg: "sticky" }}
                 top="100px"
               >
                 {isGuide && guide ? (
-                  <VStack align="start" spacing={4}>
-                    <Heading size="md">About Your Guide</Heading>
+                  <VStack align="start" spacing={{ base: 3, md: 4 }}>
+                    <Heading size={{ base: "sm", md: "md" }}>About Your Guide</Heading>
                     
                     <Flex direction="column" align="center" w="100%">
                       <Avatar
-                        size="xl"
+                        size={{ base: "lg", md: "xl" }}
                         src={guide.avatar_url || DEFAULT_AVATAR_URL}
                         name={guide.full_name}
                         mb={2}
                       />
-                      <Text fontWeight="bold">{guide.full_name}</Text>
+                      <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }}>{guide.full_name}</Text>
                       
                       <HStack mt={1}>
                         <StarRating rating={guideReviewSummary.averageRating} size={16} />
-                        <Text fontSize="sm" color="gray.500">
+                        <Text fontSize={{ base: "xs", md: "sm" }} color="gray.500">
                           ({guideReviewSummary.totalReviews})
                         </Text>
                       </HStack>
                       
                       {guide.years_experience && (
-                        <Text fontSize="sm" mt={1}>{guide.years_experience} years experience</Text>
+                        <Text fontSize={{ base: "xs", md: "sm" }} mt={1}>{guide.years_experience} years experience</Text>
                       )}
                       
                       <Button
                         as={RouterLink}
                         to={`/profile/${guide.id}`}
-                        size="sm"
+                        size={{ base: "xs", md: "sm" }}
                         colorScheme="primary"
                         variant="outline"
                         mt={2}
@@ -355,13 +355,13 @@ const TourDetail = () => {
                     <Divider />
                   </VStack>
                 ) : (
-                  <Heading size="md" mb={4}>Tour Details</Heading>
+                  <Heading size={{ base: "sm", md: "md" }} mb={4}>Tour Details</Heading>
                 )}
                 
                 {canBook ? (
                   <Button 
                     colorScheme="primary" 
-                    size="lg" 
+                    size={{ base: "md", md: "lg" }}
                     width="100%" 
                     mt={4}
                     onClick={onOpen}
@@ -371,7 +371,7 @@ const TourDetail = () => {
                 ) : canOfferTour ? (
                   <Button 
                     colorScheme="orange" 
-                    size="lg" 
+                    size={{ base: "md", md: "lg" }}
                     width="100%" 
                     mt={4}
                     onClick={onOpen}
@@ -381,7 +381,7 @@ const TourDetail = () => {
                 ) : (
                   <Button 
                     colorScheme="primary" 
-                    size="lg" 
+                    size={{ base: "md", md: "lg" }}
                     width="100%" 
                     mt={4}
                     isDisabled={true}
@@ -391,7 +391,7 @@ const TourDetail = () => {
                   </Button>
                 )}
                 
-                <Text fontSize="sm" textAlign="center" mt={2} color="gray.500">
+                <Text fontSize={{ base: "xs", md: "sm" }} textAlign="center" mt={2} color="gray.500">
                   No payment required to reserve
                 </Text>
               </Box>
@@ -400,10 +400,10 @@ const TourDetail = () => {
         </Box>
         
         {/* Booking/Offer Modal */}
-        <Modal isOpen={isOpen} onClose={onClose} size="md">
+        <Modal isOpen={isOpen} onClose={onClose} size={{ base: "xs", sm: "md" }}>
           <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>{canOfferTour ? 'Offer This Tour' : 'Book This Tour'}</ModalHeader>
+          <ModalContent mx={{ base: 4, sm: 0 }}>
+            <ModalHeader fontSize={{ base: "lg", md: "xl" }}>{canOfferTour ? 'Offer This Tour' : 'Book This Tour'}</ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>
               <BookingForm

@@ -20,12 +20,32 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Mobile optimizations */
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+  -webkit-text-size-adjust: 100%; /* Prevent text scaling on mobile */
 }
 
 /* Enhanced global styles for better UX */
 *:focus {
   outline: 2px solid #3182ce;
   outline-offset: 2px;
+}
+
+/* Mobile-friendly touch targets */
+@media (max-width: 768px) {
+  button, 
+  [role="button"], 
+  .chakra-button,
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px; /* Ensure touch targets are at least 44px */
+    min-width: 44px;
+  }
+  
+  /* Ensure text is readable on mobile */
+  body {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
 }
 
 /* Custom scrollbar styling */
@@ -44,4 +64,11 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
+}
+
+/* Mobile scrollbar optimization */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px; /* Thinner scrollbar on mobile */
+  }
 }

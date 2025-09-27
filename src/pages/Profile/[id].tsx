@@ -94,12 +94,12 @@ const ProfilePage = () => {
   
   if (isLoading) {
     return (
-      <Container maxW="container.lg" py={8}>
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8}>
+      <Container maxW="container.lg" py={{ base: 4, md: 8 }} px={{ base: 4, md: 6 }}>
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 6, md: 8 }}>
           {/* Profile sidebar skeleton */}
           <Box>
-            <Flex direction="column" align="center" mb={6}>
-              <Skeleton height="150px" width="150px" borderRadius="full" mb={4} />
+            <Flex direction="column" align="center" mb={{ base: 4, md: 6 }}>
+              <Skeleton height={{ base: "120px", md: "150px" }} width={{ base: "120px", md: "150px" }} borderRadius="full" mb={4} />
               <SkeletonText noOfLines={2} spacing={4} width="full" />
             </Flex>
             <SkeletonText noOfLines={6} spacing={4} />
@@ -107,8 +107,8 @@ const ProfilePage = () => {
           
           {/* Main content skeleton */}
           <Box gridColumn={{ md: "span 2" }}>
-            <SkeletonText noOfLines={1} spacing={4} height="40px" mb={4} />
-            <Skeleton height="30px" mb={4} />
+            <SkeletonText noOfLines={1} spacing={4} height={{ base: "30px", md: "40px" }} mb={4} />
+            <Skeleton height={{ base: "25px", md: "30px" }} mb={4} />
             <SkeletonText noOfLines={8} spacing={4} />
           </Box>
         </SimpleGrid>
@@ -118,7 +118,7 @@ const ProfilePage = () => {
   
   if (error || !guideProfile) {
     return (
-      <Container maxW="container.lg" py={8}>
+      <Container maxW="container.lg" py={{ base: 4, md: 8 }} px={{ base: 4, md: 6 }}>
         <Alert status="error" borderRadius="md">
           <AlertIcon />
           {error || 'Guide not found'}
@@ -132,31 +132,31 @@ const ProfilePage = () => {
   const canRequestTour = currentUserProfile && currentUserProfile.role === 'tourist' && !isOwnProfile;
   
   return (
-    <Container maxW="container.lg" py={8}>
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8}>
+    <Container maxW="container.lg" py={{ base: 4, md: 8 }} px={{ base: 4, md: 6 }}>
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 6, md: 8 }}>
         {/* Profile sidebar */}
         <Box>
-          <VStack spacing={6} align="center" bg="white" p={6} borderRadius="md" boxShadow="sm">
+          <VStack spacing={{ base: 4, md: 6 }} align="center" bg="white" p={{ base: 4, md: 6 }} borderRadius="md" boxShadow="sm">
             <Avatar 
-              size="2xl"
+              size={{ base: "xl", md: "2xl" }}
               name={guideProfile.full_name}
               src={guideProfile.avatar_url || DEFAULT_AVATAR_URL}
             />
             
-            <VStack spacing={2} textAlign="center">
-              <Heading size="lg">{guideProfile.full_name}</Heading>
-              <Badge colorScheme="green" fontSize="md" px={2} py={1}>
+            <VStack spacing={{ base: 1, md: 2 }} textAlign="center">
+              <Heading size={{ base: "md", md: "lg" }}>{guideProfile.full_name}</Heading>
+              <Badge colorScheme="green" fontSize={{ base: "sm", md: "md" }} px={{ base: 2, md: 2 }} py={1}>
                 {guideProfile.role.charAt(0).toUpperCase() + guideProfile.role.slice(1)}
               </Badge>
               
-              <StarRating rating={averageRating} size={24} />
+              <StarRating rating={averageRating} size={{ base: 18, md: 24 }} />
               
-              <Text fontSize="sm" color="gray.600">
+              <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
                 {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
               </Text>
               
               {guideProfile.completed_tours_count > 0 && (
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
                   {guideProfile.completed_tours_count} tours completed
                 </Text>
               )}
@@ -164,25 +164,25 @@ const ProfilePage = () => {
             
             <Divider />
             
-            <VStack align="start" width="100%" spacing={3}>
+            <VStack align="start" width="100%" spacing={{ base: 2, md: 3 }}>
               {guideProfile.location && (
                 <HStack>
                   <Icon as={MdLocationOn} color="gray.500" />
-                  <Text>{guideProfile.location}</Text>
+                  <Text fontSize={{ base: "sm", md: "md" }}>{guideProfile.location}</Text>
                 </HStack>
               )}
               
               {guideProfile.languages && guideProfile.languages.length > 0 && (
                 <HStack alignItems="flex-start">
                   <Icon as={MdLanguage} color="gray.500" mt={1} />
-                  <Text>{guideProfile.languages.join(', ')}</Text>
+                  <Text fontSize={{ base: "sm", md: "md" }}>{guideProfile.languages.join(', ')}</Text>
                 </HStack>
               )}
               
               {guideProfile.years_experience && (
                 <HStack>
                   <Icon as={MdEvent} color="gray.500" />
-                  <Text>{guideProfile.years_experience} years experience</Text>
+                  <Text fontSize={{ base: "sm", md: "md" }}>{guideProfile.years_experience} years experience</Text>
                 </HStack>
               )}
             </VStack>
@@ -191,23 +191,23 @@ const ProfilePage = () => {
               <>
                 <Divider />
                 <VStack align="start" width="100%">
-                  <Heading size="sm">About</Heading>
-                  <Text fontSize="sm">{guideProfile.bio}</Text>
+                  <Heading size={{ base: "xs", md: "sm" }}>About</Heading>
+                  <Text fontSize={{ base: "xs", md: "sm" }}>{guideProfile.bio}</Text>
                 </VStack>
               </>
             )}
             
             {guideProfile.specialties && (
               <VStack align="start" width="100%">
-                <Heading size="sm">Specialties</Heading>
-                <Text fontSize="sm">{guideProfile.specialties}</Text>
+                <Heading size={{ base: "xs", md: "sm" }}>Specialties</Heading>
+                <Text fontSize={{ base: "xs", md: "sm" }}>{guideProfile.specialties}</Text>
               </VStack>
             )}
             
             {canRequestTour && (
               <Button 
                 colorScheme="primary" 
-                size="md" 
+                size={{ base: "sm", md: "md" }}
                 width="full"
                 leftIcon={<Icon as={MdEvent} />}
                 onClick={() => {
@@ -229,53 +229,54 @@ const ProfilePage = () => {
         {/* Main content */}
         <Box gridColumn={{ md: "span 2" }}>
           <Tabs colorScheme="primary" variant="enclosed" bg="white" boxShadow="sm" borderRadius="md">
-            <TabList>
-              <Tab fontWeight="medium">Tours</Tab>
-              <Tab fontWeight="medium">Reviews ({reviewCount || 0})</Tab>
+            <TabList overflowX="auto" overflowY="hidden">
+              <Tab fontWeight="medium" fontSize={{ base: "sm", md: "md" }} py={{ base: 3, md: 4 }} px={{ base: 3, md: 4 }} minW="fit-content">Tours</Tab>
+              <Tab fontWeight="medium" fontSize={{ base: "sm", md: "md" }} py={{ base: 3, md: 4 }} px={{ base: 3, md: 4 }} minW="fit-content">Reviews ({reviewCount || 0})</Tab>
             </TabList>
             
             <TabPanels>
               {/* Tours panel */}
-              <TabPanel>
+              <TabPanel p={{ base: 3, md: 6 }}>
                 {tours.length === 0 ? (
-                  <Box textAlign="center" py={8}>
-                    <Text color="gray.500">No tours available yet.</Text>
+                  <Box textAlign="center" py={{ base: 6, md: 8 }}>
+                    <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>No tours available yet.</Text>
                   </Box>
                 ) : (
-                  <VStack spacing={4} align="stretch">
+                  <VStack spacing={{ base: 3, md: 4 }} align="stretch">
                     {tours.map(tour => (
                       <Box 
                         key={tour.id}
-                        p={4}
+                        p={{ base: 3, md: 4 }}
                         borderWidth="1px"
                         borderRadius="md"
                         boxShadow="sm"
                       >
-                        <Flex justify="space-between" align="center" mb={2}>
-                          <Heading size="md">{tour.title}</Heading>
+                        <Flex justify="space-between" align="center" mb={2} direction={{ base: "column", sm: "row" }} gap={{ base: 2, sm: 0 }}>
+                          <Heading size={{ base: "sm", md: "md" }} textAlign={{ base: "center", sm: "left" }}>{tour.title}</Heading>
                           <Badge colorScheme={
                             tour.status === 'active' ? 'green' : 
                             tour.status === 'upcoming' ? 'blue' : 
                             tour.status === 'completed' ? 'gray' : 'red'
-                          }>
+                          } fontSize={{ base: "xs", md: "sm" }} px={2} py={1}>
                             {tour.status}
                           </Badge>
                         </Flex>
                         
-                        <Text noOfLines={2} mb={3} color="gray.600">{tour.description}</Text>
+                        <Text noOfLines={2} mb={3} color="gray.600" fontSize={{ base: "sm", md: "md" }}>{tour.description}</Text>
                         
-                        <HStack spacing={4} mb={3}>
-                          <Text fontSize="sm">{tour.location}</Text>
-                          <Text fontSize="sm">{tour.duration} hours</Text>
-                          <Text fontSize="sm" fontWeight="bold">${tour.price}</Text>
+                        <HStack spacing={{ base: 2, md: 4 }} mb={3} wrap="wrap">
+                          <Text fontSize={{ base: "xs", md: "sm" }}>{tour.location}</Text>
+                          <Text fontSize={{ base: "xs", md: "sm" }}>{tour.duration} hours</Text>
+                          <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="bold">${tour.price}</Text>
                         </HStack>
                         
                         <Button 
                           as={RouterLink}
                           to={`/tours/${tour.id}`}
-                          size="sm"
+                          size={{ base: "xs", md: "sm" }}
                           rightIcon={<FaExternalLinkAlt />}
                           variant="outline"
+                          fontSize={{ base: "xs", md: "sm" }}
                         >
                           View Details
                         </Button>
@@ -286,13 +287,13 @@ const ProfilePage = () => {
               </TabPanel>
               
               {/* Reviews panel */}
-              <TabPanel>
+              <TabPanel p={{ base: 3, md: 6 }}>
               {reviews.length === 0 ? (
-                <Box textAlign="center" py={8}>
-                  <Text color="gray.500">No reviews yet.</Text>
+                <Box textAlign="center" py={{ base: 6, md: 8 }}>
+                  <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>No reviews yet.</Text>
                 </Box>
               ) : (
-                <VStack spacing={4} align="stretch">
+                <VStack spacing={{ base: 3, md: 4 }} align="stretch">
                   {reviews.map(review => (
                     <ReviewItem 
                       key={review.id} 
