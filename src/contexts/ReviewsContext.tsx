@@ -1,3 +1,30 @@
+/**
+ * ReviewsContext - Enhanced Review Management System
+ * 
+ * This context manages the review system with enhanced debugging and validation.
+ * 
+ * Key Features:
+ * - Prevents duplicate reviews per user/target combination
+ * - Supports both guide and tour reviews as separate entities
+ * - Comprehensive logging for debugging review conflicts
+ * - Enhanced error handling with contextual messages
+ * 
+ * Review Types:
+ * - Guide Review: target_type='guide', target_id=guide_user_id
+ * - Tour Review: target_type='tour', target_id=tour_id
+ * 
+ * A user can review both a guide AND tours created by that guide - these are separate reviews.
+ * 
+ * Database Constraints:
+ * - Unique constraint on (reviewer_id, target_id, target_type)
+ * - This prevents duplicate reviews for the same specific target
+ * 
+ * Debugging Features:
+ * - All review operations are logged with emoji prefixes for easy identification
+ * - Validation includes conflict detection for better user experience
+ * - Error messages provide context about related reviews
+ */
+
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '@chakra-ui/react';
@@ -153,19 +180,28 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
    */
   const addReview = async (reviewData: ReviewData) => {
     setIsLoading(true);
+    let validationResults: any = null;
+    
     try {
-      // Check if user has already reviewed this target to prevent duplicates
-      const alreadyReviewed = await hasUserReviewed(
-        reviewData.reviewer_id, 
-        reviewData.target_id, 
-        reviewData.target_type
-      );
+      // Enhanced debug logging for review submission
+      console.log('📝 Attempting to add review:', {
+        reviewData,
+        timestamp: new Date().toISOString()
+      });
+
+      // Enhanced validation with conflict detection
+      validationResults = await validateReviewRequest(reviewData);
       
-      if (alreadyReviewed) {
+      if (!validationResults.isValid) {
         const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
+        console.warn('⚠️ Review validation failed:', {
+          reviewData,
+          reason: validationResults.reason,
+          conflictingReviews: validationResults.conflictingReviews
+        });
         toast({
           title: 'Review already exists',
-          description: `You have already reviewed this ${targetLabel}. You can only submit one review per ${targetLabel}.`,
+          description: validationResults.reason || `You have already reviewed this ${targetLabel}. Each ${targetLabel} can only be reviewed once per user.`,
           status: 'warning',
           duration: 5000,
           isClosable: true,
@@ -173,12 +209,29 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      if (validationResults.conflictingReviews && validationResults.conflictingReviews.length > 0) {
+        console.log('📊 Review context information:', validationResults.conflictingReviews);
+      }
+
+      console.log('✨ Proceeding with review insertion...');
+
       // Insert review
       const { error } = await supabase
         .from('reviews')
         .insert([reviewData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('💥 Database error inserting review:', {
+          error,
+          reviewData,
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorDetails: error.details
+        });
+        throw error;
+      }
+
+      console.log('✅ Review successfully inserted');
 
       // Send notification
       if (reviewData.target_type === 'tour') {
@@ -231,7 +284,16 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         isClosable: true,
       });
     } catch (err) {
-      console.error('Error adding review:', err);
+      console.error('💥 Error adding review:', {
+        error: err,
+        reviewData,
+        errorType: typeof err,
+        errorCode: (err as any)?.code,
+        errorMessage: (err as any)?.message,
+        errorDetails: (err as any)?.details,
+        errorHint: (err as any)?.hint,
+        stack: (err as any)?.stack
+      });
       
       // Handle duplicate review error specifically
       const isDuplicateReview = err instanceof Error && 
@@ -242,20 +304,47 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
          (err as any)?.code === 'P0001' ||
          (err as any)?.code === '23505'); // PostgreSQL unique violation error code
       
-      if (isDuplicateReview) {
-        const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
+      console.log('🔍 Duplicate review check:', {
+        isDuplicateReview,
+        errorCode: (err as any)?.code,
+        errorMessage: (err as any)?.message,
+        reviewData
+      });
+      
+      if (isDuplicateReview) {        
+        console.warn('⚠️ Showing duplicate review error to user:', {
+          errorCode: (err as any)?.code,
+          errorMessage: (err as any)?.message,
+          reviewData,
+          validationResults
+        });
+        
+        const errorMsg = getErrorMessage(err, reviewData, validationResults?.conflictingReviews);
+        
         toast({
-          title: 'Review already exists',
-          description: `You have already reviewed this ${targetLabel}. You can only submit one review per ${targetLabel}.`,
+          title: errorMsg.title,
+          description: errorMsg.description,
           status: 'warning',
           duration: 5000,
           isClosable: true,
         });
       } else {
         const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+        
+        // Enhanced error reporting for debugging
+        console.error('🚨 Non-duplicate error:', {
+          errorMessage,
+          reviewData,
+          errorType: typeof err,
+          fullError: err,
+          validationResults
+        });
+        
+        const errorMsg = getErrorMessage(err, reviewData, validationResults?.conflictingReviews);
+        
         toast({
-          title: 'Failed to submit review',
-          description: errorMessage,
+          title: errorMsg.title,
+          description: `${errorMsg.description}${import.meta.env.DEV ? ` (Code: ${(err as any)?.code || 'unknown'})` : ''}`,
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -313,6 +402,156 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
+   * Get a user-friendly error message based on the error context
+   */
+  const getErrorMessage = (error: any, reviewData: ReviewData, conflictingReviews?: any[]): { title: string; description: string } => {
+    const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
+    
+    // Check for specific error codes
+    if (error?.code === 'P0001') {
+      return {
+        title: 'Review Already Exists',
+        description: `You have already reviewed this ${targetLabel}. Each ${targetLabel} can only be reviewed once per user.`
+      };
+    }
+
+    if (error?.code === '23505' || error?.message?.includes('unique constraint')) {
+      // Enhanced message with context if available
+      let description = `You have already reviewed this ${targetLabel}.`;
+      
+      if (conflictingReviews && conflictingReviews.length > 0) {
+        const contextInfo = conflictingReviews[0];
+        if (contextInfo.type === 'guide_reviewed_before_tour') {
+          description += ' Note: You have previously reviewed the guide who created this tour, but tour and guide reviews are separate.';
+        } else if (contextInfo.type === 'tours_reviewed_before_guide') {
+          description += ' Note: You have previously reviewed tours by this guide, but tour and guide reviews are separate.';
+        }
+      }
+      
+      return {
+        title: 'Duplicate Review Detected',
+        description
+      };
+    }
+
+    // Generic database error
+    if (error?.message) {
+      return {
+        title: 'Review Submission Failed',
+        description: error.message
+      };
+    }
+
+    return {
+      title: 'Unexpected Error',
+      description: 'An unexpected error occurred while submitting your review. Please try again.'
+    };
+  };
+
+  /**
+   * Enhanced validation and debugging for review conflicts
+   */
+  const validateReviewRequest = async (reviewData: ReviewData): Promise<{ isValid: boolean; reason?: string; conflictingReviews?: any[] }> => {
+    try {
+      console.log('🔍 Validating review request:', reviewData);
+
+      // Check for exact duplicate
+      const exactDuplicate = await hasUserReviewed(
+        reviewData.reviewer_id,
+        reviewData.target_id,
+        reviewData.target_type
+      );
+
+      if (exactDuplicate) {
+        return {
+          isValid: false,
+          reason: `User has already reviewed this ${reviewData.target_type}`,
+          conflictingReviews: []
+        };
+      }
+
+      // For additional debugging: check all reviews by this user
+      const { data: allUserReviews, error } = await supabase
+        .from('reviews')
+        .select('id, target_id, target_type, created_at, tour_id')
+        .eq('reviewer_id', reviewData.reviewer_id);
+
+      if (error) {
+        console.error('Error fetching user reviews for validation:', error);
+        return { isValid: true }; // Allow to proceed if we can't validate
+      }
+
+      console.log('📊 All user reviews:', allUserReviews);
+
+      // Check for potential confusion scenarios
+      const potentialConflicts = [];
+
+      if (reviewData.target_type === 'tour') {
+        // Check if user has reviewed the guide who created this tour
+        const { data: tourData } = await supabase
+          .from('tours')
+          .select('creator_id, creator_role, title')
+          .eq('id', reviewData.target_id)
+          .single();
+
+        if (tourData) {
+          console.log('🎫 Tour information:', tourData);
+          
+          const guideReviews = allUserReviews?.filter(r => 
+            r.target_type === 'guide' && 
+            r.target_id === tourData.creator_id
+          ) || [];
+
+          if (guideReviews.length > 0) {
+            potentialConflicts.push({
+              type: 'guide_reviewed_before_tour',
+              message: `User has reviewed the guide (${tourData.creator_id}) who created this tour`,
+              reviews: guideReviews
+            });
+          }
+        }
+      } else if (reviewData.target_type === 'guide') {
+        // Check if user has reviewed any tours by this guide
+        const { data: guideToursData } = await supabase
+          .from('tours')
+          .select('id, title')
+          .eq('creator_id', reviewData.target_id)
+          .eq('creator_role', 'guide');
+
+        if (guideToursData && guideToursData.length > 0) {
+          const guideTourIds = guideToursData.map(t => t.id);
+          const tourReviews = allUserReviews?.filter(r => 
+            r.target_type === 'tour' && 
+            guideTourIds.includes(r.target_id)
+          ) || [];
+
+          if (tourReviews.length > 0) {
+            potentialConflicts.push({
+              type: 'tours_reviewed_before_guide',
+              message: `User has reviewed ${tourReviews.length} tour(s) by this guide`,
+              reviews: tourReviews,
+              tours: guideToursData
+            });
+          }
+        }
+      }
+
+      if (potentialConflicts.length > 0) {
+        console.log('⚠️ Potential review conflicts detected (but allowing):', potentialConflicts);
+      }
+
+      return {
+        isValid: true,
+        conflictingReviews: potentialConflicts
+      };
+
+    } catch (error) {
+      console.error('💥 Error validating review request:', error);
+      return { isValid: true }; // Allow to proceed if validation fails
+    }
+  };
+
+  /**
    * Check if a user has already reviewed a specific target
    */
   const hasUserReviewed = async (userId: string, targetId: string, targetType: 'guide' | 'tour'): Promise<boolean> => {
@@ -323,22 +562,46 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
+      // Enhanced debug logging
+      console.log('🔍 Checking if user has reviewed:', {
+        userId,
+        targetId,
+        targetType,
+        timestamp: new Date().toISOString()
+      });
+
       const { data, error } = await supabase
         .from('reviews')
-        .select('id')
+        .select('id, reviewer_id, target_id, target_type, created_at')
         .eq('reviewer_id', userId)
         .eq('target_id', targetId)
         .eq('target_type', targetType)
         .limit(1);
 
       if (error) {
-        console.error('Database error checking if user has reviewed:', error);
+        console.error('❌ Database error checking if user has reviewed:', {
+          error,
+          query: { userId, targetId, targetType }
+        });
         throw error;
       }
+
+      const hasReviewed = data && data.length > 0;
       
-      return data && data.length > 0;
+      console.log('✅ Review check result:', {
+        hasReviewed,
+        existingReviews: data,
+        query: { userId, targetId, targetType }
+      });
+      
+      return hasReviewed;
     } catch (err) {
-      console.error('Error checking if user has reviewed:', err);
+      console.error('💥 Error checking if user has reviewed:', {
+        error: err,
+        userId,
+        targetId,
+        targetType
+      });
       // In case of network issues or other errors, default to false to allow the attempt
       // This prevents the user from being completely blocked due to temporary issues
       return false;
