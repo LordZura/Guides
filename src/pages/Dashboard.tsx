@@ -97,10 +97,10 @@ const Dashboard = () => {
     <ToursProvider>
       <BookingProvider>
         <PaymentStatsProvider>
-          <Container maxW="container.xl" p={{ base: 4, md: 6 }}>
+          <Container maxW="container.xl" p={4}>
           <Grid 
             templateColumns={{ base: "1fr", lg: "320px 1fr" }}
-            gap={{ base: 6, md: 8 }}
+            gap={6}
           >
             {/* Profile Sidebar */}
             <GridItem>
@@ -110,19 +110,19 @@ const Dashboard = () => {
                     <Avatar 
                       src={profile.avatar_url || DEFAULT_AVATAR_URL} 
                       name={profile.full_name}
-                      size={{ base: "xl", md: "2xl" }}
-                      mb={{ base: 4, md: 6 }}
+                      size="xl"
+                      mb={4}
                       border="4px"
                       borderColor="primary.100"
                     />
                     
-                    <Heading size={{ base: "md", md: "lg" }} mb={2} color="gray.800">{profile.full_name}</Heading>
+                    <Heading size="md" mb={2} color="gray.800">{profile.full_name}</Heading>
                     
                     <Badge 
                       colorScheme={profile.role === 'guide' ? 'green' : 'blue'} 
                       mt={2}
-                      fontSize={{ base: "xs", md: "sm" }}
-                      px={{ base: 3, md: 4 }}
+                      fontSize="xs"
+                      px={3}
                       py={1}
                       borderRadius="full"
                     >
@@ -131,16 +131,16 @@ const Dashboard = () => {
                     
                     <Button 
                       leftIcon={<EditIcon />} 
-                      size={{ base: "sm", md: "md" }}
+                      size="sm"
                       variant="outline" 
                       colorScheme="primary"
-                      mt={{ base: 4, md: 6 }}
+                      mt={4}
                       onClick={handleEditClick}
                       borderRadius="full"
-                      px={{ base: 4, md: 6 }}
+                      px={4}
                       _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
                       transition="all 0.2s"
-                      fontSize={{ base: "sm", md: "md" }}
+                      fontSize="sm"
                     >
                       Edit Profile
                     </Button>
@@ -148,53 +148,53 @@ const Dashboard = () => {
                 </CardHeader>
                 
                 <CardBody pt={4}>
-                  <Stack spacing={{ base: 3, md: 5 }}>
+                  <Stack spacing={4}>
                     {profile.phone && (
                       <Flex align="center">
-                        <Icon as={MdPerson} color="primary.500" mr={3} boxSize={{ base: "4", md: "5" }} />
-                        <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="medium" color="gray.700">{profile.phone}</Text>
+                        <Icon as={MdPerson} color="primary.500" mr={3} boxSize="4" />
+                        <Text fontSize="sm" fontWeight="medium" color="gray.700">{profile.phone}</Text>
                       </Flex>
                     )}
                     
                     {profile.location && (
                       <Flex align="center">
-                        <Icon as={MdLocationOn} color="primary.500" mr={3} boxSize={{ base: "4", md: "5" }} />
-                        <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="medium" color="gray.700">{profile.location}</Text>
+                        <Icon as={MdLocationOn} color="primary.500" mr={3} boxSize="4" />
+                        <Text fontSize="sm" fontWeight="medium" color="gray.700">{profile.location}</Text>
                       </Flex>
                     )}
                     
                     {profile.languages && profile.languages.length > 0 && (
                       <Flex align="center">
-                        <Icon as={MdLanguage} color="primary.500" mr={3} boxSize={{ base: "4", md: "5" }} />
-                        <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="medium" color="gray.700">{profile.languages.join(', ')}</Text>
+                        <Icon as={MdLanguage} color="primary.500" mr={3} boxSize="4" />
+                        <Text fontSize="sm" fontWeight="medium" color="gray.700">{profile.languages.join(', ')}</Text>
                       </Flex>
                     )}
                     
                     {profile.bio && (
                       <Box>
-                        <Text fontWeight="semibold" mb={2} color="gray.700" fontSize={{ base: "sm", md: "md" }}>Bio</Text>
-                        <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" lineHeight="1.5">{profile.bio}</Text>
+                        <Text fontWeight="semibold" mb={2} color="gray.700" fontSize="sm">Bio</Text>
+                        <Text fontSize="sm" color="gray.600" lineHeight="1.5">{profile.bio}</Text>
                       </Box>
                     )}
                     
                     {/* Guide-specific fields */}
                     {profile.role === 'guide' && profile.specialties && (
                       <Box>
-                        <Text fontWeight="semibold" mb={2} color="gray.700" fontSize={{ base: "sm", md: "md" }}>Specialties</Text>
-                        <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" lineHeight="1.5">{profile.specialties}</Text>
+                        <Text fontWeight="semibold" mb={2} color="gray.700" fontSize="sm">Specialties</Text>
+                        <Text fontSize="sm" color="gray.600" lineHeight="1.5">{profile.specialties}</Text>
                       </Box>
                     )}
                     
                     {/* Tourist-specific fields */}
                     {profile.role === 'tourist' && profile.interests && (
                       <Box>
-                        <Text fontWeight="medium" mb={1} fontSize={{ base: "sm", md: "md" }}>Interests</Text>
-                        <Text fontSize={{ base: "xs", md: "sm" }}>{profile.interests}</Text>
+                        <Text fontWeight="medium" mb={1} fontSize="sm">Interests</Text>
+                        <Text fontSize="sm">{profile.interests}</Text>
                       </Box>
                     )}
                     
-                    <Box pt={{ base: 3, md: 4 }} borderTop="1px" borderColor="gray.100">
-                      <Link as={RouterLink} to="/explore" color="primary.600" fontWeight="semibold" _hover={{ color: 'primary.700' }} fontSize={{ base: "sm", md: "md" }}>
+                    <Box pt={3} borderTop="1px" borderColor="gray.100">
+                      <Link as={RouterLink} to="/explore" color="primary.600" fontWeight="semibold" _hover={{ color: 'primary.700' }} fontSize="sm">
                         Browse {profile.role === 'guide' ? 'Tour Requests' : 'Tours'} →
                       </Link>
                     </Box>
@@ -209,8 +209,8 @@ const Dashboard = () => {
                 <ProfileEditor onSave={handleEditComplete} />
               ) : (
                 <Box>
-                  <Flex justify="space-between" align="center" mb={{ base: 6, md: 8 }} direction={{ base: "column", sm: "row" }} gap={{ base: 4, sm: 0 }}>
-                    <Heading size={{ base: "lg", md: "xl" }} color="gray.800" textAlign={{ base: "center", sm: "left" }}>
+                  <Flex justify="space-between" align="center" mb={6} direction={{ base: "column", sm: "row" }} gap={{ base: 4, sm: 0 }}>
+                    <Heading size="lg" color="gray.800" textAlign={{ base: "center", sm: "left" }}>
                       {profile.role === 'guide' ? 'Guide Dashboard' : 'Tourist Dashboard'}
                     </Heading>
                     
@@ -218,12 +218,12 @@ const Dashboard = () => {
                       leftIcon={<AddIcon />} 
                       colorScheme="primary"
                       onClick={onCreateOpen}
-                      size={{ base: "md", md: "lg" }}
+                      size="md"
                       borderRadius="full"
-                      px={{ base: 6, md: 8 }}
+                      px={6}
                       _hover={{ transform: 'translateY(-1px)', boxShadow: 'lg' }}
                       transition="all 0.2s"
-                      fontSize={{ base: "sm", md: "md" }}
+                      fontSize="sm"
                       w={{ base: "full", sm: "auto" }}
                     >
                       {profile.role === 'guide' ? 'Create Tour' : 'Post Tour Request'}
@@ -242,27 +242,27 @@ const Dashboard = () => {
                     borderColor="gray.100"
                   >
                     <TabList borderBottomColor="gray.200" overflowX="auto" overflowY="hidden">
-                      <Tab fontWeight="semibold" py={{ base: 3, md: 4 }} px={{ base: 3, md: 6 }} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }} minW="fit-content" fontSize={{ base: "sm", md: "md" }}>My {profile.role === 'guide' ? 'Tours' : 'Tour Requests'}</Tab>
-                      <Tab fontWeight="semibold" py={{ base: 3, md: 4 }} px={{ base: 3, md: 6 }} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }} minW="fit-content" fontSize={{ base: "sm", md: "md" }}>My Bookings</Tab>
+                      <Tab fontWeight="semibold" py={3} px={4} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }} minW="fit-content" fontSize="sm">My {profile.role === 'guide' ? 'Tours' : 'Tour Requests'}</Tab>
+                      <Tab fontWeight="semibold" py={3} px={4} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }} minW="fit-content" fontSize="sm">My Bookings</Tab>
                       {profile.role === 'guide' && (
-                        <Tab fontWeight="semibold" py={{ base: 3, md: 4 }} px={{ base: 3, md: 6 }} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }} minW="fit-content" fontSize={{ base: "sm", md: "md" }}>Payment Tracking</Tab>
+                        <Tab fontWeight="semibold" py={3} px={4} _selected={{ color: 'primary.600', borderBottomColor: 'primary.500' }} minW="fit-content" fontSize="sm">Payment Tracking</Tab>
                       )}
                     </TabList>
                     
                     <TabPanels>
                       {/* Tours/Tour Requests Panel */}
-                      <TabPanel p={{ base: 4, md: 6 }}>
+                      <TabPanel p={4}>
                         {activeTabIndex === 0 && <ToursList />}
                       </TabPanel>
                       
                       {/* Bookings Panel */}
-                      <TabPanel p={{ base: 4, md: 6 }}>
+                      <TabPanel p={4}>
                         {activeTabIndex === 1 && <BookingsList showTitle={false} />}
                       </TabPanel>
                       
                       {/* Payment Tracking Panel - Guide Only */}
                       {profile.role === 'guide' && (
-                        <TabPanel p={{ base: 4, md: 6 }}>
+                        <TabPanel p={4}>
                           {activeTabIndex === 2 && <PaymentTracker />}
                         </TabPanel>
                       )}

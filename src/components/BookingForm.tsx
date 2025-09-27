@@ -357,7 +357,7 @@ const BookingForm = ({
               max={maxCapacity}
               value={partySize}
               onChange={(_, valueAsNumber) => setPartySize(valueAsNumber)}
-              size={{ base: "md", md: "lg" }}
+              size="sm"
             >
               <NumberInputField />
               <NumberInputStepper>

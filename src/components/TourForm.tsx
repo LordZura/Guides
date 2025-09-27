@@ -420,6 +420,7 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
                 max={24}
                 value={formData.duration}
                 onChange={(_, value) => handleNumberInputChange('duration', value)}
+                size="sm"
               >
                 <NumberInputField />
                 <NumberInputStepper>
@@ -437,6 +438,7 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
                 max={10000}
                 value={formData.price}
                 onChange={(_, value) => handleNumberInputChange('price', value)}
+                size="sm"
               >
                 <NumberInputField />
                 <NumberInputStepper>
@@ -454,6 +456,7 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
                 max={100}
                 value={formData.capacity}
                 onChange={(_, value) => handleNumberInputChange('capacity', value)}
+                size="sm"
               >
                 <NumberInputField />
                 <NumberInputStepper>

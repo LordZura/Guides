@@ -290,6 +290,7 @@ const TouristTourRequestForm = ({ onSuccess, onCancel }: TouristTourRequestFormP
                 max={24}
                 value={formData.duration}
                 onChange={(_, value) => handleNumberInputChange('duration', value)}
+                size="sm"
               >
                 <NumberInputField />
                 <NumberInputStepper>
@@ -308,6 +309,7 @@ const TouristTourRequestForm = ({ onSuccess, onCancel }: TouristTourRequestFormP
                 max={20}
                 value={formData.party_size}
                 onChange={(_, value) => handleNumberInputChange('party_size', value)}
+                size="sm"
               >
                 <NumberInputField />
                 <NumberInputStepper>
