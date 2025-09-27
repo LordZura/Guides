@@ -44,6 +44,34 @@ import RatingFilter from '../components/RatingFilter';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+// Type definitions for database function responses
+interface GuideWithReviews extends Profile {
+  average_rating: number;
+  total_reviews: number;
+  rating_counts: Record<string, number>;
+}
+
+interface TourWithReviews {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  price: number;
+  duration: number;
+  capacity: number;
+  languages: string[];
+  is_private: boolean;
+  is_active: boolean;
+  creator_role: string;
+  creator_id: string;
+  days_available: boolean[];
+  created_at: string;
+  updated_at: string;
+  average_rating: number;
+  total_reviews: number;
+  rating_counts: Record<string, number>;
+}
+
 interface FilterOptions {
   language?: string;
   location?: string;
@@ -76,96 +104,37 @@ const Explore = () => {
   const [selectedDaysAvailable, setSelectedDaysAvailable] = useState<number[]>([]);
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   
-  // Fetch guides with filters
+  // Fetch guides with filters using optimized function
   const fetchGuides = async (filters: FilterOptions = {}) => {
     setIsLoadingGuides(true);
     setError(null);
 
     try {
-      // Build the query
-      let query = supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'guide');
-      
-      // Apply filters if provided
-      if (filters.language && filters.language.trim() !== '') {
-        // Using contains to check if guide speaks the selected language
-        query = query.contains('languages', [filters.language]);
-      }
-      
-      // Note: Location filtering is not applied to guides, only to tours
-      
-      const { data, error } = await query;
+      // Use the optimized function that fetches guides with review summaries in one query
+      const { data, error } = await supabase
+        .rpc('get_guides_with_reviews', {
+          language_filter: filters.language || null,
+          min_rating: filters.rating || null,
+          min_review_count: filters.reviewCount || null
+        });
       
       if (error) {
         throw error;
       }
       
-      let guides = data || [];
+      // Convert the data to match the expected format
+      const guides = (data || []).map((guide: GuideWithReviews) => ({
+        ...guide,
+        reviews_count: guide.total_reviews // Map total_reviews to reviews_count for consistency
+      }));
       
-      // Fetch rating data for all guides
-      const guidesWithRatings = await Promise.all(
-        guides.map(async (guide) => {
-          try {
-            const { data: ratingData, error: ratingError } = await supabase
-              .rpc('get_review_summary', { 
-                target_id_param: guide.id, 
-                target_type_param: 'guide' 
-              });
-            
-            if (ratingError) {
-              console.warn(`Error fetching rating for guide ${guide.id}:`, ratingError);
-              return {
-                ...guide,
-                average_rating: 0,
-                reviews_count: 0,
-              };
-            }
-            
-            return {
-              ...guide,
-              average_rating: ratingData?.average_rating || 0,
-              reviews_count: ratingData?.total_reviews || 0,
-            };
-          } catch (err) {
-            console.warn(`Error fetching rating for guide ${guide.id}:`, err);
-            return {
-              ...guide,
-              average_rating: 0,
-              reviews_count: 0,
-            };
-          }
-        })
-      );
-      
-      // Apply client-side filters for rating and review count
-      let filteredGuides = guidesWithRatings;
-      
-      if (filters.rating && filters.rating > 0) {
-        // Use consistent filter logic - ratings are now exact thresholds (4 stars means 4.0+)
-        const minRatingThreshold = filters.rating;
-        
-        filteredGuides = filteredGuides.filter(guide => 
-          // Only exclude guides that don't meet the rating threshold
-          // Include guides with 0 rating if they also have 0 reviews (no ratings yet)
-          guide.average_rating >= minRatingThreshold || (guide.average_rating === 0 && guide.reviews_count === 0)
-        );
-      }
-      
-      if (filters.reviewCount && filters.reviewCount > 0) {
-        filteredGuides = filteredGuides.filter(guide => 
-          guide.reviews_count >= filters.reviewCount!
-        );
-      }
-      
-      setGuides(filteredGuides);
+      setGuides(guides);
     } catch (err) {
       console.error("Error fetching guides:", err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch guides';
       
       // If database is not accessible, use fallback data for development/testing
-      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_BLOCKED_BY_CLIENT')) {
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_BLOCKED_BY_CLIENT') || errorMessage.includes('function get_guides_with_reviews')) {
         const fallbackGuides = [
           {
             id: '1',
@@ -176,6 +145,8 @@ const Explore = () => {
             languages: ['English', 'French'],
             average_rating: 4.5,
             reviews_count: 25,
+            total_reviews: 25,
+            rating_counts: {},
             avatar_url: null,
             phone: null,
             created_at: new Date().toISOString(),
@@ -190,6 +161,8 @@ const Explore = () => {
             languages: ['Spanish', 'English'],
             average_rating: 4.8,
             reviews_count: 42,
+            total_reviews: 42,
+            rating_counts: {},
             avatar_url: null,
             phone: null,
             created_at: new Date().toISOString(),
@@ -204,6 +177,8 @@ const Explore = () => {
             languages: ['Japanese', 'English'],
             average_rating: 4.2,
             reviews_count: 18,
+            total_reviews: 18,
+            rating_counts: {},
             avatar_url: null,
             phone: null,
             created_at: new Date().toISOString(),
@@ -218,6 +193,8 @@ const Explore = () => {
             languages: ['English'],
             average_rating: 3.0,
             reviews_count: 12,
+            total_reviews: 12,
+            rating_counts: {},
             avatar_url: null,
             phone: null,
             created_at: new Date().toISOString(),
@@ -227,30 +204,22 @@ const Explore = () => {
         
         let filteredGuides = fallbackGuides;
         
-        // Apply language filter
+        // Apply filters (same logic as in the optimized function)
         if (filters.language && filters.language.trim() !== '') {
           filteredGuides = filteredGuides.filter(guide => 
             guide.languages && guide.languages.includes(filters.language!)
           );
         }
         
-        // Apply rating filter
         if (filters.rating && filters.rating > 0) {
-          const minRatingThreshold = filters.rating;
-          
           filteredGuides = filteredGuides.filter(guide => 
-            // Include guides without rating data (undefined, null, non-numeric) since we can't know their rating yet
-            // Only exclude guides that have numeric rating data but don't meet the threshold
-            typeof guide.average_rating !== 'number' || guide.average_rating >= minRatingThreshold
+            guide.average_rating >= filters.rating! || (guide.average_rating === 0 && guide.reviews_count === 0)
           );
         }
         
-        // Apply review count filter
         if (filters.reviewCount && filters.reviewCount > 0) {
           filteredGuides = filteredGuides.filter(guide => 
-            // Include guides without review count data (undefined, null, non-numeric)
-            // Only filter out guides that have numeric review counts below the threshold
-            typeof guide.reviews_count !== 'number' || guide.reviews_count >= filters.reviewCount!
+            guide.reviews_count >= filters.reviewCount!
           );
         }
         
@@ -271,7 +240,7 @@ const Explore = () => {
     }
   };
   
-  // Fetch tours
+  // Fetch tours using optimized function
   const fetchTours = async (filters: FilterOptions = {}) => {
     setIsLoadingTours(true);
     setError(null);
@@ -282,109 +251,34 @@ const Explore = () => {
       // Tourists see tours from guides, guides see tours from tourists
       const oppositeRole = userRole === 'guide' ? 'tourist' : 'guide';
       
-      // Build the query - get more fields to enable client-side filtering
-      let query = supabase
-        .from('tours')
-        .select('id, location, price, languages, days_available')
-        .eq('creator_role', oppositeRole)
-        .eq('is_active', true);
-      
-      // Apply server-side filters
-      if (filters.location) {
-        query = query.eq('location', filters.location);
-      }
-      
-      if (filters.priceRange) {
-        const [min, max] = filters.priceRange;
-        query = query
-          .gte('price', min)
-          .lte('price', max);
-      }
-      
-      const { data, error } = await query;
+      // Use the optimized function that fetches tours with review summaries in one query
+      const { data, error } = await supabase
+        .rpc('get_tours_with_reviews', {
+          creator_role_filter: oppositeRole,
+          language_filter: filters.language || null,
+          location_filter: filters.location || null,
+          min_price: filters.priceRange ? filters.priceRange[0] : null,
+          max_price: filters.priceRange ? filters.priceRange[1] : null,
+          min_rating: filters.rating || null,
+          min_review_count: filters.reviewCount || null,
+          days_available_filter: filters.daysAvailable && filters.daysAvailable.length > 0 ? filters.daysAvailable : null
+        });
       
       if (error) throw error;
       
-      let tours = data || [];
+      // Convert the data to match the expected format and extract just the IDs
+      const tours = (data || []).map((tour: TourWithReviews) => ({
+        ...tour,
+        reviews_count: tour.total_reviews // Map total_reviews to reviews_count for consistency
+      }));
       
-      // Fetch rating data for all tours
-      const toursWithRatings = await Promise.all(
-        tours.map(async (tour) => {
-          try {
-            const { data: ratingData, error: ratingError } = await supabase
-              .rpc('get_review_summary', { 
-                target_id_param: tour.id, 
-                target_type_param: 'tour' 
-              });
-            
-            if (ratingError) {
-              console.warn(`Error fetching rating for tour ${tour.id}:`, ratingError);
-              return {
-                ...tour,
-                average_rating: 0,
-                reviews_count: 0,
-              };
-            }
-            
-            return {
-              ...tour,
-              average_rating: ratingData?.average_rating || 0,
-              reviews_count: ratingData?.total_reviews || 0,
-            };
-          } catch (err) {
-            console.warn(`Error fetching rating for tour ${tour.id}:`, err);
-            return {
-              ...tour,
-              average_rating: 0,
-              reviews_count: 0,
-            };
-          }
-        })
-      );
-      
-      let filteredTours = toursWithRatings;
-      
-      // Apply client-side filters
-      if (filters.language && filters.language.trim() !== '') {
-        filteredTours = filteredTours.filter(tour => 
-          tour.languages && tour.languages.includes(filters.language!)
-        );
-      }
-      
-      // Apply rating filter for tours
-      if (filters.rating && filters.rating > 0) {
-        const minRatingThreshold = filters.rating;
-        
-        filteredTours = filteredTours.filter(tour => 
-          // Only exclude tours that don't meet the rating threshold
-          // Include tours with 0 rating if they also have 0 reviews (no ratings yet)
-          tour.average_rating >= minRatingThreshold || (tour.average_rating === 0 && tour.reviews_count === 0)
-        );
-      }
-      
-      // Apply review count filter for tours
-      if (filters.reviewCount && filters.reviewCount > 0) {
-        filteredTours = filteredTours.filter(tour => 
-          tour.reviews_count >= filters.reviewCount!
-        );
-      }
-      
-      if (filters.daysAvailable && filters.daysAvailable.length > 0) {
-        filteredTours = filteredTours.filter(tour => {
-          if (!tour.days_available) return false;
-          return filters.daysAvailable!.some(dayIndex => 
-            tour.days_available[dayIndex] === true
-          );
-        });
-      }
-      
-      setTours(filteredTours.map(tour => tour.id));
+      setTours(tours.map((tour: TourWithReviews) => tour.id));
     } catch (err) {
       console.error("Error fetching tours:", err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tours';
       
       // If database is not accessible, use fallback data for development/testing
-      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_BLOCKED_BY_CLIENT')) {
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_BLOCKED_BY_CLIENT') || errorMessage.includes('function get_tours_with_reviews')) {
         const fallbackTours = [
           {
             id: 'tour1',
@@ -401,7 +295,9 @@ const Explore = () => {
             creator_id: '1',
             days_available: [true, true, true, false, false, true, true],
             average_rating: 4.3,
-            reviews_count: 15
+            reviews_count: 15,
+            total_reviews: 15,
+            rating_counts: {}
           },
           {
             id: 'tour2',
@@ -418,7 +314,9 @@ const Explore = () => {
             creator_id: '2',
             days_available: [false, true, true, true, true, false, true],
             average_rating: 4.7,
-            reviews_count: 28
+            reviews_count: 28,
+            total_reviews: 28,
+            rating_counts: {}
           },
           {
             id: 'tour3',
@@ -435,27 +333,27 @@ const Explore = () => {
             creator_id: '3',
             days_available: [true, false, true, true, false, true, true],
             average_rating: 4.1,
-            reviews_count: 12
+            reviews_count: 12,
+            total_reviews: 12,
+            rating_counts: {}
           }
         ];
         
         let filteredTours = fallbackTours;
         
-        // Apply language filter
+        // Apply filters (same logic as in the optimized function)
         if (filters.language && filters.language.trim() !== '') {
           filteredTours = filteredTours.filter(tour => 
             tour.languages && tour.languages.includes(filters.language!)
           );
         }
         
-        // Apply location filter
         if (filters.location) {
           filteredTours = filteredTours.filter(tour => 
             tour.location === filters.location
           );
         }
         
-        // Apply price range filter
         if (filters.priceRange) {
           const [min, max] = filters.priceRange;
           filteredTours = filteredTours.filter(tour => 
@@ -463,25 +361,18 @@ const Explore = () => {
           );
         }
         
-        // Apply rating filter
         if (filters.rating && filters.rating > 0) {
-          const minRatingThreshold = filters.rating;
-          
           filteredTours = filteredTours.filter(tour => 
-            // Only exclude tours that don't meet the rating threshold
-            // Include tours with 0 rating if they also have 0 reviews (no ratings yet)
-            tour.average_rating >= minRatingThreshold || (tour.average_rating === 0 && tour.reviews_count === 0)
+            tour.average_rating >= filters.rating! || (tour.average_rating === 0 && tour.reviews_count === 0)
           );
         }
         
-        // Apply review count filter
         if (filters.reviewCount && filters.reviewCount > 0) {
           filteredTours = filteredTours.filter(tour => 
             tour.reviews_count >= filters.reviewCount!
           );
         }
         
-        // Apply days available filter
         if (filters.daysAvailable && filters.daysAvailable.length > 0) {
           filteredTours = filteredTours.filter(tour => {
             if (!tour.days_available) return false;
