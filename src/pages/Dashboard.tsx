@@ -101,6 +101,7 @@ const Dashboard = () => {
           <Grid 
             templateColumns={{ base: "1fr", lg: "320px 1fr" }}
             gap={6}
+            alignItems="start"
           >
             {/* Profile Sidebar */}
             <GridItem>
@@ -249,7 +250,7 @@ const Dashboard = () => {
                       )}
                     </TabList>
                     
-                    <TabPanels>
+                    <TabPanels minH="400px">
                       {/* Tours/Tour Requests Panel */}
                       <TabPanel p={4}>
                         {activeTabIndex === 0 && <ToursList />}
@@ -275,9 +276,9 @@ const Dashboard = () => {
         </Container>
         
         {/* Create Tour Modal */}
-        <Modal isOpen={isCreateOpen} onClose={onCreateClose} size="xl">
+        <Modal isOpen={isCreateOpen} onClose={onCreateClose} size={{ base: "full", md: "xl" }}>
           <ModalOverlay />
-          <ModalContent borderRadius="xl">
+          <ModalContent borderRadius={{ base: "none", md: "xl" }} maxH="90vh" overflowY="auto">
             <ModalCloseButton />
             <ModalBody pt={10} pb={6}>
               <TourForm onSuccess={handleCreateSuccess} onCancel={onCreateClose} />
