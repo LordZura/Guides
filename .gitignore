@@ -63,3 +63,15 @@ temp/
 
 # Vite
 .vite/
+
+# Agent temporary files
+/tmp/
+*.tmp
+*.temp
+*_backup
+*_temp
+debug_*
+
+# Development artifacts
+.cache/
+*.log
