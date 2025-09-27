@@ -1,11 +1,11 @@
 import React from 'react';
-import { HStack, Icon, useColorModeValue, Box, Tooltip } from '@chakra-ui/react';
+import { HStack, Icon, useColorModeValue, Box, Tooltip, useBreakpointValue } from '@chakra-ui/react';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 
 export interface StarRatingProps {
   rating: number;
   maxRating?: number;
-  size?: number;
+  size?: number | { base?: number; sm?: number; md?: number; lg?: number; xl?: number };
   color?: string;
   spacing?: number;
   interactive?: boolean;
@@ -24,6 +24,12 @@ const StarRating: React.FC<StarRatingProps> = ({
   onChange
 }) => {
   const starColor = useColorModeValue(color || 'yellow.400', color || 'yellow.300');
+  
+  // Handle responsive size
+  const responsiveSize = useBreakpointValue(
+    typeof size === 'object' ? size : { base: size, md: size }
+  ) || 4;
+  
   const stars = [];
 
   const handleClick = (index: number) => {
@@ -48,8 +54,8 @@ const StarRating: React.FC<StarRatingProps> = ({
       <Icon 
         key={i} 
         as={StarIcon} 
-        w={`${size}px`} 
-        h={`${size}px`} 
+        w={`${responsiveSize}px`} 
+        h={`${responsiveSize}px`} 
         color={starColor} 
         cursor={interactive ? 'pointer' : 'default'} 
         onClick={() => handleClick(i)}
