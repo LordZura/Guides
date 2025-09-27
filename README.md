@@ -1,211 +1,250 @@
-# TourGuideHub - A Complete Tour Guide Marketplace Platform
+# TourGuideHub - Complete Tour Guide Marketplace Platform
 
-TourGuideHub is a full-featured web application that connects tourists with local tour guides. Built with React, TypeScript, and Supabase, it provides a comprehensive platform for tour discovery, booking, and management.
+> **🤖 Agent-Friendly Documentation**: This README is optimized for AI agents. See [SQL_REFERENCE.md](./SQL_REFERENCE.md) for comprehensive database documentation.
 
-## 🌟 Key Features
+TourGuideHub is a production-ready web application connecting tourists with local tour guides. Built with modern technologies including React 18, TypeScript, and Supabase, it provides a complete marketplace platform for tour discovery, booking, and management.
 
-### For Tourists
-- **Tour Discovery**: Browse and search tours by location, language, price, and ratings
-- **Advanced Filtering**: Filter by guide rating, language, availability, and tour type
-- **Booking System**: Request tours or accept guide offers with integrated payment tracking
-- **Review System**: Rate and review completed tours and guides
-- **Profile Management**: Create and manage tourist profiles with interests and preferences
-- **Real-time Notifications**: Get notified about booking updates and messages
+## 🏗️ Architecture Overview
 
-### For Tour Guides  
-- **Tour Creation**: Create detailed tours with descriptions, pricing, and availability
-- **Tour Templates**: Save and reuse tour templates for efficiency
-- **Booking Management**: Accept/decline tour requests and make offers to tourists
-- **Profile Showcase**: Build comprehensive guide profiles with experience and specialties
-- **Payment Tracking**: Monitor earnings and payment status
-- **Dashboard Analytics**: View bookings, reviews, and performance metrics
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   React Frontend │    │   Supabase       │    │   PostgreSQL    │
+│   • TypeScript   │◄──►│   • Auth         │◄──►│   • RLS Policies│
+│   • Chakra UI    │    │   • Real-time    │    │   • Functions   │
+│   • Context API  │    │   • Storage      │    │   • Triggers    │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
 
-### Platform Features
-- **Dual User Roles**: Separate interfaces and features for guides and tourists
-- **Real-time Chat**: Communication system between guides and tourists
-- **Multi-language Support**: Tours and guides can specify multiple languages
-- **Rating & Review System**: Comprehensive 5-star rating system with detailed reviews
-- **Notification System**: Real-time updates for bookings, messages, and platform events
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
+## 🚀 Quick Start for Agents
 
-## 🚀 Quick Start
+### 1. Prerequisites Check
+```bash
+node --version    # Required: v16+
+npm --version     # Required: v8+
+```
 
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-- Supabase account and project
+### 2. Installation
+```bash
+git clone <repository>
+cd Guides
+npm install       # Installs 426+ packages
+```
 
-### Environment Setup
-1. Copy the environment template:
+### 3. Environment Setup
 ```bash
 cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
 ```
 
-2. Configure your environment variables in `.env.local`:
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+### 4. Database Setup - CRITICAL ⚠️
+Execute SQL files from `src/db/migrations/` in **numerical order**. See [SQL_REFERENCE.md](./SQL_REFERENCE.md) for detailed migration guide.
+
+**Essential files (will cause app failure if missing):**
+- `011_create_languages_table.sql` - Language filtering system
+- All review system functions (013-017) - Complex aggregation system
+
+### 5. Development
+```bash
+npm run dev      # Starts dev server on http://localhost:5173
+npm run build    # Production build (currently 1MB+ bundle)
+npm run test     # Vitest test runner
+npm run lint     # ESLint (currently 101 warnings)
 ```
 
-### Database Setup
-This application requires specific database tables and functions. Execute the following SQL migration files in your Supabase SQL Editor **in order**:
+## 📊 Current Project Status
 
-#### Core Tables (Execute First)
-1. `001_create_profiles.sql` - User profiles table
-2. `002_create_tours_table.sql` - Tours table
-3. `003_create_bookings_table.sql` - Bookings table
-4. `004_create_reviews_table.sql` - Reviews table
-5. `005_update_profiles_add_fields.sql` - Profile field updates
-6. `006_create_notifications_table.sql` - Notifications table
-7. `007_add_tour_locations_array.sql` - Tour locations array
-8. `008_create_tour_templates_table.sql` - Tour templates table
-9. `009_update_profiles_rls_for_notifications.sql` - Profile RLS updates
-10. `010_add_offered_status_to_bookings.sql` - Booking status updates
+### ✅ Working Features
+- **Authentication**: Role-based (Guide/Tourist) with Supabase Auth
+- **Tour Management**: CRUD operations with templates
+- **Booking System**: Complete flow with status tracking
+- **Review System**: Ratings with complex aggregation functions
+- **Real-time**: Live notifications via Supabase subscriptions
+- **Responsive UI**: Mobile-first with Chakra UI
 
-#### Critical Missing Tables (Execute Next)
-11. `011_create_languages_table.sql` - **REQUIRED**: Languages table for filtering
-12. `012_fix_bookings_update_policy.sql` - **REQUIRED**: Fixes payment update policies
+### ⚠️ Known Issues
+- **Linting**: 101 warnings (console.log statements, TypeScript any types)
+- **Bundle Size**: 1MB+ (needs code splitting)
+- **SQL Migrations**: Conflicting versions of review functions
+- **Security Warnings**: 2 moderate npm audit issues
 
-#### Review System Functions (Execute Last)
-13. `013_create_get_review_summary_function.sql` - Review summary function
-14. `014_create_get_guide_rating_from_tours_function.sql` - Guide rating function
-15. `015_safe_review_fixes_migration.sql` - Review system fixes
-16. `016_add_rating_counts_to_summary.sql` - Rating counts for summaries
+### 🔄 Recent Changes
+- Complex review aggregation system (files 013-017)
+- Booking policy fixes for tourist acceptance (file 018)
+- Debug logging for booking updates (file 019)
+- Unique review constraints (file 020)
 
-#### Verification
-After running migrations, verify setup with these queries:
+## 🗂️ Project Structure for Agents
+
+```
+/home/runner/work/Guides/Guides/
+├── src/
+│   ├── components/           # 29 React components
+│   │   ├── AuthModal.tsx     # Auth with role selection
+│   │   ├── BookingForm.tsx   # Booking creation/management  
+│   │   ├── TourCard.tsx     # Tour display (has test warnings)
+│   │   ├── ReviewForm.tsx   # Review submission (many console.logs)
+│   │   └── ...
+│   ├── pages/               # 5 main pages
+│   │   ├── Dashboard.tsx    # Role-specific dashboards
+│   │   ├── Explore.tsx      # Tour discovery with filters
+│   │   ├── TourDetails.tsx  # Individual tour booking
+│   │   └── ...
+│   ├── contexts/            # 8 React contexts
+│   │   ├── AuthProvider.tsx    # User state management
+│   │   ├── BookingContext.tsx  # Booking logic (has any types)
+│   │   ├── ToursContext.tsx    # Tour data management
+│   │   └── ...
+│   ├── db/migrations/       # 21 SQL files (see SQL_REFERENCE.md)
+│   ├── lib/                 # Core utilities
+│   │   ├── supabaseClient.ts  # Supabase configuration
+│   │   ├── api.ts           # API helper functions
+│   │   └── types.ts         # TypeScript definitions
+│   └── hooks/               # Custom React hooks
+├── SQL_REFERENCE.md         # 📖 COMPREHENSIVE SQL GUIDE
+├── CONTRIBUTING.md          # Development guidelines
+└── package.json            # Dependencies and scripts
+```
+
+## 🔧 Technologies & Dependencies
+
+### Core Stack
+- **React 18.2.0**: Component library with hooks
+- **TypeScript 5.0.2**: Type safety and development experience
+- **Vite 4.4.5**: Build tool and dev server
+- **Chakra UI 2.10.9**: Component library and theming
+- **Supabase 2.38.4**: Backend-as-a-Service
+
+### Key Dependencies
+- **@supabase/supabase-js**: Database and auth client
+- **react-router-dom 6.18.0**: Client-side routing
+- **framer-motion 12.23.12**: Animations for Chakra UI
+- **react-select 5.10.2**: Enhanced select components
+- **react-icons 5.5.0**: Icon library
+
+### Development Tools
+- **Vitest 0.34.6**: Testing framework
+- **ESLint 9.34.0**: Code linting
+- **TypeScript ESLint**: TypeScript-specific linting
+- **@testing-library/react**: React component testing
+
+## 🎯 User Roles & Features
+
+### Tourist Role
+- **Browse Tours**: Filter by location, language, price, rating
+- **Booking Management**: Request tours, accept guide offers
+- **Payment Tracking**: Monitor booking payments and status
+- **Review System**: Rate tours and guides after completion
+- **Profile**: Basic profile with preferences
+
+### Guide Role  
+- **Tour Creation**: Create tours with templates or from scratch
+- **Booking Management**: Accept requests, create offers
+- **Earnings Tracking**: Monitor payments and tour performance
+- **Review Analytics**: View ratings aggregated from all tours
+- **Profile**: Detailed profile with experience, specialties, bio
+
+## 🗄️ Database Schema Summary
+
+### Core Tables (8 main tables)
 ```sql
--- Check essential tables exist
-SELECT * FROM public.languages LIMIT 5;
-SELECT * FROM public.tour_templates LIMIT 5;
-SELECT * FROM public.profiles LIMIT 5;
-
--- Verify table structures
-\d public.languages
-\d public.tour_templates
+profiles        -- User profiles extending Supabase auth
+tours           -- Tour listings with locations (JSONB)
+bookings        -- Reservations with status tracking
+reviews         -- Ratings for tours AND guides
+notifications   -- Real-time user notifications  
+languages       -- Language filtering (REQUIRED)
+tour_templates  -- Reusable tour configurations
 ```
 
-**⚠️ Important**: All migrations must be executed for the application to function properly. Missing migrations will cause table not found errors and broken functionality.
+### Complex Functions (see SQL_REFERENCE.md)
+- `get_review_summary()` - Aggregates ratings with distribution
+- `get_guide_rating_from_tours()` - Guide-specific calculations
+- **Version conflicts exist** - use migration 017 as canonical
 
-### Installation & Development
+## 🚨 Critical Information for Agents
 
+### Before Making Changes
+1. **Read SQL_REFERENCE.md completely** - Complex migration dependencies
+2. **Check current linting status** - 101 warnings need attention
+3. **Understand RLS policies** - Complex security rules in Supabase
+4. **Review booking system** - Multiple conflicting policy migrations
+
+### Common Development Tasks
+
+#### Adding New Features
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+# 1. Create component in src/components/
+# 2. Add to appropriate context if needed
+# 3. Update types in src/lib/types.ts
+# 4. Add tests (existing pattern: *.test.tsx)
+# 5. Run linting and fix warnings
 ```
 
-The application will be available at `http://localhost:5173/Guides/`
-
-### Production Build
-
+#### Database Changes
 ```bash
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Deploy to GitHub Pages (if configured)
-npm run deploy
+# 1. Create new migration file (next number: 021_*.sql)
+# 2. Include safety checks for existing objects
+# 3. Update SQL_REFERENCE.md immediately
+# 4. Test migration in development first
 ```
 
-## 📁 Project Structure
+#### Debugging Common Issues
+- **"Table not found"**: Check migration order, especially languages table
+- **"Tourist not allowed"**: Check RLS policies, likely booking permissions
+- **Function signature errors**: Review function conflicts in migrations 013-017
+- **Build failures**: Check TypeScript types, avoid 'any'
 
+### Testing Strategy
+- **Component Tests**: Use @testing-library/react pattern
+- **Integration Tests**: Available but limited coverage  
+- **Manual Testing**: Required for booking flows and payments
+- **Database Testing**: SQL functions need manual verification
+
+## 🔄 Development Workflow
+
+### For New Contributors
+1. **Setup**: Follow Quick Start guide completely
+2. **Database**: Execute ALL migrations in order (critical)
+3. **Code Review**: Check existing component patterns
+4. **Testing**: Add tests following existing patterns
+5. **Documentation**: Update SQL_REFERENCE.md for DB changes
+
+### For Code Changes
+```bash
+git checkout -b feature/your-feature
+# Make changes
+npm run lint    # Fix warnings before commit
+npm run test    # Ensure tests pass
+npm run build   # Verify production build
+# Commit with descriptive messages
 ```
-src/
-├── components/          # Reusable UI components
-│   ├── AuthModal.tsx    # Authentication modal
-│   ├── BookingForm.tsx  # Tour booking forms
-│   ├── GuideCard.tsx    # Guide profile cards
-│   ├── TourCard.tsx     # Tour display cards
-│   ├── ReviewForm.tsx   # Review submission
-│   └── ...
-├── contexts/            # React Context providers
-│   ├── AuthProvider.tsx # Authentication state
-│   ├── BookingContext.tsx # Booking management
-│   ├── ToursContext.tsx  # Tours data
-│   └── ...
-├── pages/              # Main application pages
-│   ├── Dashboard.tsx   # User dashboard
-│   ├── Explore.tsx     # Tour/guide discovery
-│   ├── TourDetails.tsx # Individual tour pages
-│   └── Profile/        # User profile pages
-├── hooks/              # Custom React hooks
-├── lib/                # Utilities and configuration
-│   └── supabaseClient.ts # Supabase client setup
-└── db/                 # Database migrations
-    └── migrations/     # SQL migration files
-```
 
-## 🔧 Core Technologies
+## 📞 Support & Troubleshooting
 
-- **Frontend**: React 18, TypeScript, Chakra UI
-- **Backend**: Supabase (PostgreSQL, Auth, Real-time)
-- **Build Tool**: Vite
-- **Routing**: React Router v6
-- **State Management**: React Context + Hooks
-- **Styling**: Chakra UI + Emotion
-- **Icons**: React Icons, Chakra UI Icons
+### Common Issues
+1. **App won't start**: Check .env.local configuration
+2. **Login fails**: Verify Supabase URL and keys
+3. **No tours showing**: Run migration 011 (languages table)
+4. **Booking errors**: Check migrations 018-019 for policies
+5. **Review system broken**: Use migration 017 (latest version)
 
-## 🎯 User Flows
+### Debug Resources
+- **Browser Console**: Shows Supabase errors and RLS violations
+- **Supabase Dashboard**: Check RLS policies and table data
+- **SQL_REFERENCE.md**: Comprehensive migration guide
+- **CONTRIBUTING.md**: Development guidelines
 
-### Tourist Journey
-1. Register/Login as Tourist
-2. Browse tours on Explore page
-3. Filter by preferences (location, language, price)
-4. View tour details and guide profiles
-5. Request booking or accept guide offer
-6. Complete payment
-7. Attend tour and leave review
+### Performance Notes
+- **Bundle Size**: 1MB+ (consider code splitting)
+- **Database**: GIN indexes on JSONB fields for performance
+- **Real-time**: Supabase subscriptions for live updates
+- **Caching**: Limited client-side caching implemented
 
-### Guide Journey  
-1. Register/Login as Guide
-2. Set up comprehensive profile
-3. Create tours with details and pricing
-4. Manage bookings and availability
-5. Communicate with tourists
-6. Track payments and earnings
-7. Build reputation through reviews
+---
 
-## 🔐 Authentication & Authorization
-
-- Row Level Security (RLS) policies in Supabase
-- Role-based access control (Guide vs Tourist)
-- Protected routes for authenticated users
-- Secure profile and booking data access
-
-## 📱 Pages & Routes
-
-- `/explore` - Main tour and guide discovery (public)
-- `/dashboard` - User dashboard (protected)
-- `/profile/:id` - User profile pages (public)
-- `/tours/:id` - Individual tour details (public)
-- `/about` - About page (public)
-
-## 🛠️ Development Notes
-
-- **TypeScript**: Strict type checking enabled
-- **Error Boundaries**: Comprehensive error handling
-- **Testing**: Unit tests with Vitest and React Testing Library  
-- **Linting**: ESLint with TypeScript rules
-- **Performance**: Code splitting and optimization
-- **Security**: Environment variable protection and RLS policies
-
-## 🚨 Important Setup Requirements
-
-1. **Database Migrations**: Must run all migration files in order
-2. **Environment Variables**: Supabase URL and keys are required
-3. **RLS Policies**: Database security policies must be properly configured
-4. **Language Data**: Seed the languages table for proper filtering
-5. **File Uploads**: Configure Supabase storage for profile pictures
-
-## 📞 Support
-
-For development issues:
-1. Check browser console for errors
-2. Verify Supabase connection and RLS policies
-3. Ensure all database migrations are applied
-4. Check environment variable configuration
+**📋 Agent Checklist**: 
+- [ ] Read SQL_REFERENCE.md before DB changes
+- [ ] Run all migrations in order for setup
+- [ ] Address linting warnings in modified files
+- [ ] Test booking and review flows manually
+- [ ] Update documentation for significant changes
