@@ -1,3 +1,26 @@
+/**
+ * ReviewForm - Enhanced Review Submission Component
+ * 
+ * This component handles review submission with comprehensive logging for debugging.
+ * 
+ * Key Features:
+ * - Validates user has completed required booking
+ * - Prevents duplicate review submissions
+ * - Logs all major operations for debugging review conflicts
+ * - Supports both guide and tour reviews
+ * 
+ * Props:
+ * - targetId: The ID of the entity being reviewed (guide user ID or tour ID)
+ * - targetType: 'guide' | 'tour' - specifies what type of entity is being reviewed
+ * - tourId: Optional tour ID for context (used for tour completion validation)
+ * - bookingStatus: Optional booking status override
+ * 
+ * Debug Logging:
+ * - All major operations are logged with 🔍, ✅, ❌, 📝, 🚀 emoji prefixes
+ * - Logs include timestamps and full context information
+ * - Form submission includes complete review data for debugging
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,
