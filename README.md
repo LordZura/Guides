@@ -219,6 +219,52 @@ npm run build   # Verify production build
 # Commit with descriptive messages
 ```
 
+## 🗄️ Storage & File Management
+
+### Universal Storage System
+The application now includes a universal-safe storage system that handles different file organization patterns:
+
+#### File Organization Support
+- **Nested Folders**: Files stored in `avatars/` subfolder
+- **Root Storage**: Files stored at bucket root level
+- **Mixed Patterns**: Automatically detects and handles both patterns
+
+#### Universal Storage Functions
+```typescript
+// Universal file listing (checks multiple paths)
+const result = await universalListFiles('profile-images', ['avatars', ''], { limit: 20 });
+
+// Universal file upload (consistent path handling)
+const upload = await universalUpload('profile-images', file, userId, 'avatars');
+
+// Bucket access checking
+const access = await checkBucketAccess('profile-images');
+```
+
+#### Storage Setup Requirements
+1. **Bucket Creation**: Create `profile-images` bucket in Supabase Dashboard
+2. **RLS Policies**: Run SQL in `sql/storage-policies.sql`
+3. **Bucket Configuration**:
+   - Public: `true` (for avatar access)
+   - File size limit: `5MB`
+   - Allowed MIME types: `image/*`
+
+#### Diagnostic Tools
+- **Universal Diagnostic**: `/universal-storage-diagnostic` (new component)
+- **Legacy Diagnostic**: `/storage-diagnostic` (updated with universal functions)
+- **CLI Fix Script**: `npm run fix-storage`
+
+#### Required SQL Policies
+```sql
+-- Enable file listing (CRITICAL for .list() operations)
+CREATE POLICY allow_list_profile_images ON storage.objects FOR SELECT 
+USING (bucket_id = 'profile-images');
+
+-- Enable authenticated uploads
+CREATE POLICY allow_upload_profile_images ON storage.objects FOR INSERT
+TO authenticated WITH CHECK (bucket_id = 'profile-images');
+```
+
 ## 📞 Support & Troubleshooting
 
 ### Common Issues
