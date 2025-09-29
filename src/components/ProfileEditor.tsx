@@ -18,6 +18,7 @@ import {
   IconButton,
 } from '@chakra-ui/react';
 import { CheckIcon, CloseIcon, EditIcon } from '@chakra-ui/icons';
+import { universalUpload } from '../utils/universal-storage';
 import { supabase, Profile, DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthProvider';
 import SearchableLanguageSelector from './SearchableLanguageSelector';
@@ -154,21 +155,14 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
     try {
       setIsUploading(true);
       
-      // Create a unique filename
-      const fileExt = avatarFile.name.split('.').pop();
-      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      // Use universal upload for consistent path handling
+      const uploadResult = await universalUpload('profile-images', avatarFile, user.id, 'avatars');
       
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('profile-images')
-        .upload(filePath, avatarFile);
-      
-      if (uploadError) {
-        console.error('Error uploading avatar:', uploadError);
+      if (!uploadResult.success) {
+        console.error('Error uploading avatar:', uploadResult.error);
         
         // Specific error handling for bucket not found
-        if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('bucket')) {
+        if (uploadResult.error?.includes('Bucket not found') || uploadResult.error?.includes('bucket')) {
           toast({
             title: 'Storage bucket missing',
             description: 'The profile-images bucket is not configured. Please contact support or visit /storage-diagnostic for troubleshooting.',
@@ -179,22 +173,17 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
         } else {
           toast({
             title: 'Upload failed',
-            description: `Could not upload avatar: ${uploadError.message}. Please try again.`,
+            description: `Could not upload avatar: ${uploadResult.error}. Please try again.`,
             status: 'error',
             duration: 5000,
             isClosable: true,
           });
         }
         
-        throw uploadError;
+        throw new Error(uploadResult.error);
       }
       
-      // Get the public URL
-      const { data } = supabase.storage
-        .from('profile-images')
-        .getPublicUrl(filePath);
-      
-      return data.publicUrl;
+      return uploadResult.publicUrl || null;
     } catch (err) {
       console.error('Error uploading avatar:', err);
       
