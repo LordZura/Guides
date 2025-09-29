@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@chakra-ui/react';
 import { useAuth } from './contexts/AuthProvider';
@@ -10,6 +10,7 @@ import AuthModal from './components/AuthModal';
 import TourDetail from './pages/TourDetails';
 import ProfilePage from './pages/Profile/[id]';
 import NotificationTestPanel from './components/NotificationTestPanel';
+import { diagnoseBuckets } from './utils/storage-diagnostic';
 
 // Placeholder components for routes not implemented in Subtask 1
 const About = () => <Box p={4} maxW="container.xl" mx="auto"><Box as="h1" fontSize="2xl" fontWeight="bold">About TourGuideHub</Box></Box>;
@@ -31,6 +32,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   const { isAuthModalOpen, closeAuthModal } = useModal();
+  
+  // Run storage diagnostic on app load
+  useEffect(() => {
+    diagnoseBuckets();
+  }, []);
   
   return (
     <Box minH="100vh" bg="transparent">
