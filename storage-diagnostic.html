@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Storage Diagnostic Tool</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #2e7d32;
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            color: #1976d2;
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        .config-info {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Supabase Storage Diagnostic Tool</h1>
+        
+        <div class="config-info">
+            <h3>📋 Current Configuration</h3>
+            <p><strong>Project URL:</strong> <span id="projectUrl"></span></p>
+            <p><strong>Using:</strong> Anonymous Key (anon)</p>
+            <p><strong>Target Bucket:</strong> <code>profile-images</code></p>
+            <p><strong>Upload Path Pattern:</strong> <code>profile-images/avatars/{filename}</code></p>
+        </div>
+
+        <div class="section">
+            <h3>🗂️ Step 1: List All Storage Buckets</h3>
+            <button onclick="listBuckets()">List All Buckets</button>
+            <div id="bucketResults"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔍 Step 2: Test Bucket Access</h3>
+            <button onclick="testBucketAccess('profile-images')">Test 'profile-images' Bucket</button>
+            <button onclick="testBucketAccess('avatars')">Test 'avatars' Bucket</button>
+            <button onclick="testBucketAccess('profile-images/avatars')">Test 'profile-images/avatars' Bucket</button>
+            <div id="accessResults"></div>
+        </div>
+
+        <div class="section">
+            <h3>📤 Step 3: Test Avatar Upload</h3>
+            <input type="file" id="avatarFile" accept="image/*">
+            <br>
+            <button onclick="testUpload('profile-images', 'avatars/')">Upload to profile-images/avatars/</button>
+            <button onclick="testUpload('avatars', '')">Upload to avatars bucket</button>
+            <button onclick="testUpload('profile-images', '')">Upload to profile-images root</button>
+            <div id="uploadResults"></div>
+        </div>
+
+        <div class="section">
+            <h3>🛠️ Step 4: Create Missing Bucket</h3>
+            <button onclick="createBucket('profile-images')">Create 'profile-images' Bucket</button>
+            <button onclick="createBucket('avatars')">Create 'avatars' Bucket</button>
+            <div id="createResults"></div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Diagnostic Summary</h3>
+            <div id="diagnosticSummary">
+                <p>Run the tests above to generate a diagnostic summary...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase client
+        const SUPABASE_URL = 'https://ghtdjwcqqcbfzaeiekhk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdodGRqd2NxcWNiZnphZWlla2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NzIwMDQsImV4cCI6MjA3MTU0ODAwNH0.RwFrnqqsbIeWO5u5wrLITaefRc7lD5hjr5DlFFg8Dt4';
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        document.getElementById('projectUrl').textContent = SUPABASE_URL;
+
+        let diagnosticData = {
+            bucketsFound: [],
+            accessTests: {},
+            uploadTests: {},
+            errors: []
+        };
+
+        function logResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = message;
+            element.appendChild(div);
+        }
+
+        function logJson(elementId, title, data) {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.innerHTML = `<strong>${title}:</strong><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            element.appendChild(div);
+        }
+
+        async function listBuckets() {
+            const resultsDiv = document.getElementById('bucketResults');
+            resultsDiv.innerHTML = '<p>🔍 Fetching buckets...</p>';
+
+            try {
+                const { data, error } = await supabase.storage.listBuckets();
+                
+                if (error) {
+                    logResult('bucketResults', `❌ Error listing buckets: ${error.message}`, 'error');
+                    logJson('bucketResults', 'Full Error Object', error);
+                    diagnosticData.errors.push(`List buckets: ${error.message}`);
+                } else {
+                    diagnosticData.bucketsFound = data.map(b => b.name);
+                    logResult('bucketResults', `✅ Found ${data.length} buckets`, 'success');
+                    logJson('bucketResults', 'Buckets', data);
+                    
+                    const hasProfileImages = data.some(b => b.name === 'profile-images');
+                    const hasAvatars = data.some(b => b.name === 'avatars');
+                    
+                    if (!hasProfileImages && !hasAvatars) {
+                        logResult('bucketResults', '⚠️ Neither "profile-images" nor "avatars" bucket found!', 'error');
+                    } else if (hasProfileImages) {
+                        logResult('bucketResults', '✅ "profile-images" bucket exists', 'success');
+                    } else if (hasAvatars) {
+                        logResult('bucketResults', '✅ "avatars" bucket exists', 'success');
+                    }
+                }
+            } catch (err) {
+                logResult('bucketResults', `❌ Network/Client Error: ${err.message}`, 'error');
+                diagnosticData.errors.push(`Network error: ${err.message}`);
+            }
+
+            updateDiagnosticSummary();
+        }
+
+        async function testBucketAccess(bucketName) {
+            const resultsDiv = document.getElementById('accessResults');
+            
+            try {
+                logResult('accessResults', `🔍 Testing access to "${bucketName}" bucket...`, 'info');
+                
+                const { data, error } = await supabase.storage.from(bucketName).list();
+                
+                if (error) {
+                    logResult('accessResults', `❌ Cannot access "${bucketName}": ${error.message}`, 'error');
+                    diagnosticData.accessTests[bucketName] = { success: false, error: error.message };
+                } else {
+                    logResult('accessResults', `✅ Successfully accessed "${bucketName}" (${data.length} files)`, 'success');
+                    diagnosticData.accessTests[bucketName] = { success: true, fileCount: data.length };
+                    if (data.length > 0) {
+                        logJson('accessResults', `Files in ${bucketName}`, data.slice(0, 5)); // Show first 5 files
+                    }
+                }
+            } catch (err) {
+                logResult('accessResults', `❌ Network/Client Error testing "${bucketName}": ${err.message}`, 'error');
+                diagnosticData.accessTests[bucketName] = { success: false, error: `Network error: ${err.message}` };
+            }
+
+            updateDiagnosticSummary();
+        }
+
+        async function testUpload(bucketName, pathPrefix) {
+            const fileInput = document.getElementById('avatarFile');
+            const resultsDiv = document.getElementById('uploadResults');
+            
+            if (!fileInput.files[0]) {
+                logResult('uploadResults', '⚠️ Please select a file first', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const fileName = `test-${Date.now()}-${file.name}`;
+            const fullPath = pathPrefix + fileName;
+
+            try {
+                logResult('uploadResults', `🔍 Testing upload to "${bucketName}/${fullPath}"...`, 'info');
+                
+                const { data, error } = await supabase.storage
+                    .from(bucketName)
+                    .upload(fullPath, file);
+
+                if (error) {
+                    logResult('uploadResults', `❌ Upload failed to "${bucketName}/${fullPath}": ${error.message}`, 'error');
+                    logJson('uploadResults', 'Upload Error Details', error);
+                    diagnosticData.uploadTests[`${bucketName}/${pathPrefix}`] = { success: false, error: error.message };
+                } else {
+                    logResult('uploadResults', `✅ Upload successful to "${bucketName}/${fullPath}"`, 'success');
+                    logJson('uploadResults', 'Upload Success Details', data);
+                    diagnosticData.uploadTests[`${bucketName}/${pathPrefix}`] = { success: true, path: data.path };
+                    
+                    // Test download URL
+                    const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(fullPath);
+                    logResult('uploadResults', `🔗 Public URL: <a href="${urlData.publicUrl}" target="_blank">${urlData.publicUrl}</a>`, 'info');
+                }
+            } catch (err) {
+                logResult('uploadResults', `❌ Network/Client Error uploading to "${bucketName}": ${err.message}`, 'error');
+                diagnosticData.uploadTests[`${bucketName}/${pathPrefix}`] = { success: false, error: `Network error: ${err.message}` };
+            }
+
+            updateDiagnosticSummary();
+        }
+
+        async function createBucket(bucketName) {
+            const resultsDiv = document.getElementById('createResults');
+            
+            try {
+                logResult('createResults', `🔍 Attempting to create "${bucketName}" bucket...`, 'info');
+                
+                const { data, error } = await supabase.storage.createBucket(bucketName, {
+                    public: true,
+                    allowedMimeTypes: ['image/*'],
+                    fileSizeLimit: 5242880 // 5MB
+                });
+
+                if (error) {
+                    if (error.message.includes('already exists')) {
+                        logResult('createResults', `ℹ️ Bucket "${bucketName}" already exists`, 'info');
+                    } else {
+                        logResult('createResults', `❌ Failed to create "${bucketName}": ${error.message}`, 'error');
+                        logJson('createResults', 'Create Error Details', error);
+                    }
+                } else {
+                    logResult('createResults', `✅ Successfully created "${bucketName}" bucket`, 'success');
+                    logJson('createResults', 'Create Success Details', data);
+                    
+                    // Refresh bucket list
+                    setTimeout(() => {
+                        logResult('createResults', '🔄 Refreshing bucket list...', 'info');
+                        listBuckets();
+                    }, 1000);
+                }
+            } catch (err) {
+                logResult('createResults', `❌ Network/Client Error creating "${bucketName}": ${err.message}`, 'error');
+            }
+        }
+
+        function updateDiagnosticSummary() {
+            const summaryDiv = document.getElementById('diagnosticSummary');
+            
+            let summary = '<h4>📊 Current Status:</h4>';
+            
+            // Bucket status
+            if (diagnosticData.bucketsFound.length > 0) {
+                summary += `<p>✅ <strong>Buckets found:</strong> ${diagnosticData.bucketsFound.join(', ')}</p>`;
+                
+                if (diagnosticData.bucketsFound.includes('profile-images')) {
+                    summary += '<p>✅ <strong>Recommended solution:</strong> Use existing "profile-images" bucket</p>';
+                } else if (diagnosticData.bucketsFound.includes('avatars')) {
+                    summary += '<p>⚠️ <strong>Possible solution:</strong> Use "avatars" bucket instead of "profile-images"</p>';
+                } else {
+                    summary += '<p>❌ <strong>Issue:</strong> No suitable bucket found. Create "profile-images" bucket.</p>';
+                }
+            } else {
+                summary += '<p>❓ <strong>Status:</strong> Bucket list not yet retrieved</p>';
+            }
+
+            // Access test results
+            const accessCount = Object.keys(diagnosticData.accessTests).length;
+            if (accessCount > 0) {
+                const successfulAccess = Object.entries(diagnosticData.accessTests)
+                    .filter(([name, result]) => result.success)
+                    .map(([name]) => name);
+                
+                if (successfulAccess.length > 0) {
+                    summary += `<p>✅ <strong>Accessible buckets:</strong> ${successfulAccess.join(', ')}</p>`;
+                } else {
+                    summary += '<p>❌ <strong>Issue:</strong> No buckets are accessible</p>';
+                }
+            }
+
+            // Upload test results
+            const uploadCount = Object.keys(diagnosticData.uploadTests).length;
+            if (uploadCount > 0) {
+                const successfulUploads = Object.entries(diagnosticData.uploadTests)
+                    .filter(([path, result]) => result.success)
+                    .map(([path]) => path);
+                
+                if (successfulUploads.length > 0) {
+                    summary += `<p>✅ <strong>Successful upload paths:</strong> ${successfulUploads.join(', ')}</p>';
+                } else {
+                    summary += '<p>❌ <strong>Issue:</strong> All upload attempts failed</p>';
+                }
+            }
+
+            // Error summary
+            if (diagnosticData.errors.length > 0) {
+                summary += `<p>❌ <strong>Errors encountered:</strong></p><ul>`;
+                diagnosticData.errors.forEach(error => {
+                    summary += `<li>${error}</li>`;
+                });
+                summary += '</ul>';
+            }
+
+            summaryDiv.innerHTML = summary;
+        }
+
+        // Auto-run bucket list on load
+        window.addEventListener('load', () => {
+            setTimeout(listBuckets, 500);
+        });
+    </script>
+</body>
+</html>
