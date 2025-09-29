@@ -159,12 +159,23 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
       const fileName = `${user.id}_${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
       
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      // Upload to Supabase Storage with enhanced error handling
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('profile-images')
         .upload(filePath, avatarFile);
       
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Avatar upload error:', {
+          message: uploadError.message,
+          bucket: 'profile-images',
+          path: filePath,
+          fileSize: avatarFile.size,
+          fileType: avatarFile.type
+        });
+        throw uploadError;
+      }
+      
+      console.log('Avatar upload successful:', uploadData);
       
       // Get the public URL
       const { data } = supabase.storage
@@ -172,13 +183,27 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
         .getPublicUrl(filePath);
       
       return data.publicUrl;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error uploading avatar:', err);
+      
+      // Provide specific error messages based on the error type
+      let errorDescription = 'Could not upload avatar. Please try again.';
+      
+      if (err.message?.includes('Bucket not found')) {
+        errorDescription = 'Storage bucket not configured. Please contact support or visit /storage-diagnostic to fix.';
+      } else if (err.message?.includes('permission') || err.message?.includes('policy')) {
+        errorDescription = 'Permission denied. Please check your account permissions.';
+      } else if (err.message?.includes('too large') || err.message?.includes('size')) {
+        errorDescription = 'Image file is too large. Please use an image smaller than 5MB.';
+      } else if (err.message?.includes('type') || err.message?.includes('format')) {
+        errorDescription = 'Invalid file format. Please use JPG, PNG, or WebP images.';
+      }
+      
       toast({
         title: 'Upload failed',
-        description: 'Could not upload avatar. Please try again.',
+        description: errorDescription,
         status: 'error',
-        duration: 5000,
+        duration: 8000,
         isClosable: true,
       });
       return currentProfile?.avatar_url || null;
