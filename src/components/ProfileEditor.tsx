@@ -164,7 +164,30 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
         .from('profile-images')
         .upload(filePath, avatarFile);
       
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Error uploading avatar:', uploadError);
+        
+        // Specific error handling for bucket not found
+        if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('bucket')) {
+          toast({
+            title: 'Storage bucket missing',
+            description: 'The profile-images bucket is not configured. Please contact support or visit /storage-diagnostic for troubleshooting.',
+            status: 'error',
+            duration: 10000,
+            isClosable: true,
+          });
+        } else {
+          toast({
+            title: 'Upload failed',
+            description: `Could not upload avatar: ${uploadError.message}. Please try again.`,
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+        
+        throw uploadError;
+      }
       
       // Get the public URL
       const { data } = supabase.storage
@@ -174,13 +197,44 @@ const ProfileEditor = ({ onSave }: ProfileEditorProps) => {
       return data.publicUrl;
     } catch (err) {
       console.error('Error uploading avatar:', err);
-      toast({
-        title: 'Upload failed',
-        description: 'Could not upload avatar. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // More specific error handling
+      if (err instanceof Error) {
+        if (err.message?.includes('Bucket not found') || err.message?.includes('bucket')) {
+          toast({
+            title: 'Storage bucket missing',
+            description: 'The profile-images bucket is not configured. Visit /storage-diagnostic to fix this issue.',
+            status: 'error',
+            duration: 10000,
+            isClosable: true,
+          });
+        } else if (err.message?.includes('row-level security')) {
+          toast({
+            title: 'Permission denied',
+            description: 'Storage permissions need to be configured. Please contact support.',
+            status: 'error',
+            duration: 8000,
+            isClosable: true,
+          });
+        } else {
+          toast({
+            title: 'Upload failed',
+            description: `Could not upload avatar: ${err.message}. Please try again.`,
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      } else {
+        toast({
+          title: 'Upload failed',
+          description: 'Could not upload avatar. Please try again.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+      
       return currentProfile?.avatar_url || null;
     } finally {
       setIsUploading(false);

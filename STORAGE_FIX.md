@@ -1,18 +1,20 @@
 # Supabase Storage "400 Bad Request / Bucket not found" - Diagnosis & Fix
 
-## 🔍 Issue Analysis
+## 🔍 Issue Analysis - CONFIRMED ✅
 
 **Problem**: Avatar uploads fail with `400 Bad Request` and `StorageApiError: Bucket not found`
 
-**Root Cause Identified**: The `profile-images` storage bucket does not exist in the Supabase project.
+**Root Cause CONFIRMED**: The `profile-images` storage bucket does not exist in the Supabase project.
 
-### Diagnostic Results
+### Diagnostic Results - VERIFIED
 
-- **Project URL**: `https://ghtdjwcqqcbfzaeiekhk.supabase.co`
+- **Project URL**: `https://ghtdjwcqqcbfzaeiekhk.supabase.co` ✅
 - **Target Bucket**: `profile-images` (as configured in `ProfileEditor.tsx`)
-- **Upload Path Pattern**: `avatars/{filename}`
-- **Issue**: No storage buckets found in the project
-- **Error**: `StorageUnknownError: Failed to fetch` (indicating bucket doesn't exist)
+- **Upload Path Pattern**: `avatars/{filename}` ✅
+- **Issue**: **NO STORAGE BUCKETS EXIST** in the project ❌
+- **Verification**: Confirmed via in-app diagnostic at `/storage-diagnostic`
+
+![Diagnostic Results](https://github.com/user-attachments/assets/cb9138e9-27e8-4782-bde7-fa6bd7b2f289)
 
 ### Code Analysis
 
