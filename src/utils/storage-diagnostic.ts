@@ -17,17 +17,34 @@ export async function diagnoseStorageIssue() {
     // Get project URL from config
     diagnosticResults.projectUrl = import.meta.env.VITE_SUPABASE_URL || 'Not configured';
     console.log(`📡 Project URL: ${diagnosticResults.projectUrl}`);
+    
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      diagnosticResults.errors.push('Missing environment variables - check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+    }
 
-    // Step 1: List all buckets
+    // Step 1: List all buckets with timeout
     console.log('\n🗂️ Step 1: Listing all storage buckets...');
     try {
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      
+      const bucketsPromise = supabase.storage.listBuckets();
+      
+      const { data: buckets, error: bucketsError } = await Promise.race([
+        bucketsPromise,
+        timeoutPromise
+      ]) as any;
       
       if (bucketsError) {
         diagnosticResults.errors.push(`List buckets: ${bucketsError.message}`);
         console.error('❌ Error listing buckets:', bucketsError);
+        
+        if (bucketsError.message.includes('fetch')) {
+          diagnosticResults.errors.push('Network connectivity issue - check Supabase project URL and network access');
+        }
       } else {
-        diagnosticResults.bucketsFound = buckets.map(b => b.name);
+        diagnosticResults.bucketsFound = buckets.map((b: any) => b.name);
         console.log(`✅ Found ${buckets.length} buckets:`, diagnosticResults.bucketsFound);
       }
     } catch (err: any) {
@@ -35,21 +52,35 @@ export async function diagnoseStorageIssue() {
       console.error('❌ Network error:', err);
     }
 
-    // Step 2: Test access to specific buckets
+    // Step 2: Test access to specific buckets with better error handling
     console.log('\n🔍 Step 2: Testing bucket access...');
-    const bucketsToTest = ['profile-images', 'avatars'];
+    const bucketsToTest = ['profile-images'];
+    
+    // Add any found buckets that might be alternative names
+    if (diagnosticResults.bucketsFound.includes('avatars')) {
+      bucketsToTest.push('avatars');
+    }
+    if (diagnosticResults.bucketsFound.includes('images')) {
+      bucketsToTest.push('images');
+    }
     
     for (const bucketName of bucketsToTest) {
       try {
         console.log(`  Testing "${bucketName}" bucket...`);
-        const { data, error } = await supabase.storage.from(bucketName).list();
+        const { data, error } = await supabase.storage.from(bucketName).list('avatars');
         
         if (error) {
           diagnosticResults.accessTests[bucketName] = { success: false, error: error.message };
           console.log(`  ❌ Cannot access "${bucketName}": ${error.message}`);
+          
+          if (error.message.includes('not found')) {
+            console.log(`  💡 Bucket "${bucketName}" does not exist`);
+          } else if (error.message.includes('permission')) {
+            console.log(`  💡 Permission issue with "${bucketName}" - check storage policies`);
+          }
         } else {
           diagnosticResults.accessTests[bucketName] = { success: true, fileCount: data.length };
-          console.log(`  ✅ Successfully accessed "${bucketName}" (${data.length} files)`);
+          console.log(`  ✅ Successfully accessed "${bucketName}" (${data.length} files in avatars folder)`);
         }
       } catch (err: any) {
         diagnosticResults.accessTests[bucketName] = { success: false, error: `Network error: ${err.message}` };
@@ -57,15 +88,17 @@ export async function diagnoseStorageIssue() {
       }
     }
 
-    // Step 3: Try to create missing buckets
-    console.log('\n🛠️ Step 3: Attempting to create missing buckets...');
+    // Step 3: Try to create missing buckets if profile-images doesn't exist
+    console.log('\n🛠️ Step 3: Checking bucket creation needs...');
     
-    if (!diagnosticResults.bucketsFound.includes('profile-images')) {
+    if (!diagnosticResults.bucketsFound.includes('profile-images') && 
+        !diagnosticResults.accessTests['profile-images']?.success) {
+      
       try {
         console.log('  Creating "profile-images" bucket...');
         const { error } = await supabase.storage.createBucket('profile-images', {
           public: true,
-          allowedMimeTypes: ['image/*'],
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'],
           fileSizeLimit: 5242880 // 5MB
         });
 
@@ -76,79 +109,113 @@ export async function diagnoseStorageIssue() {
           } else {
             diagnosticResults.createTests['profile-images'] = { success: false, error: error.message };
             console.log(`  ❌ Failed to create "profile-images": ${error.message}`);
+            
+            if (error.message.includes('permission')) {
+              console.log('  💡 Need service role key or storage admin permissions to create buckets');
+            }
           }
         } else {
           diagnosticResults.createTests['profile-images'] = { success: true };
           console.log('  ✅ Successfully created "profile-images" bucket');
-          // Re-test access
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for creation to propagate
-          const { data: testData, error: testError } = await supabase.storage.from('profile-images').list();
-          if (!testError) {
-            diagnosticResults.accessTests['profile-images'] = { success: true, fileCount: testData.length };
-            console.log('  ✅ Confirmed access to newly created bucket');
+          
+          // Re-test access after creation
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          try {
+            const { data: testData, error: testError } = await supabase.storage.from('profile-images').list();
+            if (!testError) {
+              diagnosticResults.accessTests['profile-images'] = { success: true, fileCount: testData.length };
+              console.log('  ✅ Confirmed access to newly created bucket');
+            }
+          } catch (reTestErr) {
+            console.log('  ⚠️ Could not verify new bucket access');
           }
         }
       } catch (err: any) {
         diagnosticResults.createTests['profile-images'] = { success: false, error: `Network error: ${err.message}` };
         console.log(`  ❌ Network error creating "profile-images": ${err.message}`);
       }
+    } else if (diagnosticResults.accessTests['profile-images']?.success) {
+      console.log('  ✅ "profile-images" bucket is already accessible');
     }
 
-    // Step 4: Test a small upload if possible
+    // Step 4: Test upload functionality if we have access
     console.log('\n📤 Step 4: Testing upload functionality...');
     
-    if (diagnosticResults.accessTests['profile-images']?.success) {
+    const accessibleBuckets = Object.entries(diagnosticResults.accessTests)
+      .filter(([_, test]) => test.success)
+      .map(([bucket, _]) => bucket);
+    
+    for (const bucketName of accessibleBuckets) {
       try {
         // Create a small test file
-        const testContent = new Blob(['test avatar'], { type: 'text/plain' });
-        const testFileName = `test-${Date.now()}.txt`;
+        const testContent = new Blob(['test-avatar-upload'], { type: 'text/plain' });
+        const testFileName = `diagnostic-test-${Date.now()}.txt`;
         const testPath = `avatars/${testFileName}`;
 
-        console.log(`  Testing upload to profile-images/${testPath}...`);
+        console.log(`  Testing upload to ${bucketName}/${testPath}...`);
         
         const { data, error } = await supabase.storage
-          .from('profile-images')
+          .from(bucketName)
           .upload(testPath, testContent);
 
         if (error) {
-          diagnosticResults.uploadTests['profile-images/avatars/'] = { success: false, error: error.message };
-          console.log(`  ❌ Upload failed: ${error.message}`);
+          diagnosticResults.uploadTests[`${bucketName}/avatars/`] = { success: false, error: error.message };
+          console.log(`  ❌ Upload failed to ${bucketName}: ${error.message}`);
+          
+          if (error.message.includes('policy')) {
+            console.log(`  💡 Check storage policies for ${bucketName} - may need INSERT permission for anon role`);
+          }
         } else {
-          diagnosticResults.uploadTests['profile-images/avatars/'] = { success: true, path: data.path };
-          console.log(`  ✅ Upload successful: ${data.path}`);
+          diagnosticResults.uploadTests[`${bucketName}/avatars/`] = { success: true, path: data.path };
+          console.log(`  ✅ Upload successful to ${bucketName}: ${data.path}`);
+          
+          // Test public URL generation
+          const { data: urlData } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(testPath);
+          console.log(`  ✅ Public URL: ${urlData.publicUrl}`);
           
           // Clean up test file
           try {
-            await supabase.storage.from('profile-images').remove([testPath]);
+            await supabase.storage.from(bucketName).remove([testPath]);
             console.log('  🗑️ Cleaned up test file');
           } catch (cleanupErr) {
             console.log('  ⚠️ Could not clean up test file (not critical)');
           }
         }
       } catch (err: any) {
-        diagnosticResults.uploadTests['profile-images/avatars/'] = { success: false, error: `Network error: ${err.message}` };
-        console.log(`  ❌ Network error during upload test: ${err.message}`);
+        diagnosticResults.uploadTests[`${bucketName}/avatars/`] = { success: false, error: `Network error: ${err.message}` };
+        console.log(`  ❌ Network error during upload test to ${bucketName}: ${err.message}`);
       }
     }
 
-    // Generate recommendations
+    // Generate comprehensive recommendations
     console.log('\n📊 Generating recommendations...');
     
     if (diagnosticResults.accessTests['profile-images']?.success) {
-      diagnosticResults.recommendations.push('✅ "profile-images" bucket exists and is accessible - configuration should work');
+      if (diagnosticResults.uploadTests['profile-images/avatars/']?.success) {
+        diagnosticResults.recommendations.push('✅ "profile-images" bucket exists, accessible, and upload works - avatar upload should work correctly');
+      } else {
+        diagnosticResults.recommendations.push('⚠️ "profile-images" bucket exists and is accessible but upload failed - check storage policies');
+        diagnosticResults.recommendations.push('💡 Add INSERT policy for authenticated users or anon role in Supabase Dashboard > Storage > Policies');
+      }
     } else if (diagnosticResults.createTests['profile-images']?.success) {
-      diagnosticResults.recommendations.push('✅ Successfully created "profile-images" bucket - retry the upload');
+      diagnosticResults.recommendations.push('✅ Successfully created "profile-images" bucket - retry the avatar upload');
     } else if (diagnosticResults.bucketsFound.includes('avatars')) {
-      diagnosticResults.recommendations.push('⚠️ Consider using "avatars" bucket instead of "profile-images"');
+      diagnosticResults.recommendations.push('⚠️ Consider using "avatars" bucket instead of "profile-images" - update ProfileEditor.tsx');
     } else {
-      diagnosticResults.recommendations.push('❌ Create "profile-images" bucket in Supabase dashboard or check permissions');
+      diagnosticResults.recommendations.push('❌ Create "profile-images" bucket manually in Supabase Dashboard > Storage > Buckets');
+      diagnosticResults.recommendations.push('💡 Set bucket as public and add policies for INSERT (upload) permissions');
     }
 
-    // Check upload functionality
-    if (diagnosticResults.uploadTests['profile-images/avatars/']?.success) {
-      diagnosticResults.recommendations.push('✅ Upload functionality working correctly');
-    } else if (Object.keys(diagnosticResults.uploadTests).length > 0) {
-      diagnosticResults.recommendations.push('❌ Upload functionality has issues - check storage policies and permissions');
+    // Network connectivity check
+    if (diagnosticResults.errors.some(e => e.includes('Network') || e.includes('fetch'))) {
+      diagnosticResults.recommendations.push('🌐 Check network connectivity to Supabase and verify project URL is correct');
+    }
+
+    // Environment variables check
+    if (diagnosticResults.errors.some(e => e.includes('environment'))) {
+      diagnosticResults.recommendations.push('🔧 Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set correctly in .env file');
     }
 
     console.log('\n📋 Summary:');
@@ -167,7 +234,18 @@ export async function fixStorageIssue(): Promise<boolean> {
   console.log('🔧 Attempting to fix storage issue...');
   
   try {
-    // Try to create the profile-images bucket
+    // First, check what buckets exist
+    console.log('🔍 Checking existing buckets...');
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.log('ℹ️ Cannot list buckets (may be permission limitation)');
+      // Continue with creation attempt even if listing fails
+    } else {
+      console.log(`Found ${buckets.length} existing buckets:`, buckets.map(b => b.name));
+    }
+
+    // Try to create the profile-images bucket with comprehensive error handling
     console.log('Creating "profile-images" bucket...');
     const { error } = await supabase.storage.createBucket('profile-images', {
       public: true,
@@ -175,34 +253,82 @@ export async function fixStorageIssue(): Promise<boolean> {
       fileSizeLimit: 5242880 // 5MB
     });
 
-    if (error && !error.message.includes('already exists')) {
-      console.error('❌ Failed to create bucket:', error.message);
-      return false;
+    let bucketAvailable = false;
+
+    if (error) {
+      if (error.message.includes('already exists')) {
+        console.log('✅ Bucket "profile-images" already exists');
+        bucketAvailable = true;
+      } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+        console.log('⚠️ Permission issue creating bucket - bucket may already exist');
+        // Test if we can access it even without creation permissions
+        bucketAvailable = true;
+      } else {
+        console.error('❌ Failed to create bucket:', error.message);
+        
+        // Try alternative: suggest using existing bucket if available
+        if (buckets && buckets.length > 0) {
+          console.log('💡 Consider using existing bucket:', buckets[0].name);
+        }
+        return false;
+      }
+    } else {
+      console.log('✅ Successfully created "profile-images" bucket');
+      bucketAvailable = true;
     }
 
-    console.log('✅ Bucket "profile-images" is now available');
-    
-    // Test upload functionality
-    const testContent = new Blob(['test'], { type: 'text/plain' });
-    const testPath = `avatars/test-${Date.now()}.txt`;
-    
-    const { error: uploadError } = await supabase.storage
-      .from('profile-images')
-      .upload(testPath, testContent);
+    if (bucketAvailable) {
+      // Test upload functionality with more detailed error reporting
+      console.log('📤 Testing upload functionality...');
+      const testContent = new Blob(['test-avatar-upload'], { type: 'text/plain' });
+      const testPath = `avatars/fix-test-${Date.now()}.txt`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(testPath, testContent);
 
-    if (uploadError) {
-      console.error('❌ Upload test failed:', uploadError.message);
-      return false;
+      if (uploadError) {
+        console.error('❌ Upload test failed:', uploadError.message);
+        console.log('🔍 Upload error details:', {
+          code: uploadError.name,
+          message: uploadError.message,
+          path: testPath
+        });
+        
+        // Provide specific guidance based on error type
+        if (uploadError.message.includes('Bucket not found')) {
+          console.log('💡 Bucket exists but may need proper configuration or policies');
+        } else if (uploadError.message.includes('permission') || uploadError.message.includes('policy')) {
+          console.log('💡 Check storage policies - anon key may need upload permissions');
+        }
+        
+        return false;
+      }
+
+      console.log('✅ Upload successful:', uploadData.path);
+
+      // Test public URL generation
+      const { data: urlData } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(testPath);
+      
+      console.log('✅ Public URL generated:', urlData.publicUrl);
+
+      // Clean up test file
+      try {
+        await supabase.storage.from('profile-images').remove([testPath]);
+        console.log('🗑️ Cleaned up test file');
+      } catch (cleanupErr) {
+        console.log('⚠️ Could not clean up test file (not critical)');
+      }
     }
-
-    // Clean up test file
-    await supabase.storage.from('profile-images').remove([testPath]);
     
-    console.log('✅ Storage issue has been fixed!');
+    console.log('🎉 Storage issue has been fixed!');
     return true;
 
   } catch (err: any) {
     console.error('❌ Error fixing storage issue:', err.message);
+    console.log('🔍 Full error details:', err);
     return false;
   }
 }
