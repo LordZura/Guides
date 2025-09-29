@@ -11,6 +11,7 @@ import TourDetail from './pages/TourDetails';
 import ProfilePage from './pages/Profile/[id]';
 import NotificationTestPanel from './components/NotificationTestPanel';
 import StorageDiagnostic from './components/StorageDiagnostic';
+import StorageDiagnosticEnhanced from './components/StorageDiagnosticEnhanced';
 import { diagnoseBuckets } from './utils/storage-diagnostic';
 
 // Placeholder components for routes not implemented in Subtask 1
@@ -52,6 +53,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/test-notifications" element={<NotificationTestPanel />} />
           <Route path="/storage-diagnostic" element={<StorageDiagnostic />} />
+          <Route path="/storage-diagnostic-enhanced" element={<StorageDiagnosticEnhanced />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
