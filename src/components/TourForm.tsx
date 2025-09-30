@@ -383,24 +383,30 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
       <form onSubmit={handleSubmit}>
         <VStack spacing={6} align="stretch">
           <FormControl isRequired isInvalid={!!errors.title}>
-            <FormLabel>Title</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Title</FormLabel>
             <Input 
               name="title"
               value={formData.title}
               onChange={handleInputChange}
               placeholder="Enter a catchy title for your tour"
+              size={{ base: "md", md: "lg" }}
+              minH={{ base: "44px", md: "48px" }}
+              borderRadius="lg"
             />
             <FormErrorMessage>{errors.title}</FormErrorMessage>
           </FormControl>
           
           <FormControl isRequired isInvalid={!!errors.description}>
-            <FormLabel>Description</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }}>Description</FormLabel>
             <Textarea 
               name="description"
               value={formData.description}
               onChange={handleInputChange}
               placeholder="Describe what makes your tour special"
-              rows={5}
+              rows={4}
+              size={{ base: "md", md: "lg" }}
+              borderRadius="lg"
+              minH={{ base: "100px", md: "120px" }}
             />
             <FormErrorMessage>{errors.description}</FormErrorMessage>
           </FormControl>
@@ -413,16 +419,16 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
           />
           
           <Flex gap={4} direction={{ base: 'column', md: 'row' }}>
-            <FormControl isRequired isInvalid={!!errors.duration}>
-              <FormLabel>Duration (hours)</FormLabel>
+            <FormControl isRequired isInvalid={!!errors.duration} flex="1">
+              <FormLabel fontSize={{ base: "sm", md: "md" }}>Duration (hours)</FormLabel>
               <NumberInput 
                 min={1} 
                 max={24}
                 value={formData.duration}
                 onChange={(_, value) => handleNumberInputChange('duration', value)}
-                size="sm"
+                size="md"
               >
-                <NumberInputField />
+                <NumberInputField minH="44px" borderRadius="lg" />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
                   <NumberDecrementStepper />
@@ -431,16 +437,16 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
               <FormErrorMessage>{errors.duration}</FormErrorMessage>
             </FormControl>
             
-            <FormControl isRequired isInvalid={!!errors.price}>
-              <FormLabel>Price ($)</FormLabel>
+            <FormControl isRequired isInvalid={!!errors.price} flex="1">
+              <FormLabel fontSize={{ base: "sm", md: "md" }}>Price ($)</FormLabel>
               <NumberInput 
                 min={0} 
                 max={10000}
                 value={formData.price}
                 onChange={(_, value) => handleNumberInputChange('price', value)}
-                size="sm"
+                size="md"
               >
-                <NumberInputField />
+                <NumberInputField minH="44px" borderRadius="lg" />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
                   <NumberDecrementStepper />
@@ -449,16 +455,16 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
               <FormErrorMessage>{errors.price}</FormErrorMessage>
             </FormControl>
             
-            <FormControl isRequired isInvalid={!!errors.capacity}>
-              <FormLabel>Capacity</FormLabel>
+            <FormControl isRequired isInvalid={!!errors.capacity} flex="1">
+              <FormLabel fontSize={{ base: "sm", md: "md" }}>Capacity</FormLabel>
               <NumberInput 
                 min={1} 
                 max={100}
                 value={formData.capacity}
                 onChange={(_, value) => handleNumberInputChange('capacity', value)}
-                size="sm"
+                size="md"
               >
-                <NumberInputField />
+                <NumberInputField minH="44px" borderRadius="lg" />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
                   <NumberDecrementStepper />
