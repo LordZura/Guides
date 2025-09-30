@@ -110,11 +110,24 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
   };
 
   return (
-    <Modal isOpen={true} onClose={onClose} isCentered size={{ base: "xs", sm: "md" }}>
+    <Modal 
+      isOpen={true} 
+      onClose={onClose} 
+      isCentered 
+      size={{ base: "full", sm: "md", md: "lg" }}
+      motionPreset="slideInBottom"
+    >
       <ModalOverlay />
-      <ModalContent mx={{ base: 4, sm: 0 }}>
-        <ModalHeader fontSize={{ base: "lg", md: "xl" }}>{tabIndex === 0 ? 'Welcome Back' : 'Create Account'}</ModalHeader>
-        <ModalCloseButton />
+      <ModalContent 
+        mx={{ base: 0, sm: 4 }}
+        my={{ base: 0, sm: 4 }}
+        maxH={{ base: "100vh", sm: "90vh" }}
+        overflowY="auto"
+      >
+        <ModalHeader fontSize={{ base: "xl", md: "2xl" }}>
+          {tabIndex === 0 ? 'Welcome Back' : 'Create Account'}
+        </ModalHeader>
+        <ModalCloseButton size="lg" mt={2} mr={2} />
         <ModalBody pb={6}>
           <Tabs index={tabIndex} onChange={setTabIndex} variant="line" colorScheme="primary" mb={4}>
             <TabList>
@@ -130,16 +143,38 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
                   </Alert>
                 )}
                 <form onSubmit={handleLogin}>
-                  <Stack spacing={{ base: 3, md: 4 }}>
+                  <Stack spacing={{ base: 4, md: 4 }}>
                     <FormControl isRequired>
                       <FormLabel htmlFor="email" fontSize={{ base: "sm", md: "md" }}>Email</FormLabel>
-                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} size={{ base: "md", md: "lg" }} />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        size="md"
+                        minH="48px"
+                      />
                     </FormControl>
                     <FormControl isRequired>
                       <FormLabel htmlFor="password" fontSize={{ base: "sm", md: "md" }}>Password</FormLabel>
-                      <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} size={{ base: "md", md: "lg" }} />
+                      <Input 
+                        id="password" 
+                        type="password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        size="md"
+                        minH="48px"
+                      />
                     </FormControl>
-                    <Button type="submit" colorScheme="primary" width="full" mt={4} isLoading={isLoading} size={{ base: "md", md: "lg" }}>
+                    <Button 
+                      type="submit" 
+                      colorScheme="primary" 
+                      width="full" 
+                      mt={4} 
+                      isLoading={isLoading} 
+                      size="lg"
+                      minH="48px"
+                    >
                       Sign In
                     </Button>
                   </Stack>
@@ -153,37 +188,82 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
                   </Alert>
                 )}
                 <form onSubmit={handleRegister}>
-                  <Stack spacing={{ base: 3, md: 4 }}>
+                  <Stack spacing={{ base: 4, md: 4 }}>
                     <FormControl as="fieldset">
                       <FormLabel as="legend" fontSize={{ base: "sm", md: "md" }}>I am a</FormLabel>
                       <RadioGroup value={role} onChange={(value) => setRole(value as UserRole)}>
                         <HStack spacing={{ base: 4, md: 6 }}>
-                          <Radio value="tourist" size={{ base: "sm", md: "md" }}>Tourist</Radio>
-                          <Radio value="guide" size={{ base: "sm", md: "md" }}>Guide</Radio>
+                          <Radio value="tourist" size="md">Tourist</Radio>
+                          <Radio value="guide" size="md">Guide</Radio>
                         </HStack>
                       </RadioGroup>
                     </FormControl>
                     <FormControl isRequired>
                       <FormLabel htmlFor="fullName" fontSize={{ base: "sm", md: "md" }}>Full Name</FormLabel>
-                      <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} size={{ base: "md", md: "lg" }} />
+                      <Input 
+                        id="fullName" 
+                        type="text" 
+                        value={fullName} 
+                        onChange={(e) => setFullName(e.target.value)} 
+                        size="md"
+                        minH="48px"
+                      />
                     </FormControl>
                     <FormControl isRequired>
                       <FormLabel htmlFor="regEmail" fontSize={{ base: "sm", md: "md" }}>Email</FormLabel>
-                      <Input id="regEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} size={{ base: "md", md: "lg" }} />
+                      <Input 
+                        id="regEmail" 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        size="md"
+                        minH="48px"
+                      />
                     </FormControl>
                     <FormControl>
                       <FormLabel htmlFor="phone" fontSize={{ base: "sm", md: "md" }}>Phone Number</FormLabel>
-                      <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Example: +1234567890" size={{ base: "md", md: "lg" }} />
+                      <Input 
+                        id="phone" 
+                        type="tel" 
+                        value={phone} 
+                        onChange={(e) => setPhone(e.target.value)} 
+                        placeholder="Example: +1234567890" 
+                        size="md"
+                        minH="48px"
+                      />
                     </FormControl>
                     <FormControl isRequired>
                       <FormLabel htmlFor="regPassword" fontSize={{ base: "sm", md: "md" }}>Password</FormLabel>
-                      <Input id="regPassword" type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} size={{ base: "md", md: "lg" }} />
+                      <Input 
+                        id="regPassword" 
+                        type="password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        minLength={6} 
+                        size="md"
+                        minH="48px"
+                      />
                     </FormControl>
                     <FormControl isRequired>
                       <FormLabel htmlFor="confirmPassword" fontSize={{ base: "sm", md: "md" }}>Confirm Password</FormLabel>
-                      <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} size={{ base: "md", md: "lg" }} />
+                      <Input 
+                        id="confirmPassword" 
+                        type="password" 
+                        value={confirmPassword} 
+                        onChange={(e) => setConfirmPassword(e.target.value)} 
+                        size="md"
+                        minH="48px"
+                      />
                     </FormControl>
-                    <Button type="submit" colorScheme="primary" width="full" mt={4} isLoading={isLoading} size={{ base: "md", md: "lg" }}>
+                    <Button 
+                      type="submit" 
+                      colorScheme="primary" 
+                      width="full" 
+                      mt={4} 
+                      isLoading={isLoading} 
+                      size="lg"
+                      minH="48px"
+                    >
                       Create Account
                     </Button>
                   </Stack>

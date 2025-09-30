@@ -51,7 +51,7 @@ const GuideCard = ({ guide }: GuideCardProps) => {
       borderColor="gray.200"
       position="relative"
     >
-      <Box position="relative" height="240px" overflow="hidden">
+      <Box position="relative" height={{ base: "200px", sm: "220px", md: "240px" }} overflow="hidden">
         <Image
           src={guide.avatar_url || DEFAULT_AVATAR_URL}
           alt={guide.full_name}
@@ -60,6 +60,9 @@ const GuideCard = ({ guide }: GuideCardProps) => {
           height="100%"
           transition="transform 0.3s ease"
           _hover={{ transform: 'scale(1.05)' }}
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            e.currentTarget.src = DEFAULT_AVATAR_URL;
+          }}
         />
         
         <Box

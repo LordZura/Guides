@@ -539,11 +539,26 @@ const Explore = () => {
   return (
     <Container maxW="container.xl" px={{ base: 3, sm: 4, md: 6 }} py={{ base: 4, md: 8 }}>
       <Box bg="white" borderRadius="xl" overflow="hidden" boxShadow="xl" border="1px" borderColor="gray.100">
-        <Box p={{ base: 4, sm: 6, md: 8 }} bgGradient="linear(135deg, primary.500, primary.700)" color="white" position="relative">
+        <Box p={{ base: 5, sm: 6, md: 8 }} bgGradient="linear(135deg, primary.500, primary.700)" color="white" position="relative">
           <Box position="absolute" top="0" left="0" w="full" h="full" bgGradient="linear(135deg, primary.500, transparent)" opacity="0.1" />
           <Box position="relative" zIndex="1">
-            <Heading as="h1" size={{ base: "lg", md: "xl" }} mb={3} fontWeight="black">Explore TourGuideHub</Heading>
-            <Text color="primary.50" fontSize={{ base: "md", md: "lg" }} maxW="md">Discover amazing guides, tours and travel stories from local experts</Text>
+            <Heading 
+              as="h1" 
+              fontSize={{ base: "2xl", sm: "3xl", md: "4xl" }} 
+              mb={3} 
+              fontWeight="black"
+              lineHeight="1.2"
+            >
+              Explore TourGuideHub
+            </Heading>
+            <Text 
+              color="primary.50" 
+              fontSize={{ base: "sm", sm: "md", md: "lg" }} 
+              maxW={{ base: "full", md: "md" }}
+              lineHeight="1.6"
+            >
+              Discover amazing guides, tours and travel stories from local experts
+            </Text>
             
             {isMobile && (
               <Button 
@@ -554,6 +569,7 @@ const Explore = () => {
                 onClick={onOpen}
                 borderRadius="full"
                 px={6}
+                minH="48px"
                 _hover={{ bg: 'whiteAlpha.200', transform: 'translateY(-1px)' }}
                 transition="all 0.2s"
               >
@@ -884,21 +900,28 @@ const Explore = () => {
       </Box>
       
       {/* Filter drawer - mobile only */}
-      <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+      <Drawer 
+        isOpen={isOpen} 
+        placement="right" 
+        onClose={onClose}
+        size={{ base: "full", sm: "sm" }}
+      >
         <DrawerOverlay />
         <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader>Filters</DrawerHeader>
+          <DrawerCloseButton size="lg" mt={2} mr={2} />
+          <DrawerHeader fontSize="xl" fontWeight="bold">Filters</DrawerHeader>
           
-          <DrawerBody>
-            <Stack spacing={4}>
+          <DrawerBody px={4} py={6}>
+            <VStack spacing={6} align="stretch">
               {/* Common filters for both tabs */}
               <FormControl>
-                <FormLabel>Language</FormLabel>
+                <FormLabel fontSize="sm" fontWeight="semibold">Language</FormLabel>
                 <Select 
                   placeholder="Any language"
                   value={selectedLanguage}
                   onChange={(e) => setSelectedLanguage(e.target.value)}
+                  size="md"
+                  borderRadius="lg"
                 >
                   {languages.map(lang => (
                     <option key={lang} value={lang}>{lang}</option>
@@ -909,11 +932,13 @@ const Explore = () => {
               {/* Location filter only for tours, not guides */}
               {tabIndex === 1 && (
                 <FormControl>
-                  <FormLabel>Location</FormLabel>
+                  <FormLabel fontSize="sm" fontWeight="semibold">Location</FormLabel>
                   <Select 
                     placeholder="Any location"
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
+                    size="md"
+                    borderRadius="lg"
                   >
                     {locations.map(loc => (
                       <option key={loc} value={loc}>{loc}</option>
@@ -934,14 +959,19 @@ const Explore = () => {
                   />
                   
                   <FormControl>
-                    <FormLabel>Minimum Reviews</FormLabel>
+                    <FormLabel fontSize="sm" fontWeight="semibold">Minimum Reviews</FormLabel>
                     <NumberInput 
                       min={0}
                       max={10000}
                       value={selectedReviewCount || ''}
                       onChange={(_, value) => setSelectedReviewCount(value || 0)}
+                      size="md"
                     >
-                      <NumberInputField placeholder="Enter minimum reviews" />
+                      <NumberInputField 
+                        placeholder="Enter minimum reviews"
+                        borderRadius="lg"
+                        minH="44px"
+                      />
                     </NumberInput>
                   </FormControl>
                 </>
@@ -960,22 +990,27 @@ const Explore = () => {
                       />
                       
                       <FormControl>
-                        <FormLabel>Minimum Reviews</FormLabel>
+                        <FormLabel fontSize="sm" fontWeight="semibold">Minimum Reviews</FormLabel>
                         <NumberInput 
                           min={0}
                           max={10000}
                           value={selectedReviewCount || ''}
                           onChange={(_, value) => setSelectedReviewCount(value || 0)}
+                          size="md"
                         >
-                          <NumberInputField placeholder="Enter minimum reviews" />
+                          <NumberInputField 
+                            placeholder="Enter minimum reviews"
+                            borderRadius="lg"
+                            minH="44px"
+                          />
                         </NumberInput>
                       </FormControl>
                     </>
                   )}
                   
                   <FormControl>
-                    <FormLabel>Price Range</FormLabel>
-                    <HStack spacing={2}>
+                    <FormLabel fontSize="sm" fontWeight="semibold">Price Range</FormLabel>
+                    <HStack spacing={3}>
                       <Box flex="1">
                         <Text fontSize="xs" color="gray.500" mb={1}>Min ($)</Text>
                         <NumberInput 
@@ -983,8 +1018,13 @@ const Explore = () => {
                           max={10000}
                           value={priceRange[0]}
                           onChange={(_, value) => setPriceRange([value || 20, priceRange[1]])}
+                          size="md"
                         >
-                          <NumberInputField placeholder="Min" />
+                          <NumberInputField 
+                            placeholder="Min"
+                            borderRadius="lg"
+                            minH="44px"
+                          />
                         </NumberInput>
                       </Box>
                       <Text color="gray.400" mt={6}>-</Text>
@@ -995,16 +1035,21 @@ const Explore = () => {
                           max={10000}
                           value={priceRange[1]}
                           onChange={(_, value) => setPriceRange([priceRange[0], value || 10000])}
+                          size="md"
                         >
-                          <NumberInputField placeholder="Max" />
+                          <NumberInputField 
+                            placeholder="Max"
+                            borderRadius="lg"
+                            minH="44px"
+                          />
                         </NumberInput>
                       </Box>
                     </HStack>
                   </FormControl>
                   
                   <FormControl>
-                    <FormLabel>Days Available</FormLabel>
-                    <VStack align="start" spacing={2}>
+                    <FormLabel fontSize="sm" fontWeight="semibold">Days Available</FormLabel>
+                    <VStack align="start" spacing={3}>
                       {DAYS_OF_WEEK.map((day, index) => (
                         <Checkbox
                           key={day}
@@ -1016,7 +1061,8 @@ const Explore = () => {
                               setSelectedDaysAvailable(selectedDaysAvailable.filter(d => d !== index));
                             }
                           }}
-                          size="sm"
+                          size="md"
+                          minH="44px"
                         >
                           {day}
                         </Checkbox>
@@ -1026,12 +1072,16 @@ const Explore = () => {
                 </>
               ) : null}
               
-              <Flex gap={2}>
+              <Flex gap={3} mt={4}>
                 <Button 
                   colorScheme="primary" 
                   flex="1"
                   onClick={applyFilters}
                   isLoading={isFiltering}
+                  minH="48px"
+                  fontSize="md"
+                  fontWeight="semibold"
+                  borderRadius="lg"
                 >
                   Apply Filters
                 </Button>
@@ -1039,11 +1089,14 @@ const Explore = () => {
                   variant="outline" 
                   colorScheme="primary"
                   onClick={clearFilters}
+                  minH="48px"
+                  fontSize="md"
+                  borderRadius="lg"
                 >
                   Clear
                 </Button>
               </Flex>
-            </Stack>
+            </VStack>
           </DrawerBody>
         </DrawerContent>
       </Drawer>
