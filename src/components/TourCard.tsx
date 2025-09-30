@@ -429,13 +429,15 @@ const TourCard = ({ tourId }: TourCardProps) => {
             as={RouterLink}
             to={`/tours/${tour.id}`}
             colorScheme="primary"
-            size={{ base: "sm", md: "sm" }}
+            size="md"
             borderRadius="full"
-            px={6}
+            px={8}
             fontWeight="semibold"
             _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
             transition="all 0.2s"
             width={{ base: "100%", sm: "auto" }}
+            minH="48px"
+            mt={{ base: 2, sm: 0 }}
           >
             View Details
           </Button>

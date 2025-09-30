@@ -400,10 +400,22 @@ const TourDetail = () => {
         </Box>
         
         {/* Booking/Offer Modal */}
-        <Modal isOpen={isOpen} onClose={onClose} size={{ base: "xs", sm: "md" }}>
+        <Modal 
+          isOpen={isOpen} 
+          onClose={onClose} 
+          size={{ base: "full", sm: "md", md: "lg" }}
+          motionPreset="slideInBottom"
+        >
           <ModalOverlay />
-          <ModalContent mx={{ base: 4, sm: 0 }}>
-            <ModalHeader fontSize={{ base: "lg", md: "xl" }}>{canOfferTour ? 'Offer This Tour' : 'Book This Tour'}</ModalHeader>
+          <ModalContent 
+            mx={{ base: 0, sm: 4 }}
+            my={{ base: 0, sm: 4 }}
+            maxH={{ base: "100vh", sm: "90vh" }}
+            overflowY="auto"
+          >
+            <ModalHeader fontSize={{ base: "lg", md: "xl" }}>
+              {canOfferTour ? 'Offer This Tour' : 'Book This Tour'}
+            </ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>
               <BookingForm

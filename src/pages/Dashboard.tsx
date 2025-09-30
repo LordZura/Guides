@@ -97,10 +97,10 @@ const Dashboard = () => {
     <ToursProvider>
       <BookingProvider>
         <PaymentStatsProvider>
-          <Container maxW="container.xl" p={4}>
+          <Container maxW="container.xl" p={{ base: 3, md: 4 }}>
           <Grid 
-            templateColumns={{ base: "1fr", lg: "320px 1fr" }}
-            gap={6}
+            templateColumns={{ base: "1fr", md: "280px 1fr", lg: "320px 1fr" }}
+            gap={{ base: 4, md: 6 }}
             alignItems="start"
           >
             {/* Profile Sidebar */}
@@ -111,7 +111,7 @@ const Dashboard = () => {
                     <Avatar 
                       src={profile.avatar_url || DEFAULT_AVATAR_URL} 
                       name={profile.full_name}
-                      size="xl"
+                      size={{ base: "lg", md: "xl" }}
                       mb={4}
                       border="4px"
                       borderColor="primary.100"

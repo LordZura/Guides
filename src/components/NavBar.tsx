@@ -20,11 +20,16 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { openAuthModal } = useModal();
   const navigate = useNavigate();
-  const { isOpen, onToggle } = useDisclosure();
+  const { isOpen, onToggle, onClose } = useDisclosure();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/explore');
+    onClose(); // Close mobile menu after sign out
+  };
+
+  const handleLinkClick = () => {
+    onClose(); // Close mobile menu after navigation
   };
 
   return (
@@ -117,6 +122,9 @@ const Navbar = () => {
           icon={isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />}
           variant="ghost"
           aria-label="Toggle Navigation"
+          aria-expanded={isOpen}
+          minH="44px"
+          minW="44px"
         />
       </Flex>
 
@@ -124,22 +132,22 @@ const Navbar = () => {
       <Collapse in={isOpen} animateOpacity>
         <Box pb={6} px={6} display={{ md: 'none' }} bg="white" borderTop="1px" borderColor="gray.100">
           <Stack spacing={1} pt={4}>
-            <Link as={RouterLink} to="/explore" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
+            <Link as={RouterLink} to="/explore" onClick={handleLinkClick} px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s" minH="48px">
               Explore
             </Link>
-            <Link as={RouterLink} to="/guides" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
+            <Link as={RouterLink} to="/guides" onClick={handleLinkClick} px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s" minH="48px">
               Guides
             </Link>
-            <Link as={RouterLink} to="/tours" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
+            <Link as={RouterLink} to="/tours" onClick={handleLinkClick} px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s" minH="48px">
               Tours
             </Link>
-            <Link as={RouterLink} to="/posts" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
+            <Link as={RouterLink} to="/posts" onClick={handleLinkClick} px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s" minH="48px">
               Posts
             </Link>
             
             {user ? (
               <>
-                <Link as={RouterLink} to="/dashboard" px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s">
+                <Link as={RouterLink} to="/dashboard" onClick={handleLinkClick} px={4} py={3} _hover={{ bg: 'primary.50', borderRadius: 'lg' }} display="block" fontWeight="semibold" transition="all 0.2s" minH="48px">
                   Dashboard
                 </Link>
                 <Button
@@ -153,13 +161,17 @@ const Navbar = () => {
                   color="primary.600"
                   _hover={{ bg: 'primary.50', borderRadius: 'lg' }}
                   transition="all 0.2s"
+                  minH="48px"
                 >
                   Sign Out
                 </Button>
               </>
             ) : (
               <Button
-                onClick={openAuthModal}
+                onClick={() => {
+                  openAuthModal();
+                  onClose();
+                }}
                 variant="ghost"
                 justifyContent="flex-start"
                 w="full"
@@ -169,6 +181,7 @@ const Navbar = () => {
                 color="primary.600"
                 _hover={{ bg: 'primary.50', borderRadius: 'lg' }}
                 transition="all 0.2s"
+                minH="48px"
               >
                 Get Started
               </Button>
