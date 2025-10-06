@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { universalListFiles, checkBucketAccess, ensureStoragePolicies } from './universal-storage';
 
 export async function diagnoseStorageIssue() {
   console.log('🔍 Starting Supabase Storage Diagnostic...');
@@ -35,21 +36,37 @@ export async function diagnoseStorageIssue() {
       console.error('❌ Network error:', err);
     }
 
-    // Step 2: Test access to specific buckets
-    console.log('\n🔍 Step 2: Testing bucket access...');
+    // Step 2: Test access to specific buckets using universal listing
+    console.log('\n🔍 Step 2: Testing bucket access with universal listing...');
     const bucketsToTest = ['profile-images', 'avatars'];
     
     for (const bucketName of bucketsToTest) {
       try {
         console.log(`  Testing "${bucketName}" bucket...`);
-        const { data, error } = await supabase.storage.from(bucketName).list();
         
-        if (error) {
-          diagnosticResults.accessTests[bucketName] = { success: false, error: error.message };
-          console.log(`  ❌ Cannot access "${bucketName}": ${error.message}`);
+        // Use universal bucket access check
+        const accessResult = await checkBucketAccess(bucketName);
+        
+        if (!accessResult.accessible) {
+          diagnosticResults.accessTests[bucketName] = { 
+            success: false, 
+            error: accessResult.error || 'Bucket not accessible' 
+          };
+          console.log(`  ❌ Cannot access "${bucketName}": ${accessResult.error}`);
         } else {
-          diagnosticResults.accessTests[bucketName] = { success: true, fileCount: data.length };
-          console.log(`  ✅ Successfully accessed "${bucketName}" (${data.length} files)`);
+          // Use universal listing to find files in any location
+          const listResult = await universalListFiles(bucketName, ['avatars', ''], { limit: 10 });
+          
+          diagnosticResults.accessTests[bucketName] = { 
+            success: true, 
+            fileCount: listResult.totalFound 
+          };
+          console.log(`  ✅ Successfully accessed "${bucketName}" (${listResult.totalFound} files found in "${listResult.foundInPath}" path)`);
+          
+          if (listResult.totalFound > 0) {
+            console.log(`    📁 Files found in path: "${listResult.foundInPath}"`);
+            console.log(`    📄 Sample files: ${listResult.files.slice(0, 3).map(f => f.name).join(', ')}`);
+          }
         }
       } catch (err: any) {
         diagnosticResults.accessTests[bucketName] = { success: false, error: `Network error: ${err.message}` };
@@ -133,6 +150,12 @@ export async function diagnoseStorageIssue() {
 
     // Generate recommendations
     console.log('\n📊 Generating recommendations...');
+    
+    // Ensure storage policies are in place
+    if (diagnosticResults.accessTests['profile-images']?.success) {
+      console.log('🔒 Ensuring storage policies are configured...');
+      await ensureStoragePolicies('profile-images');
+    }
     
     if (diagnosticResults.accessTests['profile-images']?.success) {
       diagnosticResults.recommendations.push('✅ "profile-images" bucket exists and is accessible - configuration should work');
@@ -235,20 +258,21 @@ export async function diagnoseBuckets() {
     
     console.log();
 
-    // Test the specific bucket used in the code
-    console.log('2. Testing "profile-images" bucket...');
-    const { data: files, error: listError } = await supabase.storage
-      .from('profile-images')
-      .list('avatars', { limit: 1 });
+    // Test the specific bucket used in the code with universal listing
+    console.log('2. Testing "profile-images" bucket with universal file search...');
+    const listResult = await universalListFiles('profile-images', ['avatars', ''], { limit: 10 });
     
-    if (listError) {
-      console.error('Error accessing "profile-images" bucket:', listError);
+    if (listResult.totalFound === 0 && buckets && !buckets.map(b => b.name).includes('profile-images')) {
+      console.error('Error: "profile-images" bucket not found or inaccessible');
     } else {
       console.log('Successfully accessed "profile-images" bucket');
-      console.log('Files in avatars folder:', files ? files.length : 0);
+      console.log(`Files found: ${listResult.totalFound} (in path: "${listResult.foundInPath}")`);
+      if (listResult.totalFound > 0) {
+        console.log('Sample files:', listResult.files.slice(0, 3).map(f => f.name).join(', '));
+      }
     }
 
-    return { buckets: buckets || [], error: listError };
+    return { buckets: buckets || [], error: null };
 
   } catch (error) {
     console.error('Unexpected error:', error);

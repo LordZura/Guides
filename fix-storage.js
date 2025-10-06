@@ -140,6 +140,8 @@ fixStorageIssue()
     } else {
       console.log('\n❌ Fix failed. Please check the errors above.');
       console.log('💡 You may need to create the bucket manually in the Supabase Dashboard.');
+      console.log('💡 After creating the bucket, run the SQL in sql/storage-policies.sql');
+      console.log('💡 The app now uses universal storage functions that work with any file structure.');
     }
   })
   .catch(error => {
