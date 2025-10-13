@@ -240,9 +240,11 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       if (err && typeof err === 'object' && 'details' in err) console.error('Error details:', err.details);
       if (err && typeof err === 'object' && 'hint' in err) console.error('Error hint:', err.hint);
       
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create booking';
+      
       return { 
         success: false, 
-        error: err.message || 'Failed to create booking'
+        error: errorMessage
       };
     }
   };
@@ -273,9 +275,6 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      console.log(`Updating booking ${bookingId} to status: ${status}`);
-      console.log(`Current user: ${user.id}, Role: ${profile?.role}`);
-      
       // For debugging: verify the booking exists and the user has permission
       const { data: bookingCheck, error: checkError } = await supabase
         .from('bookings')
@@ -291,8 +290,6 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       if (!bookingCheck) {
         throw new Error(`Booking with ID ${bookingId} not found`);
       }
-      
-      console.log('Booking to update:', bookingCheck);
       
       // Check role-based permissions to give more specific error messages
       if (profile?.role === 'tourist' && bookingCheck.tourist_id !== user.id) {
@@ -310,7 +307,6 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
 
       // Special handling for tourists accepting offered bookings
       if (profile?.role === 'tourist' && bookingCheck.status === 'offered' && status === 'accepted') {
-        console.log('Tourist accepting an offered booking - this should be allowed');
         // Verify this is indeed an offered booking for this tourist
         if (bookingCheck.tourist_id !== user.id) {
           throw new Error('You can only accept bookings offered to you');

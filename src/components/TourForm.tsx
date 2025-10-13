@@ -336,13 +336,13 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
         errorMessage = err.message;
       }
       
-      if (err.details) {
-        errorDetails = err.details;
+      if (err && typeof err === 'object' && 'details' in err) {
+        errorDetails = (err as any).details;
         console.error('Error details:', errorDetails);
       }
       
-      if (err.hint) {
-        console.error('Error hint:', err.hint);
+      if (err && typeof err === 'object' && 'hint' in err) {
+        console.error('Error hint:', (err as any).hint);
       }
       
       // Log the complete tourData for debugging
