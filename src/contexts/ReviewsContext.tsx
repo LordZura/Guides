@@ -180,7 +180,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
    */
   const addReview = async (reviewData: ReviewData) => {
     setIsLoading(true);
-    let validationResults: any = null;
+    let validationResults: { isValid: boolean; reason?: string; conflictingReviews?: Review[] } | null = null;
     
     try {
       // Enhanced debug logging for review submission
@@ -404,11 +404,11 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
   /**
    * Get a user-friendly error message based on the error context
    */
-  const getErrorMessage = (error: any, reviewData: ReviewData, conflictingReviews?: any[]): { title: string; description: string } => {
+  const getErrorMessage = (error: unknown, reviewData: ReviewData, conflictingReviews?: Review[]): { title: string; description: string } => {
     const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
     
     // Check for specific error codes
-    if (error?.code === 'P0001') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P0001') {
       return {
         title: 'Review Already Exists',
         description: `You have already reviewed this ${targetLabel}. Each ${targetLabel} can only be reviewed once per user.`
@@ -451,7 +451,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
   /**
    * Enhanced validation and debugging for review conflicts
    */
-  const validateReviewRequest = async (reviewData: ReviewData): Promise<{ isValid: boolean; reason?: string; conflictingReviews?: any[] }> => {
+  const validateReviewRequest = async (reviewData: ReviewData): Promise<{ isValid: boolean; reason?: string; conflictingReviews?: Review[] }> => {
     try {
       console.log('🔍 Validating review request:', reviewData);
 

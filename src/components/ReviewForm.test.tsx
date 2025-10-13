@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
 import ReviewForm from './ReviewForm';
 
 // Mock dependencies
@@ -26,23 +27,23 @@ vi.mock('../contexts/BookingContext', () => ({
 }));
 
 vi.mock('@chakra-ui/react', () => ({
-  Box: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-  FormControl: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  FormLabel: ({ children, ...props }: any) => <label {...props}>{children}</label>,
-  FormErrorMessage: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  Textarea: ({ ...props }: any) => <textarea {...props} />,
-  HStack: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  Text: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+  Box: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
+  Button: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <button {...props}>{children}</button>,
+  FormControl: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
+  FormLabel: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <label {...props}>{children}</label>,
+  FormErrorMessage: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
+  Textarea: ({ ...props }: Record<string, unknown>) => <textarea {...props} />,
+  HStack: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
+  Text: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <span {...props}>{children}</span>,
   useToast: () => vi.fn(),
-  Alert: ({ children, ...props }: any) => <div role="alert" {...props}>{children}</div>,
+  Alert: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div role="alert" {...props}>{children}</div>,
   AlertIcon: () => <span>!</span>,
-  AlertTitle: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  AlertDescription: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  AlertTitle: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
+  AlertDescription: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
 }));
 
 vi.mock('./StarRating', () => ({
-  default: ({ onChange, ...props }: any) => 
+  default: ({ onChange, ...props }: { onChange: (rating: number) => void } & Record<string, unknown>) => 
     <div data-testid="star-rating" onClick={() => onChange(5)} {...props}>Star Rating</div>
 }));
 

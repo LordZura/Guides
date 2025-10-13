@@ -136,12 +136,13 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         setIncomingBookings(incoming);
         setOutgoingBookings(outgoing);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching bookings:', err);
-      setError(err.message || 'Failed to load bookings');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load bookings';
+      setError(errorMessage);
       toast({
         title: 'Error loading bookings',
-        description: err.message || 'An unexpected error occurred',
+        description: errorMessage || 'An unexpected error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -233,11 +234,11 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
         success: true,
         booking: data as Booking
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating booking:', err);
       // Log detailed error information for debugging
-      if (err.details) console.error('Error details:', err.details);
-      if (err.hint) console.error('Error hint:', err.hint);
+      if (err && typeof err === 'object' && 'details' in err) console.error('Error details:', err.details);
+      if (err && typeof err === 'object' && 'hint' in err) console.error('Error hint:', err.hint);
       
       return { 
         success: false, 
@@ -423,13 +424,13 @@ export const BookingProvider = ({ children }: { children: ReactNode }) => {
       setOutgoingBookings(prev => updateBookingInList(prev));
 
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating booking status:', err);
       
       // Provide a more user-friendly error message
       let errorMessage = 'An unexpected error occurred while updating the booking';
       
-      if (err.message) {
+      if (err instanceof Error && err.message) {
         errorMessage = err.message;
         
         // Special case for the specific error we're fixing

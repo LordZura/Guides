@@ -325,14 +325,14 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
       }
       
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving tour:', err);
       
       // Provide more detailed error information
       let errorMessage = 'An unexpected error occurred. Please try again.';
       let errorDetails = '';
       
-      if (err.message) {
+      if (err instanceof Error && err.message) {
         errorMessage = err.message;
       }
       

@@ -215,11 +215,11 @@ const TouristTourRequestForm = ({ onSuccess, onCancel }: TouristTourRequestFormP
       });
       
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating tour request:', err);
       toast({
         title: 'Error posting tour request',
-        description: err.message || 'Failed to post tour request. Please try again.',
+        description: err instanceof Error ? err.message : 'Failed to post tour request. Please try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,

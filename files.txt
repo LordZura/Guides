@@ -1,4 +1,0 @@
-/src/pages/Guides.tsx
-/src/components/GuideCard.tsx
-/src/components/TourCard.tsx
-/src/components/Filters.tsx
