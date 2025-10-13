@@ -4,7 +4,7 @@ import tsParser from '@typescript-eslint/parser';
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js', '*.config.cjs', 'verify-booking-fix.js'],
+    ignores: ['dist/**', 'node_modules/**', '*.config.js', '*.config.cjs', 'verify-booking-fix.js', 'fix-storage.js'],
   },
   js.configs.recommended,
   {

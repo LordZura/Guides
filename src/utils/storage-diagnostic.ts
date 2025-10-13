@@ -121,7 +121,7 @@ export async function diagnoseStorageIssue() {
           try {
             await supabase.storage.from('profile-images').remove([testPath]);
             console.log('  🗑️ Cleaned up test file');
-          } catch (cleanupErr) {
+          } catch {
             console.log('  ⚠️ Could not clean up test file (not critical)');
           }
         }
