@@ -29,6 +29,9 @@ import {
   Icon,
   Link,
   useToast,
+  VStack,
+  HStack,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import { AddIcon, EditIcon } from "@chakra-ui/icons";
 import { MdLanguage, MdLocationOn, MdPerson } from "react-icons/md";
@@ -54,6 +57,7 @@ const Dashboard = () => {
   } = useDisclosure();
   const cardBg = useColorModeValue("white", "gray.700");
   const toast = useToast();
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   // Track active tab index to optimize rendering
   const [activeTabIndex, setActiveTabIndex] = useState(0);
@@ -76,7 +80,6 @@ const Dashboard = () => {
 
   const handleEditComplete = () => {
     setIsEditing(false);
-    // Instead of forcing a page reload, we just show a success toast
     toast({
       title: "Profile updated",
       status: "success",
@@ -103,7 +106,7 @@ const Dashboard = () => {
     <ToursProvider>
       <BookingProvider>
         <PaymentStatsProvider>
-          <Container maxW="container.xl" p={{ base: 3, md: 4 }}>
+          <Container maxW="container.xl" p={{ base: 2, md: 4 }}>
             <Grid
               templateColumns={{
                 base: "1fr",
@@ -124,17 +127,21 @@ const Dashboard = () => {
                 >
                   <CardHeader pb={4}>
                     <Flex direction="column" align="center" textAlign="center">
-                      {/* Use boxSize for responsive sizing (Avatar.size isn't reliably responsive) */}
                       <Avatar
                         src={profile.avatar_url || DEFAULT_AVATAR_URL}
                         name={profile.full_name}
-                        boxSize={{ base: "56px", md: "80px" }}
+                        boxSize={{ base: "80px", md: "100px" }}
                         mb={4}
                         borderWidth="4px"
                         borderColor="primary.100"
                       />
 
-                      <Heading size="md" mb={2} color="gray.800">
+                      <Heading 
+                        size={{ base: "md", md: "lg" }} 
+                        mb={2} 
+                        color="gray.800"
+                        fontSize={{ base: "lg", md: "xl" }}
+                      >
                         {profile.full_name}
                       </Heading>
 
@@ -143,7 +150,7 @@ const Dashboard = () => {
                           profile.role === "guide" ? "green" : "blue"
                         }
                         mt={2}
-                        fontSize="xs"
+                        fontSize={{ base: "xs", md: "sm" }}
                         px={3}
                         py={1}
                         borderRadius="full"
@@ -154,19 +161,21 @@ const Dashboard = () => {
 
                       <Button
                         leftIcon={<EditIcon />}
-                        size="sm"
+                        size={{ base: "md", md: "sm" }}
                         variant="outline"
                         colorScheme="primary"
                         mt={4}
                         onClick={handleEditClick}
                         borderRadius="full"
-                        px={4}
+                        px={{ base: 6, md: 4 }}
+                        minH="48px"
                         _hover={{
                           transform: "translateY(-1px)",
                           boxShadow: "md",
                         }}
                         transition="all 0.2s"
-                        fontSize="sm"
+                        fontSize={{ base: "md", md: "sm" }}
+                        w="full"
                       >
                         Edit Profile
                       </Button>
@@ -174,17 +183,17 @@ const Dashboard = () => {
                   </CardHeader>
 
                   <CardBody pt={4}>
-                    <Stack spacing={4}>
+                    <Stack spacing={{ base: 4, md: 4 }}>
                       {profile.phone && (
                         <Flex align="center">
                           <Icon
                             as={MdPerson}
                             color="primary.500"
                             mr={3}
-                            boxSize="4"
+                            boxSize="5"
                           />
                           <Text
-                            fontSize="sm"
+                            fontSize={{ base: "md", md: "sm" }}
                             fontWeight="medium"
                             color="gray.700"
                           >
@@ -199,10 +208,10 @@ const Dashboard = () => {
                             as={MdLocationOn}
                             color="primary.500"
                             mr={3}
-                            boxSize="4"
+                            boxSize="5"
                           />
                           <Text
-                            fontSize="sm"
+                            fontSize={{ base: "md", md: "sm" }}
                             fontWeight="medium"
                             color="gray.700"
                           >
@@ -217,10 +226,10 @@ const Dashboard = () => {
                             as={MdLanguage}
                             color="primary.500"
                             mr={3}
-                            boxSize="4"
+                            boxSize="5"
                           />
                           <Text
-                            fontSize="sm"
+                            fontSize={{ base: "md", md: "sm" }}
                             fontWeight="medium"
                             color="gray.700"
                           >
@@ -235,11 +244,15 @@ const Dashboard = () => {
                             fontWeight="semibold"
                             mb={2}
                             color="gray.700"
-                            fontSize="sm"
+                            fontSize={{ base: "md", md: "sm" }}
                           >
                             Bio
                           </Text>
-                          <Text fontSize="sm" color="gray.600" lineHeight="1.5">
+                          <Text 
+                            fontSize={{ base: "md", md: "sm" }} 
+                            color="gray.600" 
+                            lineHeight="1.6"
+                          >
                             {profile.bio}
                           </Text>
                         </Box>
@@ -252,11 +265,15 @@ const Dashboard = () => {
                             fontWeight="semibold"
                             mb={2}
                             color="gray.700"
-                            fontSize="sm"
+                            fontSize={{ base: "md", md: "sm" }}
                           >
                             Specialties
                           </Text>
-                          <Text fontSize="sm" color="gray.600" lineHeight="1.5">
+                          <Text 
+                            fontSize={{ base: "md", md: "sm" }} 
+                            color="gray.600" 
+                            lineHeight="1.6"
+                          >
                             {profile.specialties}
                           </Text>
                         </Box>
@@ -265,10 +282,18 @@ const Dashboard = () => {
                       {/* Tourist-specific fields */}
                       {profile.role === "tourist" && profile.interests && (
                         <Box>
-                          <Text fontWeight="medium" mb={1} fontSize="sm">
+                          <Text 
+                            fontWeight="medium" 
+                            mb={1} 
+                            fontSize={{ base: "md", md: "sm" }}
+                          >
                             Interests
                           </Text>
-                          <Text fontSize="sm">{profile.interests}</Text>
+                          <Text 
+                            fontSize={{ base: "md", md: "sm" }}
+                          >
+                            {profile.interests}
+                          </Text>
                         </Box>
                       )}
 
@@ -279,7 +304,7 @@ const Dashboard = () => {
                           color="primary.600"
                           fontWeight="semibold"
                           _hover={{ color: "primary.700" }}
-                          fontSize="sm"
+                          fontSize={{ base: "md", md: "sm" }}
                         >
                           Browse{" "}
                           {profile.role === "guide" ? "Tour Requests" : "Tours"}{" "}
@@ -305,9 +330,10 @@ const Dashboard = () => {
                       gap={{ base: 4, sm: 0 }}
                     >
                       <Heading
-                        size="lg"
+                        size={{ base: "lg", md: "lg" }}
                         color="gray.800"
                         textAlign={{ base: "center", sm: "left" }}
+                        fontSize={{ base: "xl", md: "2xl" }}
                       >
                         {profile.role === "guide"
                           ? "Guide Dashboard"
@@ -318,15 +344,16 @@ const Dashboard = () => {
                         leftIcon={<AddIcon />}
                         colorScheme="primary"
                         onClick={onCreateOpen}
-                        size="md"
+                        size={{ base: "lg", md: "md" }}
                         borderRadius="full"
-                        px={6}
+                        px={{ base: 8, md: 6 }}
+                        minH="48px"
                         _hover={{
                           transform: "translateY(-1px)",
                           boxShadow: "lg",
                         }}
                         transition="all 0.2s"
-                        fontSize="sm"
+                        fontSize={{ base: "md", md: "sm" }}
                         w={{ base: "full", sm: "auto" }}
                       >
                         {profile.role === "guide"
@@ -353,42 +380,45 @@ const Dashboard = () => {
                       >
                         <Tab
                           fontWeight="semibold"
-                          py={3}
-                          px={4}
+                          py={{ base: 4, md: 3 }}
+                          px={{ base: 6, md: 4 }}
                           _selected={{
                             color: "primary.600",
                             borderBottomColor: "primary.500",
                           }}
                           minW="fit-content"
-                          fontSize="sm"
+                          fontSize={{ base: "md", md: "sm" }}
+                          minH="48px"
                         >
                           My{" "}
                           {profile.role === "guide" ? "Tours" : "Tour Requests"}
                         </Tab>
                         <Tab
                           fontWeight="semibold"
-                          py={3}
-                          px={4}
+                          py={{ base: 4, md: 3 }}
+                          px={{ base: 6, md: 4 }}
                           _selected={{
                             color: "primary.600",
                             borderBottomColor: "primary.500",
                           }}
                           minW="fit-content"
-                          fontSize="sm"
+                          fontSize={{ base: "md", md: "sm" }}
+                          minH="48px"
                         >
                           My Bookings
                         </Tab>
                         {profile.role === "guide" && (
                           <Tab
                             fontWeight="semibold"
-                            py={3}
-                            px={4}
+                            py={{ base: 4, md: 3 }}
+                            px={{ base: 6, md: 4 }}
                             _selected={{
                               color: "primary.600",
                               borderBottomColor: "primary.500",
                             }}
                             minW="fit-content"
-                            fontSize="sm"
+                            fontSize={{ base: "md", md: "sm" }}
+                            minH="48px"
                           >
                             Payment Tracking
                           </Tab>
@@ -397,12 +427,12 @@ const Dashboard = () => {
 
                       <TabPanels minH={{ base: "auto", md: "400px" }}>
                         {/* Tours/Tour Requests Panel */}
-                        <TabPanel p={4}>
+                        <TabPanel p={{ base: 4, md: 4 }}>
                           {activeTabIndex === 0 && <ToursList />}
                         </TabPanel>
 
                         {/* Bookings Panel */}
-                        <TabPanel p={4}>
+                        <TabPanel p={{ base: 4, md: 4 }}>
                           {activeTabIndex === 1 && (
                             <BookingsList showTitle={false} />
                           )}
@@ -410,7 +440,7 @@ const Dashboard = () => {
 
                         {/* Payment Tracking Panel - Guide Only */}
                         {profile.role === "guide" && (
-                          <TabPanel p={4}>
+                          <TabPanel p={{ base: 4, md: 4 }}>
                             {activeTabIndex === 2 && <PaymentTracker />}
                           </TabPanel>
                         )}
@@ -423,25 +453,30 @@ const Dashboard = () => {
           </Container>
 
           {/* Create Tour Modal */}
-          {/* Use a fixed modal size prop and control responsiveness through ModalContent */}
           <Modal
             isOpen={isCreateOpen}
             onClose={onCreateClose}
-            size="xl"
+            size={{ base: "full", md: "xl" }}
             scrollBehavior="inside"
           >
             <ModalOverlay />
             <ModalContent
               borderRadius={{ base: "none", md: "xl" }}
-              maxH="90vh"
+              maxH={{ base: "100vh", md: "90vh" }}
               overflowY="auto"
-              // Responsive width: full on small screens, constrained at md+
               w={{ base: "100vw", md: "xl" }}
               maxW={{ base: "100vw", md: "xl" }}
               mx={{ base: 0, md: "auto" }}
+              my={{ base: 0, md: 0 }}
             >
-              <ModalCloseButton />
-              <ModalBody pt={10} pb={6}>
+              <ModalCloseButton 
+                size="lg" 
+                mt={{ base: 2, md: 4 }} 
+                mr={{ base: 2, md: 4 }}
+                minH="48px"
+                minW="48px"
+              />
+              <ModalBody pt={{ base: 16, md: 10 }} pb={6}>
                 <TourForm
                   onSuccess={handleCreateSuccess}
                   onCancel={onCreateClose}
