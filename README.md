@@ -62,15 +62,17 @@ npm run lint     # ESLint (currently 101 warnings)
 - **Responsive UI**: Mobile-first with Chakra UI
 
 ### ⚠️ Known Issues
-- **Linting**: 101 warnings (console.log statements, TypeScript any types)
+- **Linting**: 52 warnings (reduced from 160 - remaining in test helpers and contexts)
 - **Bundle Size**: 1MB+ (needs code splitting)
-- **SQL Migrations**: Conflicting versions of review functions
+- **SQL Migrations**: Conflicting versions of review functions (documented in SQL_REFERENCE.md)
 - **Security Warnings**: 2 moderate npm audit issues
 
 ### 🔄 Recent Changes
+- **Code Cleanup**: Removed 160+ ESLint warnings, cleaned up console.log statements and TypeScript 'any' types
+- **Documentation**: Consolidated from 15+ markdown files to 4 core documentation files
+- **Removed Files**: Deleted obsolete diagnostic scripts and components
 - Complex review aggregation system (files 013-017)
 - Booking policy fixes for tourist acceptance (file 018)
-- Debug logging for booking updates (file 019)
 - Unique review constraints (file 020)
 
 ## 🗂️ Project Structure for Agents
@@ -81,8 +83,8 @@ npm run lint     # ESLint (currently 101 warnings)
 │   ├── components/           # 29 React components
 │   │   ├── AuthModal.tsx     # Auth with role selection
 │   │   ├── BookingForm.tsx   # Booking creation/management  
-│   │   ├── TourCard.tsx     # Tour display (has test warnings)
-│   │   ├── ReviewForm.tsx   # Review submission (many console.logs)
+│   │   ├── TourCard.tsx      # Tour display with reviews
+│   │   ├── ReviewForm.tsx    # Review submission
 │   │   └── ...
 │   ├── pages/               # 5 main pages
 │   │   ├── Dashboard.tsx    # Role-specific dashboards
@@ -91,10 +93,10 @@ npm run lint     # ESLint (currently 101 warnings)
 │   │   └── ...
 │   ├── contexts/            # 8 React contexts
 │   │   ├── AuthProvider.tsx    # User state management
-│   │   ├── BookingContext.tsx  # Booking logic (has any types)
+│   │   ├── BookingContext.tsx  # Booking logic
 │   │   ├── ToursContext.tsx    # Tour data management
 │   │   └── ...
-│   ├── db/migrations/       # 21 SQL files (see SQL_REFERENCE.md)
+│   ├── db/migrations/       # 22 SQL files (see SQL_REFERENCE.md)
 │   ├── lib/                 # Core utilities
 │   │   ├── supabaseClient.ts  # Supabase configuration
 │   │   ├── api.ts           # API helper functions

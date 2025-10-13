@@ -325,24 +325,24 @@ const TourForm = ({ onSuccess, onCancel, tourId }: TourFormProps) => {
       }
       
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving tour:', err);
       
       // Provide more detailed error information
       let errorMessage = 'An unexpected error occurred. Please try again.';
       let errorDetails = '';
       
-      if (err.message) {
+      if (err instanceof Error && err.message) {
         errorMessage = err.message;
       }
       
-      if (err.details) {
-        errorDetails = err.details;
+      if (err && typeof err === 'object' && 'details' in err) {
+        errorDetails = (err as any).details;
         console.error('Error details:', errorDetails);
       }
       
-      if (err.hint) {
-        console.error('Error hint:', err.hint);
+      if (err && typeof err === 'object' && 'hint' in err) {
+        console.error('Error hint:', (err as any).hint);
       }
       
       // Log the complete tourData for debugging

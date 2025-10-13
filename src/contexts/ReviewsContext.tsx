@@ -54,6 +54,13 @@ export interface ReviewData {
   tour_id?: string;
 }
 
+interface ConflictReview {
+  type: string;
+  message: string;
+  reviews?: any[];
+  tours?: any[];
+}
+
 interface ReviewsContextType {
   reviews: Review[];
   isLoading: boolean;
@@ -180,21 +187,15 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
    */
   const addReview = async (reviewData: ReviewData) => {
     setIsLoading(true);
-    let validationResults: any = null;
+    let validationResults: { isValid: boolean; reason?: string; conflictingReviews?: ConflictReview[] } | null = null;
     
     try {
-      // Enhanced debug logging for review submission
-      console.log('📝 Attempting to add review:', {
-        reviewData,
-        timestamp: new Date().toISOString()
-      });
-
       // Enhanced validation with conflict detection
       validationResults = await validateReviewRequest(reviewData);
       
       if (!validationResults.isValid) {
         const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
-        console.warn('⚠️ Review validation failed:', {
+        console.warn('Review validation failed:', {
           reviewData,
           reason: validationResults.reason,
           conflictingReviews: validationResults.conflictingReviews
@@ -209,19 +210,13 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (validationResults.conflictingReviews && validationResults.conflictingReviews.length > 0) {
-        console.log('📊 Review context information:', validationResults.conflictingReviews);
-      }
-
-      console.log('✨ Proceeding with review insertion...');
-
       // Insert review
       const { error } = await supabase
         .from('reviews')
         .insert([reviewData]);
 
       if (error) {
-        console.error('💥 Database error inserting review:', {
+        console.error('Database error inserting review:', {
           error,
           reviewData,
           errorCode: error.code,
@@ -230,8 +225,6 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         });
         throw error;
       }
-
-      console.log('✅ Review successfully inserted');
 
       // Send notification
       if (reviewData.target_type === 'tour') {
@@ -303,13 +296,6 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
          err.message.includes('idx_reviews_unique_reviewer_target') ||
          (err as any)?.code === 'P0001' ||
          (err as any)?.code === '23505'); // PostgreSQL unique violation error code
-      
-      console.log('🔍 Duplicate review check:', {
-        isDuplicateReview,
-        errorCode: (err as any)?.code,
-        errorMessage: (err as any)?.message,
-        reviewData
-      });
       
       if (isDuplicateReview) {        
         console.warn('⚠️ Showing duplicate review error to user:', {
@@ -404,18 +390,18 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
   /**
    * Get a user-friendly error message based on the error context
    */
-  const getErrorMessage = (error: any, reviewData: ReviewData, conflictingReviews?: any[]): { title: string; description: string } => {
+  const getErrorMessage = (error: unknown, reviewData: ReviewData, conflictingReviews?: ConflictReview[]): { title: string; description: string } => {
     const targetLabel = reviewData.target_type === 'guide' ? 'guide' : 'tour';
     
     // Check for specific error codes
-    if (error?.code === 'P0001') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P0001') {
       return {
         title: 'Review Already Exists',
         description: `You have already reviewed this ${targetLabel}. Each ${targetLabel} can only be reviewed once per user.`
       };
     }
 
-    if (error?.code === '23505' || error?.message?.includes('unique constraint')) {
+    if (error && typeof error === 'object' && (('code' in error && error.code === '23505') || ('message' in error && typeof error.message === 'string' && error.message.includes('unique constraint')))) {
       // Enhanced message with context if available
       let description = `You have already reviewed this ${targetLabel}.`;
       
@@ -435,7 +421,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // Generic database error
-    if (error?.message) {
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
       return {
         title: 'Review Submission Failed',
         description: error.message
@@ -451,10 +437,8 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
   /**
    * Enhanced validation and debugging for review conflicts
    */
-  const validateReviewRequest = async (reviewData: ReviewData): Promise<{ isValid: boolean; reason?: string; conflictingReviews?: any[] }> => {
+  const validateReviewRequest = async (reviewData: ReviewData): Promise<{ isValid: boolean; reason?: string; conflictingReviews?: ConflictReview[] }> => {
     try {
-      console.log('🔍 Validating review request:', reviewData);
-
       // Check for exact duplicate
       const exactDuplicate = await hasUserReviewed(
         reviewData.reviewer_id,
@@ -481,8 +465,6 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         return { isValid: true }; // Allow to proceed if we can't validate
       }
 
-      console.log('📊 All user reviews:', allUserReviews);
-
       // Check for potential confusion scenarios
       const potentialConflicts = [];
 
@@ -495,8 +477,6 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
           .single();
 
         if (tourData) {
-          console.log('🎫 Tour information:', tourData);
-          
           const guideReviews = allUserReviews?.filter(r => 
             r.target_type === 'guide' && 
             r.target_id === tourData.creator_id
@@ -537,7 +517,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (potentialConflicts.length > 0) {
-        console.log('⚠️ Potential review conflicts detected (but allowing):', potentialConflicts);
+        console.warn('Potential review conflicts detected (but allowing):', potentialConflicts);
       }
 
       return {
@@ -562,14 +542,6 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Enhanced debug logging
-      console.log('🔍 Checking if user has reviewed:', {
-        userId,
-        targetId,
-        targetType,
-        timestamp: new Date().toISOString()
-      });
-
       const { data, error } = await supabase
         .from('reviews')
         .select('id, reviewer_id, target_id, target_type, created_at')
@@ -579,7 +551,7 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
         .limit(1);
 
       if (error) {
-        console.error('❌ Database error checking if user has reviewed:', {
+        console.error('Database error checking if user has reviewed:', {
           error,
           query: { userId, targetId, targetType }
         });
@@ -587,12 +559,6 @@ export const ReviewsProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const hasReviewed = data && data.length > 0;
-      
-      console.log('✅ Review check result:', {
-        hasReviewed,
-        existingReviews: data,
-        query: { userId, targetId, targetType }
-      });
       
       return hasReviewed;
     } catch (err) {
