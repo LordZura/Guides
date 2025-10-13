@@ -29,9 +29,6 @@ import {
   Icon,
   Link,
   useToast,
-  VStack,
-  HStack,
-  useBreakpointValue,
 } from "@chakra-ui/react";
 import { AddIcon, EditIcon } from "@chakra-ui/icons";
 import { MdLanguage, MdLocationOn, MdPerson } from "react-icons/md";
@@ -57,7 +54,6 @@ const Dashboard = () => {
   } = useDisclosure();
   const cardBg = useColorModeValue("white", "gray.700");
   const toast = useToast();
-  const isMobile = useBreakpointValue({ base: true, md: false });
 
   // Track active tab index to optimize rendering
   const [activeTabIndex, setActiveTabIndex] = useState(0);

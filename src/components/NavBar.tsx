@@ -10,7 +10,6 @@ import {
   Link,
   useDisclosure,
   HStack,
-  useBreakpointValue,
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthProvider';
@@ -22,7 +21,6 @@ const Navbar = () => {
   const { openAuthModal } = useModal();
   const navigate = useNavigate();
   const { isOpen, onToggle, onClose } = useDisclosure();
-  const isMobile = useBreakpointValue({ base: true, md: false });
 
   const handleSignOut = async () => {
     await signOut();
