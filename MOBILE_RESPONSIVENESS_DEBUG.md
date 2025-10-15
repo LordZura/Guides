@@ -331,7 +331,60 @@ The main content area has padding-top defined in TWO places:
 
 ## Low Priority Issues (Good to Know)
 
-### 7. Media Query Breakpoint Overlap ℹ️ **LOW**
+### 7. Global overflow-x: hidden May Hide Content ℹ️ **LOW**
+
+**Severity**: LOW - Usually fine, but can hide legitimate content  
+**Impact**: Horizontal scrolling is completely disabled, may hide wide content
+
+**Problem in `src/index.css` (lines 7-10 and 24-29):**
+```css
+html { 
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  /* ... */
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+```
+
+**Why This Could Be Problematic:**
+- `overflow-x: hidden` on both html and body completely disables horizontal scrolling
+- If any element genuinely needs to be wider (like a wide table or code block), it will be cut off
+- Users cannot scroll to see hidden content
+- Better approach is to prevent overflow rather than hide it
+
+**What Could Go Wrong:**
+1. A data table with many columns gets cut off - users can't see all data
+2. A code snippet in documentation is too wide - part is hidden
+3. A wide image or diagram is cropped unexpectedly
+4. Pre-formatted text blocks are cut off
+
+**Current Mitigation:**
+- The `max-width: 100vw` helps prevent elements from being wider than viewport
+- Most components use responsive design and don't exceed viewport width
+- In practice, this works fine for this application
+
+**Fix Recommended (Optional):**
+- Remove `overflow-x: hidden` from global styles
+- Add it only to specific containers that need it
+- Or keep it but document the decision and potential edge cases
+
+**Assessment**: Low priority because:
+- The app is well-designed and elements don't exceed viewport width
+- This is a common pattern (though not always best practice)
+- No evidence of cut-off content in current implementation
+- More of a "good to know" than an actual bug
+
+**Files to Review:**
+- `src/index.css` - Lines 9 and 28
+
+---
+
+### 8. Media Query Breakpoint Overlap ℹ️ **LOW**
 
 **Severity**: LOW - Minor potential for 1px overlap  
 **Impact**: At exactly 768px width, both mobile and desktop styles might apply
@@ -357,7 +410,7 @@ The main content area has padding-top defined in TWO places:
 
 ---
 
-### 8. Tab List Scrolling on Mobile ℹ️ **INFO**
+### 9. Tab List Scrolling on Mobile ℹ️ **INFO**
 
 **Severity**: NONE - Actually implemented correctly  
 **Impact**: None - just documenting good implementation
