@@ -85,4 +85,9 @@ body {
   img, video, iframe {
     max-width: 100%;
   }
+  
+  img, video {
+    height: auto;
+    object-fit: contain;
+  }
 }
