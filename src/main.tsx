@@ -118,13 +118,6 @@ const theme = extendTheme({
   },
 });
 
-// Add viewport meta tag for mobile
-const viewportMeta = document.createElement("meta");
-viewportMeta.name = "viewport";
-viewportMeta.content =
-  "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no";
-document.head.appendChild(viewportMeta);
-
 // Mount the React app into #root
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
