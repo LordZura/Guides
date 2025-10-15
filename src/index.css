@@ -35,18 +35,8 @@ body {
   outline-offset: 2px;
 }
 
-/* Mobile-friendly touch targets */
+/* Mobile-friendly touch targets and text sizing */
 @media (max-width: 768px) {
-  button, 
-  [role="button"], 
-  .chakra-button,
-  input[type="submit"],
-  input[type="button"] {
-    min-height: 48px !important;
-    min-width: 48px !important;
-    font-size: 16px !important;
-  }
-  
   /* Ensure text is readable on mobile */
   body {
     font-size: 16px;
@@ -90,119 +80,9 @@ body {
   }
 }
 
-/* Prevent horizontal overflow on mobile */
+/* Prevent horizontal overflow on mobile - targeted approach */
 @media (max-width: 768px) {
-  * {
+  img, video, iframe {
     max-width: 100%;
-    box-sizing: border-box;
-  }
-  
-  /* Ensure containers don't overflow */
-  .chakra-container {
-    max-width: 100vw !important;
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-  }
-  
-  /* Fix modal overflow */
-  .chakra-modal__content {
-    max-width: 100vw !important;
-    max-height: 100vh !important;
-  }
-}
-
-/* Improve mobile modal experience */
-@media (max-width: 768px) {
-  .chakra-modal__overlay {
-    padding: 0 !important;
-  }
-  
-  .chakra-modal__content {
-    margin: 0 !important;
-    border-radius: 0 !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-  }
-}
-
-/* Better mobile input styling */
-@media (max-width: 768px) {
-  input, textarea, select {
-    font-size: 16px !important; /* Prevent zoom on iOS */
-    border-radius: 8px !important;
-    min-height: 48px !important;
-  }
-  
-  /* Better mobile form controls */
-  .chakra-input, 
-  .chakra-textarea, 
-  .chakra-select {
-    min-height: 48px !important;
-    font-size: 16px !important;
-  }
-}
-
-/* Mobile card improvements */
-@media (max-width: 768px) {
-  .chakra-card {
-    margin: 8px 0 !important;
-    border-radius: 12px !important;
-  }
-  
-  .chakra-card__body {
-    padding: 16px !important;
-  }
-}
-
-/* Mobile navigation improvements */
-@media (max-width: 768px) {
-  nav {
-    position: fixed !important;
-    top: 0 !important;
-    width: 100% !important;
-    z-index: 1000 !important;
-  }
-  
-  /* Ensure main content doesn't hide under fixed nav */
-  main {
-    padding-top: 80px !important;
-  }
-}
-
-/* Better mobile grid layouts */
-@media (max-width: 768px) {
-  .chakra-grid {
-    gap: 16px !important;
-  }
-  
-  .chakra-grid-item {
-    min-width: 0 !important; /* Allow flex shrinking */
-  }
-}
-
-/* Mobile avatar improvements */
-@media (max-width: 768px) {
-  .chakra-avatar {
-    border-radius: 12px !important;
-  }
-}
-
-/* Better mobile button styling */
-@media (max-width: 768px) {
-  .chakra-button {
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-    padding: 12px 24px !important;
-  }
-}
-
-/* Mobile text improvements */
-@media (max-width: 768px) {
-  h1, h2, h3, h4, h5, h6 {
-    line-height: 1.3 !important;
-  }
-  
-  p {
-    line-height: 1.6 !important;
   }
 }
