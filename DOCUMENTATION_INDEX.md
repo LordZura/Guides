@@ -8,7 +8,7 @@
 
 ### 🎯 Primary Documents
 
-#### 1. **AI_RECREATION_PROMPT.md** (49KB)
+#### 1. **AI_RECREATION_PROMPT.md** (50KB)
 **The Complete Blueprint**
 
 This is the main document for AI assistants to recreate the entire TourGuideHub platform from scratch.
@@ -32,7 +32,7 @@ This is the main document for AI assistants to recreate the entire TourGuideHub 
 
 ---
 
-#### 2. **QUICK_RECREATION_GUIDE.md** (11KB)
+#### 2. **QUICK_RECREATION_GUIDE.md** (12KB)
 **The Fast Reference**
 
 A condensed version of the full prompt for quick lookups and rapid development.
@@ -51,7 +51,7 @@ A condensed version of the full prompt for quick lookups and rapid development.
 
 ---
 
-#### 3. **ARCHITECTURE_DIAGRAMS.md** (33KB)
+#### 3. **ARCHITECTURE_DIAGRAMS.md** (47KB)
 **The Visual Guide**
 
 ASCII diagrams and flowcharts showing system architecture and data flows.
@@ -184,15 +184,15 @@ These files already existed and provide context about the current implementation
 
 | Document | Size | Purpose | Audience |
 |----------|------|---------|----------|
-| AI_RECREATION_PROMPT.md | 49KB | Complete specification | AI assistants, new developers |
-| QUICK_RECREATION_GUIDE.md | 11KB | Fast reference | Experienced developers |
-| ARCHITECTURE_DIAGRAMS.md | 33KB | Visual documentation | All developers, planners |
+| AI_RECREATION_PROMPT.md | 50KB | Complete specification | AI assistants, new developers |
+| QUICK_RECREATION_GUIDE.md | 12KB | Fast reference | Experienced developers |
+| ARCHITECTURE_DIAGRAMS.md | 47KB | Visual documentation | All developers, planners |
 | README.md | - | Project overview | Everyone |
 | SQL_REFERENCE.md | - | Database guide | Database developers |
 | CONTRIBUTING.md | - | Dev guidelines | Contributors |
 | DEVELOPMENT_GUIDE.md | - | Command reference | Active developers |
 
-**Total New Documentation:** ~93KB of detailed specifications
+**Total New Documentation:** ~119KB of detailed specifications
 
 ---
 
@@ -346,7 +346,7 @@ If you're using this documentation to recreate the project:
 
 This documentation package represents a complete analysis and specification of the TourGuideHub platform. It includes:
 
-- **93KB+ of new documentation**
+- **119KB+ of new documentation**
 - **3 major documentation files**
 - **Complete technical specifications**
 - **Visual architecture diagrams**
