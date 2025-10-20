@@ -373,62 +373,90 @@ const Dashboard = () => {
                         borderBottomColor="gray.200"
                         overflowX="auto"
                         overflowY="hidden"
+                        flexWrap={{ base: "nowrap", md: "wrap" }}
+                        css={{
+                          '&::-webkit-scrollbar': {
+                            height: '4px',
+                          },
+                          '&::-webkit-scrollbar-thumb': {
+                            background: 'rgba(0, 0, 0, 0.3)',
+                            borderRadius: '4px',
+                          },
+                        }}
                       >
                         <Tab
                           fontWeight="semibold"
-                          py={{ base: 4, md: 3 }}
-                          px={{ base: 6, md: 4 }}
+                          py={{ base: 3, md: 3 }}
+                          px={{ base: 4, md: 4 }}
                           _selected={{
                             color: "primary.600",
                             borderBottomColor: "primary.500",
                           }}
-                          minW="fit-content"
-                          fontSize={{ base: "md", md: "sm" }}
+                          minW={{ base: "auto", md: "fit-content" }}
+                          fontSize={{ base: "sm", md: "sm" }}
                           minH="48px"
+                          whiteSpace="nowrap"
+                          flex={{ base: "0 0 auto", md: "initial" }}
                         >
                           My{" "}
                           {profile.role === "guide" ? "Tours" : "Tour Requests"}
                         </Tab>
                         <Tab
                           fontWeight="semibold"
-                          py={{ base: 4, md: 3 }}
-                          px={{ base: 6, md: 4 }}
+                          py={{ base: 3, md: 3 }}
+                          px={{ base: 4, md: 4 }}
                           _selected={{
                             color: "primary.600",
                             borderBottomColor: "primary.500",
                           }}
-                          minW="fit-content"
-                          fontSize={{ base: "md", md: "sm" }}
+                          minW={{ base: "auto", md: "fit-content" }}
+                          fontSize={{ base: "sm", md: "sm" }}
                           minH="48px"
+                          whiteSpace="nowrap"
+                          flex={{ base: "0 0 auto", md: "initial" }}
                         >
                           My Bookings
                         </Tab>
                         {profile.role === "guide" && (
                           <Tab
                             fontWeight="semibold"
-                            py={{ base: 4, md: 3 }}
-                            px={{ base: 6, md: 4 }}
+                            py={{ base: 3, md: 3 }}
+                            px={{ base: 4, md: 4 }}
                             _selected={{
                               color: "primary.600",
                               borderBottomColor: "primary.500",
                             }}
-                            minW="fit-content"
-                            fontSize={{ base: "md", md: "sm" }}
+                            minW={{ base: "auto", md: "fit-content" }}
+                            fontSize={{ base: "sm", md: "sm" }}
                             minH="48px"
+                            whiteSpace="nowrap"
+                            flex={{ base: "0 0 auto", md: "initial" }}
                           >
                             Payment Tracking
                           </Tab>
                         )}
                       </TabList>
 
-                      <TabPanels minH={{ base: "auto", md: "400px" }}>
+                      <TabPanels 
+                        minH={{ base: "auto", md: "400px" }}
+                        maxW="100%"
+                        overflowX="hidden"
+                      >
                         {/* Tours/Tour Requests Panel */}
-                        <TabPanel p={{ base: 4, md: 4 }}>
+                        <TabPanel 
+                          p={{ base: 4, md: 4 }}
+                          maxW="100%"
+                          overflowX="auto"
+                        >
                           {activeTabIndex === 0 && <ToursList />}
                         </TabPanel>
 
                         {/* Bookings Panel */}
-                        <TabPanel p={{ base: 4, md: 4 }}>
+                        <TabPanel 
+                          p={{ base: 4, md: 4 }}
+                          maxW="100%"
+                          overflowX="auto"
+                        >
                           {activeTabIndex === 1 && (
                             <BookingsList showTitle={false} />
                           )}
@@ -436,7 +464,11 @@ const Dashboard = () => {
 
                         {/* Payment Tracking Panel - Guide Only */}
                         {profile.role === "guide" && (
-                          <TabPanel p={{ base: 4, md: 4 }}>
+                          <TabPanel 
+                            p={{ base: 4, md: 4 }}
+                            maxW="100%"
+                            overflowX="auto"
+                          >
                             {activeTabIndex === 2 && <PaymentTracker />}
                           </TabPanel>
                         )}
