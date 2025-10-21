@@ -386,16 +386,16 @@ const Dashboard = () => {
                       >
                         <Tab
                           fontWeight="semibold"
-                          py={{ base: 1, md: 1 }}
-                          px={{ base: 2, md: 2 }}
+                          py={{ base: 3, md: 3 }}
+                          px={{ base: 4, md: 4 }}
                           _selected={{
                             color: "primary.600",
                             borderBottomColor: "primary.500",
                           }}
                           minW={{ base: "auto", md: "fit-content" }}
                           fontSize={{ base: "sm", md: "sm" }}
-                          minH="20px"
-                          whiteSpace="wrap"
+                          minH="48px"
+                          whiteSpace="nowrap"
                           flex={{ base: "0 0 auto", md: "initial" }}
                         >
                           My{" "}
