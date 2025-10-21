@@ -1,35 +1,42 @@
-/* Enhanced global reset and base styles */
+/* index.css - improved responsive defaults and targeted fixes */
 
-* { 
-  box-sizing: border-box; 
+/* === Base reset === */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-html { 
+html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
-  max-width: 100vw;
+  /* debugging: DO NOT hide overflow globally while fixing layout */
+  /* overflow-x: hidden; */
+  /* max-width: 100vw; */
 }
 
-html, body, #root { 
-  height: 100%; 
-  margin: 0; 
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
 }
 
 body {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   color: #111827;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Mobile optimizations */
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
-  overflow-x: hidden;
-  max-width: 100vw;
+  /* allow horizontal scroll to appear while debugging root cause */
+  /* overflow-x: hidden; */
+  /* max-width: 100vw; */
 }
 
-/* Enhanced global styles for better UX */
+/* Focus indicator for accessibility */
 *:focus {
   outline: 2px solid #3182ce;
   outline-offset: 2px;
@@ -37,16 +44,15 @@ body {
 
 /* Mobile-friendly touch targets and text sizing */
 @media (max-width: 768px) {
-  /* Ensure text is readable on mobile */
   body {
     font-size: 16px;
   }
-  
+
   /* Better tab scrolling on mobile */
   .chakra-tabs__tablist::-webkit-scrollbar {
     height: 4px;
   }
-  
+
   .chakra-tabs__tablist::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.3);
     border-radius: 4px;
@@ -58,16 +64,13 @@ body {
   width: 8px;
   height: 8px;
 }
-
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
-
 ::-webkit-scrollbar-thumb {
   background: #cbd5e0;
   border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
 }
@@ -80,14 +83,102 @@ body {
   }
 }
 
-/* Prevent horizontal overflow on mobile - targeted approach */
+/* Ensure media elements are constrained */
 @media (max-width: 768px) {
-  img, video, iframe {
+  img,
+  video,
+  iframe {
     max-width: 100%;
   }
-  
-  img, video {
+  img,
+  video {
     height: auto;
     object-fit: contain;
   }
 }
+
+/* ============================
+   RESPONSIVE FIXES (TARGETED)
+   ============================ */
+
+/* Allow Chakra flex/grid/stack children to shrink — fixes min-width overflow problems */
+.chakra-stack > *,
+.chakra-flex > *,
+.chakra-grid > *,
+.chakra-tabs__tablist > * {
+  min-width: 0;
+}
+
+/* Ensure headings/titles (tour cards and other headings) wrap and don't force horizontal scroll */
+.tour-card-title,
+.chakra-heading,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* Allow badges / inline chips to wrap rather than forming one long row */
+.tour-card .badges-wrap,
+.tour-card .badge,
+.badges-wrap,
+.badge {
+  display: inline-block;
+  white-space: normal;
+}
+
+/* Ensure cards don't overflow their parent and are constrained to full width */
+.tour-card,
+.chakra-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Slightly reduce padding / font-size on very narrow screens to avoid overflow */
+@media (max-width: 420px) {
+  .tour-card {
+    padding: 0.6rem !important;
+  }
+  .tour-card-title {
+    font-size: 1.05rem !important;
+  }
+}
+
+/* Wrap long text inside inline elements (safety) */
+.tour-card,
+.tour-card * {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Utility: prevent elements from forcing an overly large min-width
+   Use these on component wrappers if needed as a class alternative to React props */
+.shrinkable > * {
+  min-width: 0;
+}
+
+/* ============================
+   OPTIONAL: DEBUG / STRONG FALLBACK
+   (Use temporarily to confirm external CSS is winning)
+   ============================
+*/
+/*
+.chakra-stack > *, .chakra-flex > *, .chakra-grid > * {
+  min-width: 0 !important;
+}
+
+.tour-card-title, .chakra-heading {
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  white-space: normal !important;
+}
+*/
+
+/* End of file */
