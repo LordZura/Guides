@@ -2,31 +2,43 @@
 <html lang="en">
   <head>
     <script type="text/javascript">
-    // Single-page apps for GitHub Pages
-    // MIT License
-    // https://github.com/rafgraph/spa-github-pages
-    (function(l) {
-      if (l.search[1] === '/' ) {
-        var decoded = l.search.slice(1).split('&').map(function(s) { 
-          return s.replace(/~and~/g, '&')
-        }).join('?');
-        window.history.replaceState(null, null,
-          l.pathname.slice(0, -1) + decoded + l.hash
-        );
-      }
-    }(window.location))
-  </script>
+      // Single-page apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <!-- DO NOT set X-Frame-Options via meta — must be set via server response header -->
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- favicon: leave as relative; Vite will update references during build -->
+    <link rel="icon" type="image/svg+xml" href="/Guides/vite.svg" />
+
     <title>TourGuideHub</title>
   </head>
   <body>
     <div id="root"></div>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <script type="module" src="./src/main.tsx"></script>
+
+    <!--
+      IMPORTANT:
+      - During development (vite dev server) Vite injects module entries and you'll see a script tag like:
+          <script type="module" src="/src/main.tsx"></script>
+        That's fine only for dev.
+      - For production, run `npm run build` and deploy the generated `dist/` to GitHub Pages (or your host).
+      - Do NOT deploy the raw repository index.html that references /src/main.tsx; browsers will fetch .tsx sources directly and fail MIME checking.
+    -->
   </body>
 </html>
