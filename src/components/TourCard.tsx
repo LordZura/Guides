@@ -17,7 +17,6 @@ import {
 } from "@chakra-ui/react";
 import {
   MdAccessTime,
-  MdAttachMoney,
   MdCalendarToday,
   MdGroup,
   MdLocationOn,
@@ -92,7 +91,7 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
           } else {
             profileData = profileResult.data;
           }
-        } catch (profileError) {
+        } catch {
           profileData = { full_name: "Unknown Guide", avatar_url: null };
         }
 
