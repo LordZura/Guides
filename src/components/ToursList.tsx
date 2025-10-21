@@ -39,6 +39,7 @@ import {
 import { useTours, Tour } from '../contexts/ToursContext';
 import { useAuth } from '../contexts/AuthProvider';
 import TourForm from './TourForm';
+import TourDetailsModal from './TourDetailsModal';
 
 /**
  * ToursList (updated)
@@ -65,6 +66,17 @@ const ToursList: React.FC = () => {
     onOpen: onEditOpen,
     onClose: onEditClose,
   } = useDisclosure();
+
+  const {
+    isOpen: isDetailsOpen,
+    onOpen: onDetailsOpen,
+    onClose: onDetailsClose,
+  } = useDisclosure();
+
+  const handleViewDetailsClick = (tour: Tour) => {
+    setSelectedTour(tour);
+    onDetailsOpen();
+  };
 
   const handleEditClick = (tour: Tour) => {
     setSelectedTour(tour);
@@ -180,14 +192,7 @@ const ToursList: React.FC = () => {
                   <MenuList>
                     <MenuItem
                       icon={<ViewIcon />}
-                      onClick={() =>
-                        toast({
-                          title: "View details",
-                          description: "This feature will be available soon",
-                          status: "info",
-                          duration: 3000,
-                        })
-                      }
+                      onClick={() => handleViewDetailsClick(tour)}
                     >
                       View Details
                     </MenuItem>
@@ -297,6 +302,15 @@ const ToursList: React.FC = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      {/* Tour Details Modal */}
+      {selectedTour && (
+        <TourDetailsModal
+          isOpen={isDetailsOpen}
+          onClose={onDetailsClose}
+          tourId={selectedTour.id}
+        />
+      )}
     </Stack>
   );
 };
