@@ -8,7 +8,6 @@ import {
   Button,
   Stack,
   IconButton,
-  Collapse,
   Link,
   useDisclosure,
   HStack,
@@ -24,6 +23,12 @@ import {
   Spacer,
   VisuallyHidden,
   type LinkProps,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerCloseButton,
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import { FiSearch, FiChevronDown } from 'react-icons/fi';
@@ -64,7 +69,7 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { openAuthModal } = useModal();
   const navigate = useNavigate();
-  const { isOpen, onToggle, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const bg = useColorModeValue('rgba(255,255,255,0.85)', 'rgba(26,32,44,0.85)');
   const border = useColorModeValue('gray.200', 'gray.700');
@@ -73,7 +78,7 @@ const Navbar = () => {
     try {
       await signOut();
     } catch (err) {
-      // you can log or show toast here; avoid crashing if signOut fails
+      // avoid crashing if signOut fails; optionally report error
       // console.error('Sign out error', err);
     } finally {
       navigate('/explore');
@@ -86,8 +91,6 @@ const Navbar = () => {
     onClose();
   };
 
-  // Safely derive a display name from whatever the auth user object provides.
-  // Use `as any` here because your Auth user type (from context) may be a custom shape.
   const displayName =
     (user as any)?.name ||
     (user as any)?.displayName ||
@@ -152,7 +155,13 @@ const Navbar = () => {
         {/* Middle: search (hidden on very small screens) */}
         <Box display={{ base: 'none', sm: 'block' }} mx={6} flex="1">
           <InputGroup maxW="540px" w="100%">
-            <InputLeftElement pointerEvents="none" children={<FiSearch />} />
+            {/* Icon wrapped in a full-height centered box to vertically align correctly */}
+            <InputLeftElement pointerEvents="none">
+              <Box h="100%" display="flex" alignItems="center" justifyContent="center" pl={2}>
+                <FiSearch />
+              </Box>
+            </InputLeftElement>
+
             <Input
               placeholder="Search guides, tours, posts..."
               variant="filled"
@@ -226,7 +235,7 @@ const Navbar = () => {
         <IconButton
           aria-label="Toggle menu"
           display={{ base: 'flex', md: 'none' }}
-          onClick={onToggle}
+          onClick={() => (isOpen ? onClose() : onOpen())}
           icon={isOpen ? <CloseIcon w={5} h={5} /> : <HamburgerIcon w={6} h={6} />}
           variant="ghost"
           ml={2}
@@ -235,89 +244,98 @@ const Navbar = () => {
         />
       </Flex>
 
-      {/* Mobile collapse */}
-      <Collapse in={isOpen} animateOpacity>
-        <Box px={{ base: 3, md: 6 }} pb={4} display={{ md: 'none' }}>
-          <Stack spacing={1} pt={3}>
-            {/* Mobile search */}
-            <InputGroup>
-              <InputLeftElement pointerEvents="none" children={<FiSearch />} />
-              <Input
-                placeholder="Search guides, tours..."
-                size="sm"
-                variant="filled"
-                bg={useColorModeValue('gray.50', 'whiteAlpha.50')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const q = (e.currentTarget as HTMLInputElement).value.trim();
-                    if (q) {
-                      navigate(`/search?q=${encodeURIComponent(q)}`);
-                      onClose();
-                    }
-                  }
-                }}
-              />
-            </InputGroup>
-
-            <NavLink to="/explore" onClick={onClose}>Explore</NavLink>
-            <NavLink to="/guides" onClick={onClose}>Guides</NavLink>
-            <NavLink to="/tours" onClick={onClose}>Tours</NavLink>
-            <NavLink to="/posts" onClick={onClose}>Posts</NavLink>
-
-            {user ? (
-              <>
-                <HStack spacing={3} px={2} pt={2}>
-                  <NotificationBadge />
-                  <Avatar size="sm" name={displayName} />
-                  <Box>
-                    <Text fontSize="sm" fontWeight="semibold" lineHeight="1">
-                      {displayName}
-                    </Text>
-                    <Text fontSize="xs" color="gray.500">Member</Text>
+      {/* Mobile Drawer (slides in from the left) */}
+      <Drawer placement="left" onClose={onClose} isOpen={isOpen} size="xs">
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth="1px">Menu</DrawerHeader>
+          <DrawerBody>
+            <Stack spacing={3} pt={3}>
+              {/* Mobile search — keep icon alignment fix here as well */}
+              <InputGroup>
+                <InputLeftElement pointerEvents="none">
+                  <Box h="100%" display="flex" alignItems="center" justifyContent="center" pl={2}>
+                    <FiSearch />
                   </Box>
-                </HStack>
+                </InputLeftElement>
+                <Input
+                  placeholder="Search guides, tours..."
+                  size="sm"
+                  variant="filled"
+                  bg={useColorModeValue('gray.50', 'whiteAlpha.50')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const q = (e.currentTarget as HTMLInputElement).value.trim();
+                      if (q) {
+                        navigate(`/search?q=${encodeURIComponent(q)}`);
+                        onClose();
+                      }
+                    }
+                  }}
+                />
+              </InputGroup>
 
-                <Button
-                  onClick={() => { navigate('/dashboard'); onClose(); }}
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  w="full"
-                  px={3}
-                  py={3}
-                  borderRadius="md"
-                >
-                  Dashboard
-                </Button>
+              <NavLink to="/explore" onClick={onClose}>Explore</NavLink>
+              <NavLink to="/guides" onClick={onClose}>Guides</NavLink>
+              <NavLink to="/tours" onClick={onClose}>Tours</NavLink>
+              <NavLink to="/posts" onClick={onClose}>Posts</NavLink>
 
+              {user ? (
+                <>
+                  <HStack spacing={3} px={2} pt={2}>
+                    <NotificationBadge />
+                    <Avatar size="sm" name={displayName} />
+                    <Box>
+                      <Text fontSize="sm" fontWeight="semibold" lineHeight="1">
+                        {displayName}
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">Member</Text>
+                    </Box>
+                  </HStack>
+
+                  <Button
+                    onClick={() => { navigate('/dashboard'); onClose(); }}
+                    variant="ghost"
+                    justifyContent="flex-start"
+                    w="full"
+                    px={3}
+                    py={3}
+                    borderRadius="md"
+                  >
+                    Dashboard
+                  </Button>
+
+                  <Button
+                    onClick={handleSignOut}
+                    variant="outline"
+                    justifyContent="flex-start"
+                    w="full"
+                    px={3}
+                    py={3}
+                    borderRadius="md"
+                    colorScheme="primary"
+                  >
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
                 <Button
-                  onClick={handleSignOut}
-                  variant="outline"
-                  justifyContent="flex-start"
-                  w="full"
-                  px={3}
-                  py={3}
-                  borderRadius="md"
+                  onClick={() => { handleGetStarted(); }}
+                  variant="solid"
                   colorScheme="primary"
+                  w="full"
+                  px={3}
+                  py={3}
+                  borderRadius="md"
                 >
-                  Sign Out
+                  Get Started
                 </Button>
-              </>
-            ) : (
-              <Button
-                onClick={() => { handleGetStarted(); }}
-                variant="solid"
-                colorScheme="primary"
-                w="full"
-                px={3}
-                py={3}
-                borderRadius="md"
-              >
-                Get Started
-              </Button>
-            )}
-          </Stack>
-        </Box>
-      </Collapse>
+              )}
+            </Stack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
     </Box>
   );
 };
