@@ -121,7 +121,6 @@ const BookingItem: React.FC<BookingItemProps> = ({
       boxShadow="lg"
       transition="all 0.3s ease"
       _hover={{
-        transform: "translateY(-8px)",
         boxShadow: "2xl",
         borderColor: "primary.200",
       }}
