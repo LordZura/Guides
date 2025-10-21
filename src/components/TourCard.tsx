@@ -17,7 +17,6 @@ import {
 } from "@chakra-ui/react";
 import {
   MdAccessTime,
-  MdAttachMoney,
   MdCalendarToday,
   MdGroup,
   MdLocationOn,
