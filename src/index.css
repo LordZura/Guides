@@ -186,3 +186,12 @@ h6 {
 .tour-card, .tour-card > * {
   min-width: 0;
 }
+
+body {
+  touch-action: pan-y;
+}
+
+input, textarea {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}

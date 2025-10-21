@@ -84,7 +84,6 @@ const Navbar = () => {
       await signOut();
     } catch (err) {
       // avoid crashing if signOut fails
-      // console.error(err);
     } finally {
       navigate("/explore");
       onClose();
@@ -229,8 +228,15 @@ const Navbar = () => {
           minW={0}
           maxW={{ base: "100%", md: "640px" }}
         >
-          <InputGroup>
-            <InputLeftElement pointerEvents="none" w="3.25rem" h="100%" top="0">
+          {/* InputGroup fills the available area, allowing the search to be as long as possible */}
+          <InputGroup w="100%">
+            {/* fixed-width left element keeps the icon centered and ensures predictable padding */}
+            <InputLeftElement
+              pointerEvents="none"
+              w="3.25rem" // ~52px - predictable padding
+              h="100%"
+              top="0"
+            >
               <Box
                 h="100%"
                 display="flex"
@@ -244,19 +250,18 @@ const Navbar = () => {
 
             <Input
               placeholder="Search guides, tours, posts..."
-              variant="filled"
               bg={inputBg}
               border="1px"
               borderColor={inputBorder}
-              borderRadius="lg"
+              borderRadius="full"
               size="md"
-              pl={{ base: "3.5rem", md: "3.5rem" }}
+              pl={{ base: "3.5rem", md: "3.5rem" }} // ensures text doesn't overlap icon
               pr="3"
-              height={{ base: "44px", md: "44px" }}
+              height="44px"
               transition="box-shadow 0.15s, border-color 0.15s, background 0.15s"
-              _hover={{ bg: useColorModeValue("gray.50", "whiteAlpha.50") }}
+              _hover={{ boxShadow: "sm" }}
               _focus={{
-                boxShadow: "0 0 0 3px rgba(99,102,241,0.12)",
+                boxShadow: "0 0 0 3px rgba(99,102,241,0.12)", // subtle focus ring
                 borderColor: "primary.400",
                 bg: inputBg,
               }}
@@ -366,8 +371,8 @@ const Navbar = () => {
           <DrawerHeader borderBottomWidth="1px">Menu</DrawerHeader>
           <DrawerBody>
             <Stack spacing={3} pt={3}>
-              {/* Mobile search — same layout & fixes as desktop search */}
-              <InputGroup>
+              {/* Mobile search — same improved layout */}
+              <InputGroup w="100%">
                 <InputLeftElement
                   pointerEvents="none"
                   w="3.25rem"
@@ -388,11 +393,10 @@ const Navbar = () => {
                 <Input
                   placeholder="Search guides, tours..."
                   size="md"
-                  variant="filled"
                   bg={inputBg}
                   border="1px"
                   borderColor={inputBorder}
-                  borderRadius="lg"
+                  borderRadius="full"
                   pl={{ base: "3.5rem" }}
                   pr="3"
                   height="44px"
