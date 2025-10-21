@@ -6,6 +6,10 @@ import { useModal } from './contexts/ModalContext';
 import Navbar from './components/NavBar';
 import Dashboard from './pages/Dashboard';
 import Explore from './pages/Explore';
+import Guides from './pages/Guides';
+import Tours from './pages/Tours';
+import Posts from './pages/Posts';
+import Search from './pages/Search';
 import AuthModal from './components/AuthModal';
 import TourDetail from './pages/TourDetails';
 import ProfilePage from './pages/Profile/[id]';
@@ -43,6 +47,10 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/explore" replace />} />
           <Route path="/explore" element={<Explore />} />
+          <Route path="/guides" element={<Guides />} />
+          <Route path="/tours" element={<Tours />} />
+          <Route path="/posts" element={<Posts />} />
+          <Route path="/search" element={<Search />} />
           <Route path="/about" element={<About />} />
           <Route path="/test-notifications" element={<NotificationTestPanel />} />
           <Route path="/responsive-test" element={<ResponsiveTestPage />} />

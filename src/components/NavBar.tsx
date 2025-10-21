@@ -1,7 +1,7 @@
 // src/components/NavBar.tsx
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import type { ReactNode } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Flex,
@@ -36,6 +36,7 @@ import { FiSearch, FiChevronDown } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthProvider";
 import { useModal } from "../contexts/ModalContext";
 import NotificationBadge from "./NotificationBadge";
+import SettingsModal from "./SettingsModal";
 
 interface NavLinkProps extends LinkProps {
   to: string;
@@ -74,7 +75,10 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { openAuthModal } = useModal();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onClose: onSettingsClose } = useDisclosure();
+  const [searchValue, setSearchValue] = useState('');
 
   const bg = useColorModeValue("rgba(255,255,255,0.92)", "rgba(26,32,44,0.92)");
   const border = useColorModeValue("gray.200", "gray.700");
@@ -82,7 +86,7 @@ const Navbar = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-    } catch (err) {
+    } catch {
       // avoid crashing if signOut fails
     } finally {
       navigate("/explore");
@@ -93,6 +97,25 @@ const Navbar = () => {
   const handleGetStarted = () => {
     openAuthModal();
     onClose();
+  };
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`, {
+        state: { from: location.pathname }
+      });
+      setSearchValue('');
+    }
+  };
+
+  const handleProfileClick = () => {
+    if (user?.id) {
+      navigate(`/profile/${user.id}`);
+    }
+  };
+
+  const handleSettingsClick = () => {
+    onSettingsOpen();
   };
 
   const displayName =
@@ -269,12 +292,11 @@ const Navbar = () => {
                 boxShadow: "0 0 0 3px rgba(99,102,241,0.12)",
                 borderColor: "primary.400",
               }}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  const q = (e.currentTarget as HTMLInputElement).value.trim();
-                  if (q) {
-                    navigate(`/search?q=${encodeURIComponent(q)}`);
-                  }
+                  handleSearch(searchValue);
                 }
               }}
             />
@@ -320,10 +342,10 @@ const Navbar = () => {
                   </HStack>
                 </MenuButton>
                 <MenuList>
-                  <MenuItem as={RouterLink} to="/profile">
+                  <MenuItem onClick={handleProfileClick}>
                     Profile
                   </MenuItem>
-                  <MenuItem as={RouterLink} to="/settings">
+                  <MenuItem onClick={handleSettingsClick}>
                     Settings
                   </MenuItem>
                   <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
@@ -407,11 +429,9 @@ const Navbar = () => {
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      const q = (
-                        e.currentTarget as HTMLInputElement
-                      ).value.trim();
+                      const q = (e.currentTarget as HTMLInputElement).value.trim();
                       if (q) {
-                        navigate(`/search?q=${encodeURIComponent(q)}`);
+                        handleSearch(q);
                         onClose();
                       }
                     }
@@ -494,6 +514,9 @@ const Navbar = () => {
           </DrawerBody>
         </DrawerContent>
       </Drawer>
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={isSettingsOpen} onClose={onSettingsClose} />
     </Box>
   );
 };
