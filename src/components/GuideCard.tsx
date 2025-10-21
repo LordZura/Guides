@@ -45,7 +45,6 @@ const GuideCard = ({ guide }: GuideCardProps) => {
       bg={cardBg}
       transition="all 0.3s ease"
       _hover={{ 
-        transform: 'translateY(-4px)', 
         boxShadow: '2xl',
         borderColor: 'primary.200'
       }}
