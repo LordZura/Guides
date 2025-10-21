@@ -406,13 +406,9 @@ const Dashboard: React.FC = () => {
                         }}
                         transition="all 0.15s"
                         fontSize={{ base: "md", md: "sm" }}
-                        // full width on small screens so it doesn't cause overflow
                         w={{ base: "100%", sm: "auto" }}
-                        isFullWidth={{ base: true, sm: false } as any}
                       >
-                        {profile.role === "guide"
-                          ? "Create Tour"
-                          : "Post Tour Request"}
+                        {profile.role === "guide" ? "Create Tour" : "Post Tour Request"}
                       </Button>
                     </Flex>
 
