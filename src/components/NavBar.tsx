@@ -1,5 +1,5 @@
 // src/components/NavBar.tsx
-import React, { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
