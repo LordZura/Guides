@@ -7,10 +7,10 @@ import {
   Button,
   Avatar,
   HStack,
-  Divider,
   Icon,
   useColorModeValue,
   Tooltip,
+  Stack,
 } from '@chakra-ui/react';
 import { 
   MdAccessTime, 
@@ -113,163 +113,281 @@ const BookingItem: React.FC<BookingItemProps> = ({
 
   return (
     <Box
-      p={4}
+      p={{ base: 4, md: 6 }}
       borderWidth="1px"
-      borderRadius="md"
+      borderRadius="xl"
       borderColor={borderColor}
       bg={bg}
-      boxShadow="sm"
+      boxShadow="lg"
+      transition="all 0.3s ease"
+      _hover={{
+        transform: "translateY(-8px)",
+        boxShadow: "2xl",
+        borderColor: "primary.200",
+      }}
+      minW={0}
+      maxW="100%"
+      boxSizing="border-box"
     >
-      <Flex justify="space-between" align="center" mb={3}>
-        <HStack>
+      {/* Title and Status */}
+      <Flex justify="space-between" align="flex-start" mb={4} minW={0}>
+        <Box minW={0} flex="1">
+          <Text
+            fontWeight="semibold"
+            fontSize={{ base: "md", md: "lg" }}
+            mb={2}
+            color="gray.800"
+            lineHeight="1.3"
+            wordBreak="break-word"
+            overflowWrap="anywhere"
+            whiteSpace="normal"
+          >
+            {tourTitle}
+          </Text>
           <Tooltip label={getStatusDescription(booking.status)}>
-            <Badge colorScheme={getStatusColor(booking.status)} display="flex" alignItems="center">
+            <Badge
+              colorScheme={getStatusColor(booking.status)}
+              display="inline-flex"
+              alignItems="center"
+              fontSize="xs"
+              borderRadius="full"
+              px={3}
+              py={1}
+            >
               {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
               <Icon as={MdInfo} ml={1} />
             </Badge>
           </Tooltip>
-          <Text fontWeight="medium">{tourTitle}</Text>
-        </HStack>
-        <Text fontWeight="bold">${booking.total_price.toFixed(2)}</Text>
+        </Box>
       </Flex>
 
-      <HStack spacing={4} mb={3} flexWrap="wrap">
-        <Flex align="center">
-          <Icon as={MdLocationOn} color="gray.500" mr={1} />
-          <Text fontSize="sm">{tourLocation}</Text>
+      {/* Tour Details */}
+      <Stack spacing={3} mb={6}>
+        <Flex align="center" minW={0}>
+          <Icon as={MdLocationOn} color="primary.500" mr={3} boxSize="4" />
+          <Text
+            fontSize="sm"
+            fontWeight="medium"
+            color="gray.700"
+            noOfLines={1}
+            overflow="hidden"
+            textOverflow="ellipsis"
+          >
+            {tourLocation}
+          </Text>
         </Flex>
         <Flex align="center">
-          <Icon as={MdCalendarToday} color="gray.500" mr={1} />
-          <Text fontSize="sm">{formatDate(booking.booking_date)}</Text>
+          <Icon as={MdCalendarToday} color="primary.500" mr={3} boxSize="4" />
+          <Text fontSize="sm" fontWeight="medium" color="gray.700">
+            {formatDate(booking.booking_date)}
+          </Text>
         </Flex>
         <Flex align="center">
-          <Icon as={MdAccessTime} color="gray.500" mr={1} />
-          <Text fontSize="sm">{booking.preferred_time}</Text>
+          <Icon as={MdAccessTime} color="primary.500" mr={3} boxSize="4" />
+          <Text fontSize="sm" fontWeight="medium" color="gray.700">
+            {booking.preferred_time}
+          </Text>
         </Flex>
         <Flex align="center">
-          <Icon as={MdGroup} color="gray.500" mr={1} />
-          <Text fontSize="sm">{booking.party_size} {booking.party_size === 1 ? 'person' : 'people'}</Text>
+          <Icon as={MdGroup} color="primary.500" mr={3} boxSize="4" />
+          <Text fontSize="sm" fontWeight="medium" color="gray.700">
+            {booking.party_size} {booking.party_size === 1 ? 'person' : 'people'}
+          </Text>
         </Flex>
-      </HStack>
+      </Stack>
 
       {booking.notes && (
-        <Box bg="gray.50" p={2} borderRadius="md" mb={3}>
-          <Text fontSize="sm">{booking.notes}</Text>
+        <Box
+          bg="gray.50"
+          p={3}
+          borderRadius="md"
+          mb={6}
+          borderLeft="3px solid"
+          borderColor="primary.300"
+        >
+          <Text
+            fontSize="sm"
+            color="gray.600"
+            lineHeight="1.5"
+            wordBreak="break-word"
+            overflowWrap="anywhere"
+            whiteSpace="normal"
+          >
+            {booking.notes}
+          </Text>
         </Box>
       )}
 
-      <Divider my={3} />
-
-      <Flex justify="space-between" align="center">
-        {/* Person info (tourist or guide) */}
+      {/* Footer with person info and price */}
+      <Flex
+        justify="space-between"
+        align={{ base: "start", sm: "center" }}
+        pt={4}
+        borderTop="1px"
+        borderColor="gray.100"
+        direction={{ base: "column", sm: "row" }}
+        gap={{ base: 3, sm: 0 }}
+        minW={0}
+        mb={4}
+      >
         <HStack>
           <Avatar
             size="sm"
             name={isGuide ? booking.tourist_name : booking.guide_name}
             src={isGuide ? booking.tourist_avatar : booking.guide_avatar || DEFAULT_AVATAR_URL}
+            border="2px"
+            borderColor="primary.100"
           />
-          <Text fontSize="sm">
+          <Text fontSize="sm" fontWeight="medium" color="gray.700">
             {isGuide ? booking.tourist_name : booking.guide_name}
           </Text>
         </HStack>
 
-        {/* Action buttons */}
-        <HStack spacing={2}>
-          {showAcceptDecline && (
-            <>
-              <Button
-                size="sm"
-                colorScheme="green"
-                leftIcon={<MdCheckCircle />}
-                onClick={onAccept}
-                isLoading={isProcessing}
-              >
-                Accept
-              </Button>
-              <Button
-                size="sm"
-                colorScheme="red"
-                variant="outline"
-                leftIcon={<MdCancel />}
-                onClick={onDecline}
-                isLoading={isProcessing}
-              >
-                Decline
-              </Button>
-            </>
-          )}
+        <Badge
+          colorScheme="purple"
+          px={4}
+          py={2}
+          borderRadius="md"
+          fontWeight="semibold"
+          fontSize={{ base: "sm", md: "md" }}
+        >
+          ${booking.total_price.toFixed(2)}
+        </Badge>
+      </Flex>
 
-          {showAcceptDeclineOffer && (
-            <>
-              <Button
-                size="sm"
-                colorScheme="green"
-                leftIcon={<MdCheckCircle />}
-                onClick={onAccept}
-                isLoading={isProcessing}
-              >
-                Accept Offer
-              </Button>
-              <Button
-                size="sm"
-                colorScheme="red"
-                variant="outline"
-                leftIcon={<MdCancel />}
-                onClick={onDecline}
-                isLoading={isProcessing}
-              >
-                Decline Offer
-              </Button>
-            </>
-          )}
-
-          {showPayment && (
+      {/* Action buttons */}
+      <Flex
+        gap={2}
+        flexWrap="wrap"
+        justify={{ base: "stretch", sm: "flex-start" }}
+        direction={{ base: "column", sm: "row" }}
+      >
+        {showAcceptDecline && (
+          <>
             <Button
               size="sm"
-              colorScheme="blue"
-              leftIcon={<MdPayment />}
-              onClick={onPayment}
-            >
-              Pay Now
-            </Button>
-          )}
-
-          {showComplete && (
-            <Button
-              size="sm"
-              colorScheme="purple"
+              colorScheme="green"
               leftIcon={<MdCheckCircle />}
-              onClick={onComplete}
+              onClick={onAccept}
               isLoading={isProcessing}
+              borderRadius="full"
+              px={6}
+              minH="44px"
+              flex={{ base: "1", sm: "0 0 auto" }}
             >
-              Mark Completed
+              Accept
             </Button>
-          )}
-
-          {showCancel && (
             <Button
               size="sm"
               colorScheme="red"
               variant="outline"
               leftIcon={<MdCancel />}
-              onClick={onCancel}
+              onClick={onDecline}
               isLoading={isProcessing}
+              borderRadius="full"
+              px={6}
+              minH="44px"
+              flex={{ base: "1", sm: "0 0 auto" }}
             >
-              Cancel
+              Decline
             </Button>
-          )}
+          </>
+        )}
 
-          {showReview && (
+        {showAcceptDeclineOffer && (
+          <>
             <Button
               size="sm"
-              colorScheme="yellow"
-              leftIcon={<MdStar />}
-              onClick={onReview}
+              colorScheme="green"
+              leftIcon={<MdCheckCircle />}
+              onClick={onAccept}
+              isLoading={isProcessing}
+              borderRadius="full"
+              px={6}
+              minH="44px"
+              flex={{ base: "1", sm: "0 0 auto" }}
             >
-              Write Review
+              Accept Offer
             </Button>
-          )}
-        </HStack>
+            <Button
+              size="sm"
+              colorScheme="red"
+              variant="outline"
+              leftIcon={<MdCancel />}
+              onClick={onDecline}
+              isLoading={isProcessing}
+              borderRadius="full"
+              px={6}
+              minH="44px"
+              flex={{ base: "1", sm: "0 0 auto" }}
+            >
+              Decline Offer
+            </Button>
+          </>
+        )}
+
+        {showPayment && (
+          <Button
+            size="sm"
+            colorScheme="blue"
+            leftIcon={<MdPayment />}
+            onClick={onPayment}
+            borderRadius="full"
+            px={6}
+            minH="44px"
+            flex={{ base: "1", sm: "0 0 auto" }}
+          >
+            Pay Now
+          </Button>
+        )}
+
+        {showComplete && (
+          <Button
+            size="sm"
+            colorScheme="purple"
+            leftIcon={<MdCheckCircle />}
+            onClick={onComplete}
+            isLoading={isProcessing}
+            borderRadius="full"
+            px={6}
+            minH="44px"
+            flex={{ base: "1", sm: "0 0 auto" }}
+          >
+            Mark Completed
+          </Button>
+        )}
+
+        {showCancel && (
+          <Button
+            size="sm"
+            colorScheme="red"
+            variant="outline"
+            leftIcon={<MdCancel />}
+            onClick={onCancel}
+            isLoading={isProcessing}
+            borderRadius="full"
+            px={6}
+            minH="44px"
+            flex={{ base: "1", sm: "0 0 auto" }}
+          >
+            Cancel
+          </Button>
+        )}
+
+        {showReview && (
+          <Button
+            size="sm"
+            colorScheme="yellow"
+            leftIcon={<MdStar />}
+            onClick={onReview}
+            borderRadius="full"
+            px={6}
+            minH="44px"
+            flex={{ base: "1", sm: "0 0 auto" }}
+          >
+            Write Review
+          </Button>
+        )}
       </Flex>
     </Box>
   );
