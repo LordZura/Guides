@@ -79,7 +79,7 @@ const ToursList: React.FC = () => {
   const handleStatusToggle = async (tour: Tour) => {
     try {
       await updateTourStatus(tour.id, !tour.is_active);
-    } catch (err) {
+    } catch {
       toast({ title: 'Status update failed', status: 'error' });
     }
   };
