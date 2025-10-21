@@ -180,7 +180,9 @@ const Dashboard: React.FC = () => {
                       </Heading>
 
                       <Badge
-                        colorScheme={profile.role === "guide" ? "green" : "blue"}
+                        colorScheme={
+                          profile.role === "guide" ? "green" : "blue"
+                        }
                         mt={2}
                         fontSize={{ base: "xs", md: "sm" }}
                         px={3}
@@ -592,7 +594,10 @@ const Dashboard: React.FC = () => {
               />
               <ModalBody pt={{ base: 16, md: 10 }} pb={6}>
                 <Box minW={0}>
-                  <TourForm onSuccess={handleCreateSuccess} onCancel={onCreateClose} />
+                  <TourForm
+                    onSuccess={handleCreateSuccess}
+                    onCancel={onCreateClose}
+                  />
                 </Box>
               </ModalBody>
             </ModalContent>
