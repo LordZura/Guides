@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Heading,
@@ -16,7 +16,6 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalBody,
   ModalFooter,
   ModalCloseButton,
@@ -26,33 +25,46 @@ import {
   CardBody,
   CardHeader,
   HStack,
+  Wrap,
+  WrapItem,
+  Spacer,
 } from '@chakra-ui/react';
-import { 
-  DeleteIcon, 
-  EditIcon, 
-  ViewIcon, 
-  ChevronDownIcon, 
-  CheckIcon, 
-  WarningIcon 
+import {
+  DeleteIcon,
+  EditIcon,
+  ViewIcon,
+  ChevronDownIcon,
+  CheckIcon,
+  WarningIcon,
 } from '@chakra-ui/icons';
 import { useTours, Tour } from '../contexts/ToursContext';
 import { useAuth } from '../contexts/AuthProvider';
 import TourForm from './TourForm';
 
-const ToursList = () => {
+/**
+ * ToursList (updated)
+ * - Title wraps to multiple lines (no single-line collision with price)
+ * - Price moved to bottom-right (footer)
+ * - Badges use Wrap/WrapItem so they flow to next line on small screens
+ * - Defensive layout: minW={0}, maxW="100%", wordBreak/overflowWrap applied
+ */
+
+const ToursList: React.FC = () => {
   const { tours, isLoading, error, refreshTours, deleteTour, updateTourStatus } = useTours();
   const { profile } = useAuth();
   const toast = useToast();
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
-  const { 
-    isOpen: isDeleteOpen, 
-    onOpen: onDeleteOpen, 
-    onClose: onDeleteClose 
+
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
   } = useDisclosure();
-  const { 
-    isOpen: isEditOpen, 
-    onOpen: onEditOpen, 
-    onClose: onEditClose 
+
+  const {
+    isOpen: isEditOpen,
+    onOpen: onEditOpen,
+    onClose: onEditClose,
   } = useDisclosure();
 
   const handleEditClick = (tour: Tour) => {
@@ -66,7 +78,11 @@ const ToursList = () => {
   };
 
   const handleStatusToggle = async (tour: Tour) => {
-    await updateTourStatus(tour.id, !tour.is_active);
+    try {
+      await updateTourStatus(tour.id, !tour.is_active);
+    } catch (err) {
+      toast({ title: 'Status update failed', status: 'error' });
+    }
   };
 
   const confirmDelete = async () => {
@@ -85,7 +101,7 @@ const ToursList = () => {
     return (
       <Stack spacing={4}>
         {[1, 2, 3].map(i => (
-          <Card key={i}>
+          <Card key={i} w="100%" maxW="100%" minW={0}>
             <CardBody>
               <Skeleton height="24px" width="50%" mb={2} />
               <Skeleton height="16px" width="100%" mb={1} />
@@ -113,7 +129,7 @@ const ToursList = () => {
     );
   }
 
-  if (tours.length === 0) {
+  if (!tours || tours.length === 0) {
     return (
       <Box p={8} textAlign="center" bg="gray.50" borderRadius="md">
         <Text mb={4}>You haven't created any {profile?.role === 'guide' ? 'tours' : 'tour requests'} yet.</Text>
@@ -123,69 +139,135 @@ const ToursList = () => {
   }
 
   return (
-    <Stack spacing={4}>
-      {tours.map(tour => (
-        <Card key={tour.id} variant="outline" borderColor={tour.is_active ? 'green.200' : 'gray.200'}>
-          <CardHeader pb={0}>
-            <Flex justify="space-between" align="flex-start">
-              <Heading as="h3" size="md">{tour.title}</Heading>
-              <Menu>
-                <MenuButton
-                  as={IconButton}
-                  icon={<ChevronDownIcon />}
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Actions"
-                />
-                <MenuList>
-                  <MenuItem icon={<ViewIcon />} onClick={() => toast({ 
-                    title: "View details", 
-                    description: "This feature will be available soon",
-                    status: "info",
-                    duration: 3000
-                  })}>
-                    View Details
-                  </MenuItem>
-                  <MenuItem icon={<EditIcon />} onClick={() => handleEditClick(tour)}>
-                    Edit
-                  </MenuItem>
-                  <MenuItem icon={tour.is_active ? <WarningIcon /> : <CheckIcon />} onClick={() => handleStatusToggle(tour)}>
-                    {tour.is_active ? 'Deactivate' : 'Activate'}
-                  </MenuItem>
-                  <MenuItem icon={<DeleteIcon />} color="red.500" onClick={() => handleDeleteClick(tour)}>
-                    Delete
-                  </MenuItem>
-                </MenuList>
-              </Menu>
-            </Flex>
-          </CardHeader>
-          
-          <CardBody>
-            <HStack mb={2} wrap="wrap">
-              <Badge colorScheme={tour.is_active ? 'green' : 'gray'}>
-                {tour.is_active ? 'Active' : 'Inactive'}
-              </Badge>
-              <Badge colorScheme="blue">{tour.location}</Badge>
-              <Badge colorScheme="purple">${tour.price}</Badge>
-              <Badge colorScheme="orange">{tour.duration}h</Badge>
-            </HStack>
-            
-            <Text noOfLines={2} mb={2}>{tour.description}</Text>
-            
-            <Text fontSize="sm" color="gray.500">
-              Created: {new Date(tour.created_at).toLocaleDateString()}
-            </Text>
-          </CardBody>
-        </Card>
-      ))}
+    <Stack spacing={4} minW={0}>
+      {tours.map(tour => {
+        const formattedPrice = tour.price === undefined || tour.price === null ? '' : (typeof tour.price === 'number' ? `$${tour.price}` : String(tour.price));
+
+        return (
+          <Card
+            key={tour.id}
+            variant="outline"
+            borderColor={tour.is_active ? 'green.200' : 'gray.200'}
+            w="100%"
+            maxW="100%"
+            minW={0}
+            boxSizing="border-box"
+          >
+            <CardHeader pb={0} px={{ base: 3, md: 4 }}>
+              <Flex align="flex-start" minW={0} w="100%">
+                <Box minW={0} flex="1 1 auto">
+                  <Heading
+                    as="h3"
+                    size="md"
+                    // allow multi-line wrapping
+                    wordBreak="break-word"
+                    overflowWrap="anywhere"
+                    whiteSpace="normal"
+                    lineHeight="1.15"
+                  >
+                    {tour.title}
+                  </Heading>
+                </Box>
+
+                <Menu>
+                  <MenuButton
+                    as={IconButton}
+                    icon={<ChevronDownIcon />}
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Actions"
+                    ml={3}
+                  />
+                  <MenuList>
+                    <MenuItem
+                      icon={<ViewIcon />}
+                      onClick={() =>
+                        toast({
+                          title: "View details",
+                          description: "This feature will be available soon",
+                          status: "info",
+                          duration: 3000,
+                        })
+                      }
+                    >
+                      View Details
+                    </MenuItem>
+                    <MenuItem icon={<EditIcon />} onClick={() => handleEditClick(tour)}>
+                      Edit
+                    </MenuItem>
+                    <MenuItem
+                      icon={tour.is_active ? <WarningIcon /> : <CheckIcon />}
+                      onClick={() => handleStatusToggle(tour)}
+                    >
+                      {tour.is_active ? 'Deactivate' : 'Activate'}
+                    </MenuItem>
+                    <MenuItem icon={<DeleteIcon />} color="red.500" onClick={() => handleDeleteClick(tour)}>
+                      Delete
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              </Flex>
+            </CardHeader>
+
+            <CardBody px={{ base: 3, md: 4 }} py={3} minW={0}>
+              {/* Badges / meta row - use Wrap so badges can flow */}
+              <Wrap spacing={2} mb={3} align="center" shouldWrapChildren>
+                <WrapItem>
+                  <Badge colorScheme={tour.is_active ? 'green' : 'gray'}>{tour.is_active ? 'Active' : 'Inactive'}</Badge>
+                </WrapItem>
+                {tour.location && (
+                  <WrapItem>
+                    <Badge colorScheme="blue">{tour.location}</Badge>
+                  </WrapItem>
+                )}
+                {typeof tour.price !== 'undefined' && (
+                  <WrapItem display={{ base: 'none', md: 'inline-block' }}>
+                    {/* keep a small price badge visible on md+ near top if you like; mobile will show bottom price */}
+                    <Badge colorScheme="purple">${tour.price}</Badge>
+                  </WrapItem>
+                )}
+                {tour.duration && (
+                  <WrapItem>
+                    <Badge colorScheme="orange">{tour.duration}h</Badge>
+                  </WrapItem>
+                )}
+              </Wrap>
+
+              {/* Description - allow it to wrap naturally (paragraph-like) */}
+              <Text mb={2} wordBreak="break-word" overflowWrap="anywhere" whiteSpace="normal" color="gray.700">
+                {tour.description}
+              </Text>
+
+              {/* Footer: created date left, price bottom-right */}
+              <Flex mt={4} align="center" minW={0}>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">
+                    Created: {new Date(tour.created_at).toLocaleDateString()}
+                  </Text>
+                </Box>
+
+                <Spacer />
+
+                {/* Price is bottom-right */}
+                <Box textAlign="right" minW={0}>
+                  {formattedPrice ? (
+                    <Badge colorScheme="purple" px={3} py={1} borderRadius="md" fontWeight="semibold" fontSize={{ base: 'sm', md: 'md' }}>
+                      {formattedPrice}
+                    </Badge>
+                  ) : null}
+                </Box>
+              </Flex>
+            </CardBody>
+          </Card>
+        );
+      })}
 
       {/* Delete Confirmation Modal */}
       <Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Delete Tour</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <ModalBody p={5}>
             <Text>Are you sure you want to delete "{selectedTour?.title}"?</Text>
             <Text mt={2} color="red.500" fontWeight="bold">This action cannot be undone.</Text>
           </ModalBody>
@@ -207,10 +289,10 @@ const ToursList = () => {
           <ModalCloseButton />
           <ModalBody pt={10} pb={6}>
             {selectedTour && (
-              <TourForm 
-                tourId={selectedTour.id} 
-                onSuccess={handleEditSuccess} 
-                onCancel={onEditClose} 
+              <TourForm
+                tourId={selectedTour.id}
+                onSuccess={handleEditSuccess}
+                onCancel={onEditClose}
               />
             )}
           </ModalBody>
