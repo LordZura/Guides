@@ -21,7 +21,6 @@ import {
   InputLeftElement,
   Input,
   useColorModeValue,
-  Spacer,
   VisuallyHidden,
   type LinkProps,
   Drawer,
@@ -246,10 +245,10 @@ const Navbar = () => {
         {/* Middle: search (hidden on very small screens) */}
         <Box
           display={{ base: "none", sm: "block" }}
-          mx={6}
+          mx={{ base: 3, md: 4 }}
           flex="1"
           minW={0}
-          maxW={{ base: "100%", md: "640px" }}
+          maxW={{ base: "100%", md: "500px", lg: "600px" }}
         >
           {/* InputGroup fills the available area, allowing the search to be as long as possible */}
           <InputGroup w="100%">
@@ -302,8 +301,6 @@ const Navbar = () => {
             />
           </InputGroup>
         </Box>
-
-        <Spacer />
 
         {/* Desktop nav */}
         <HStack
@@ -370,9 +367,9 @@ const Navbar = () => {
         <IconButton
           aria-label="Toggle menu"
           display={{ base: "flex", md: "none" }}
-          onClick={() => (isOpenRef.current ? onClose() : onOpen())}
+          onClick={() => (isOpen ? onClose() : onOpen())}
           icon={
-            isOpenRef.current ? (
+            isOpen ? (
               <CloseIcon w={5} h={5} />
             ) : (
               <HamburgerIcon w={6} h={6} />
