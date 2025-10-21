@@ -1,4 +1,5 @@
 // src/components/NavBar.tsx
+import React, { useEffect, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
@@ -65,21 +66,25 @@ const NavLink = ({ to, children, onClick, ...rest }: NavLinkProps) => (
   </Link>
 );
 
+const SWIPE_THRESHOLD = 50; // minimum px for a swipe to register
+const EDGE_ZONE = 40; // px from left edge to allow opening swipe
+const HORIZ_RATIO = 1.5; // must be this times larger than vertical movement
+
 const Navbar = () => {
   const { user, signOut } = useAuth();
   const { openAuthModal } = useModal();
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const bg = useColorModeValue("rgba(255,255,255,0.85)", "rgba(26,32,44,0.85)");
+  const bg = useColorModeValue("rgba(255,255,255,0.92)", "rgba(26,32,44,0.92)");
   const border = useColorModeValue("gray.200", "gray.700");
 
   const handleSignOut = async () => {
     try {
       await signOut();
     } catch (err) {
-      // avoid crashing if signOut fails; optionally report error
-      // console.error('Sign out error', err);
+      // avoid crashing if signOut fails
+      // console.error(err);
     } finally {
       navigate("/explore");
       onClose();
@@ -97,6 +102,70 @@ const Navbar = () => {
     (user as any)?.email ||
     "User";
 
+  const inputBg = useColorModeValue("white", "gray.800");
+  const inputBorder = useColorModeValue("gray.200", "gray.700");
+
+  /* ---------- swipe handling (open/close drawer) ---------- */
+  const isOpenRef = useRef(isOpen);
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchActive = useRef(false);
+
+  const onTouchStart = useCallback((e: TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    touchStartX.current = t.clientX;
+    touchStartY.current = t.clientY;
+    touchActive.current = true;
+  }, []);
+
+  const onTouchEnd = useCallback(
+    (e: TouchEvent) => {
+      if (!touchActive.current) return;
+      if (e.changedTouches.length === 0) {
+        touchActive.current = false;
+        return;
+      }
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartX.current;
+      const dy = t.clientY - touchStartY.current;
+
+      // horizontal swipe check
+      if (
+        Math.abs(dx) > SWIPE_THRESHOLD &&
+        Math.abs(dx) > Math.abs(dy) * HORIZ_RATIO
+      ) {
+        // open if swipe right from left edge and drawer closed
+        if (!isOpenRef.current && dx > 0 && touchStartX.current <= EDGE_ZONE) {
+          onOpen();
+        }
+        // close if swipe left when drawer open
+        else if (isOpenRef.current && dx < 0) {
+          onClose();
+        }
+      }
+
+      touchActive.current = false;
+    },
+    [onOpen, onClose]
+  );
+
+  useEffect(() => {
+    // attach to the document so swipe works regardless of where the touch starts
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener("touchstart", onTouchStart as EventListener);
+      document.removeEventListener("touchend", onTouchEnd as EventListener);
+    };
+  }, [onTouchStart, onTouchEnd]);
+
+  /* ---------- UI ---------- */
   return (
     <Box
       as="nav"
@@ -153,16 +222,21 @@ const Navbar = () => {
         </Flex>
 
         {/* Middle: search (hidden on very small screens) */}
-        <Box display={{ base: "none", sm: "block" }} mx={6} flex="1">
-          <InputGroup maxW="540px" w="100%">
-            {/* Icon wrapped in a full-height centered box to vertically align correctly */}
-            <InputLeftElement pointerEvents="none">
+        <Box
+          display={{ base: "none", sm: "block" }}
+          mx={6}
+          flex="1"
+          minW={0}
+          maxW={{ base: "100%", md: "640px" }}
+        >
+          <InputGroup>
+            <InputLeftElement pointerEvents="none" w="3.25rem" h="100%" top="0">
               <Box
                 h="100%"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                pl={2}
+                pl={1}
               >
                 <FiSearch />
               </Box>
@@ -171,9 +245,25 @@ const Navbar = () => {
             <Input
               placeholder="Search guides, tours, posts..."
               variant="filled"
-              bg={useColorModeValue("gray.50", "whiteAlpha.50")}
-              _hover={{ bg: useColorModeValue("gray.100", "whiteAlpha.100") }}
-              size="sm"
+              bg={inputBg}
+              border="1px"
+              borderColor={inputBorder}
+              borderRadius="lg"
+              size="md"
+              pl={{ base: "3.5rem", md: "3.5rem" }}
+              pr="3"
+              height={{ base: "44px", md: "44px" }}
+              transition="box-shadow 0.15s, border-color 0.15s, background 0.15s"
+              _hover={{ bg: useColorModeValue("gray.50", "whiteAlpha.50") }}
+              _focus={{
+                boxShadow: "0 0 0 3px rgba(99,102,241,0.12)",
+                borderColor: "primary.400",
+                bg: inputBg,
+              }}
+              _focusVisible={{
+                boxShadow: "0 0 0 3px rgba(99,102,241,0.12)",
+                borderColor: "primary.400",
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   const q = (e.currentTarget as HTMLInputElement).value.trim();
@@ -253,9 +343,13 @@ const Navbar = () => {
         <IconButton
           aria-label="Toggle menu"
           display={{ base: "flex", md: "none" }}
-          onClick={() => (isOpen ? onClose() : onOpen())}
+          onClick={() => (isOpenRef.current ? onClose() : onOpen())}
           icon={
-            isOpen ? <CloseIcon w={5} h={5} /> : <HamburgerIcon w={6} h={6} />
+            isOpenRef.current ? (
+              <CloseIcon w={5} h={5} />
+            ) : (
+              <HamburgerIcon w={6} h={6} />
+            )
           }
           variant="ghost"
           ml={2}
@@ -272,24 +366,41 @@ const Navbar = () => {
           <DrawerHeader borderBottomWidth="1px">Menu</DrawerHeader>
           <DrawerBody>
             <Stack spacing={3} pt={3}>
-              {/* Mobile search — keep icon alignment fix here as well */}
+              {/* Mobile search — same layout & fixes as desktop search */}
               <InputGroup>
-                <InputLeftElement pointerEvents="none">
+                <InputLeftElement
+                  pointerEvents="none"
+                  w="3.25rem"
+                  h="100%"
+                  top="0"
+                >
                   <Box
                     h="100%"
                     display="flex"
                     alignItems="center"
                     justifyContent="center"
-                    pl={2}
+                    pl={1}
                   >
                     <FiSearch />
                   </Box>
                 </InputLeftElement>
+
                 <Input
                   placeholder="Search guides, tours..."
-                  size="sm"
+                  size="md"
                   variant="filled"
-                  bg={useColorModeValue("gray.50", "whiteAlpha.50")}
+                  bg={inputBg}
+                  border="1px"
+                  borderColor={inputBorder}
+                  borderRadius="lg"
+                  pl={{ base: "3.5rem" }}
+                  pr="3"
+                  height="44px"
+                  _focus={{
+                    boxShadow: "0 0 0 3px rgba(99,102,241,0.12)",
+                    borderColor: "primary.400",
+                    bg: inputBg,
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       const q = (
