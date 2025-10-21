@@ -163,22 +163,26 @@ h6 {
 .shrinkable > * {
   min-width: 0;
 }
-
-/* ============================
-   OPTIONAL: DEBUG / STRONG FALLBACK
-   (Use temporarily to confirm external CSS is winning)
-   ============================
-*/
-/*
-.chakra-stack > *, .chakra-flex > *, .chakra-grid > * {
-  min-width: 0 !important;
+/* Tour title safety */
+.tour-card-title {
+  display: block;           /* ensures width behavior is predictable */
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word;   /* breaks long words */
+  overflow-wrap: anywhere;  /* extra aggressive breaking */
+  white-space: normal;      /* allow wrapping */
+  hyphens: auto;            /* allow hyphenation where supported */
+  line-height: 1.15;
 }
 
-.tour-card-title, .chakra-heading {
-  word-break: break-word !important;
-  overflow-wrap: anywhere !important;
-  white-space: normal !important;
+/* Slightly smaller title on tiny screens */
+@media (max-width: 420px) {
+  .tour-card-title {
+    font-size: 1rem;        /* tweak as you prefer */
+  }
 }
-*/
 
-/* End of file */
+/* ensure the card inner container doesn't force too-wide min-widths */
+.tour-card, .tour-card > * {
+  min-width: 0;
+}
