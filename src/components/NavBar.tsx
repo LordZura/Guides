@@ -1,6 +1,6 @@
 // src/components/NavBar.tsx
-import type { ReactNode } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import type { ReactNode } from "react";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
   Box,
   Flex,
@@ -29,12 +29,12 @@ import {
   DrawerHeader,
   DrawerBody,
   DrawerCloseButton,
-} from '@chakra-ui/react';
-import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
-import { FiSearch, FiChevronDown } from 'react-icons/fi';
-import { useAuth } from '../contexts/AuthProvider';
-import { useModal } from '../contexts/ModalContext';
-import NotificationBadge from './NotificationBadge';
+} from "@chakra-ui/react";
+import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
+import { FiSearch, FiChevronDown } from "react-icons/fi";
+import { useAuth } from "../contexts/AuthProvider";
+import { useModal } from "../contexts/ModalContext";
+import NotificationBadge from "./NotificationBadge";
 
 interface NavLinkProps extends LinkProps {
   to: string;
@@ -53,11 +53,11 @@ const NavLink = ({ to, children, onClick, ...rest }: NavLinkProps) => (
     fontWeight="medium"
     display="block"
     _hover={{
-      textDecoration: 'none',
-      transform: 'translateY(-2px)',
+      textDecoration: "none",
+      transform: "translateY(-2px)",
     }}
     transition="all 0.15s ease"
-    fontSize={{ base: 'md', md: 'sm' }}
+    fontSize={{ base: "md", md: "sm" }}
     color="gray.700"
     {...rest}
   >
@@ -71,8 +71,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const bg = useColorModeValue('rgba(255,255,255,0.85)', 'rgba(26,32,44,0.85)');
-  const border = useColorModeValue('gray.200', 'gray.700');
+  const bg = useColorModeValue("rgba(255,255,255,0.85)", "rgba(26,32,44,0.85)");
+  const border = useColorModeValue("gray.200", "gray.700");
 
   const handleSignOut = async () => {
     try {
@@ -81,7 +81,7 @@ const Navbar = () => {
       // avoid crashing if signOut fails; optionally report error
       // console.error('Sign out error', err);
     } finally {
-      navigate('/explore');
+      navigate("/explore");
       onClose();
     }
   };
@@ -95,7 +95,7 @@ const Navbar = () => {
     (user as any)?.name ||
     (user as any)?.displayName ||
     (user as any)?.email ||
-    'User';
+    "User";
 
   return (
     <Box
@@ -119,7 +119,7 @@ const Navbar = () => {
       >
         {/* Left: Logo */}
         <Flex align="center" minW="0">
-          <Link as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
+          <Link as={RouterLink} to="/" _hover={{ textDecoration: "none" }}>
             <HStack spacing={3} alignItems="center">
               <Box
                 aria-hidden
@@ -138,7 +138,7 @@ const Navbar = () => {
               </Box>
               <Box overflow="hidden" minW={0}>
                 <Text
-                  fontSize={{ base: 'lg', md: '2xl' }}
+                  fontSize={{ base: "lg", md: "2xl" }}
                   fontWeight="black"
                   color="primary.600"
                   letterSpacing="tight"
@@ -153,11 +153,17 @@ const Navbar = () => {
         </Flex>
 
         {/* Middle: search (hidden on very small screens) */}
-        <Box display={{ base: 'none', sm: 'block' }} mx={6} flex="1">
+        <Box display={{ base: "none", sm: "block" }} mx={6} flex="1">
           <InputGroup maxW="540px" w="100%">
             {/* Icon wrapped in a full-height centered box to vertically align correctly */}
             <InputLeftElement pointerEvents="none">
-              <Box h="100%" display="flex" alignItems="center" justifyContent="center" pl={2}>
+              <Box
+                h="100%"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                pl={2}
+              >
                 <FiSearch />
               </Box>
             </InputLeftElement>
@@ -165,11 +171,11 @@ const Navbar = () => {
             <Input
               placeholder="Search guides, tours, posts..."
               variant="filled"
-              bg={useColorModeValue('gray.50', 'whiteAlpha.50')}
-              _hover={{ bg: useColorModeValue('gray.100', 'whiteAlpha.100') }}
+              bg={useColorModeValue("gray.50", "whiteAlpha.50")}
+              _hover={{ bg: useColorModeValue("gray.100", "whiteAlpha.100") }}
               size="sm"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   const q = (e.currentTarget as HTMLInputElement).value.trim();
                   if (q) {
                     navigate(`/search?q=${encodeURIComponent(q)}`);
@@ -183,7 +189,11 @@ const Navbar = () => {
         <Spacer />
 
         {/* Desktop nav */}
-        <HStack spacing={2} display={{ base: 'none', md: 'flex' }} alignItems="center">
+        <HStack
+          spacing={2}
+          display={{ base: "none", md: "flex" }}
+          alignItems="center"
+        >
           <NavLink to="/explore">Explore</NavLink>
           <NavLink to="/guides">Guides</NavLink>
           <NavLink to="/tours">Tours</NavLink>
@@ -205,14 +215,22 @@ const Navbar = () => {
                 >
                   <HStack spacing={3}>
                     <Avatar size="sm" name={displayName} />
-                    <Text display={{ base: 'none', md: 'block' }} fontSize="sm" fontWeight="medium">
-                      {displayName.split(' ')[0]}
+                    <Text
+                      display={{ base: "none", md: "block" }}
+                      fontSize="sm"
+                      fontWeight="medium"
+                    >
+                      {displayName.split(" ")[0]}
                     </Text>
                   </HStack>
                 </MenuButton>
                 <MenuList>
-                  <MenuItem as={RouterLink} to="/profile">Profile</MenuItem>
-                  <MenuItem as={RouterLink} to="/settings">Settings</MenuItem>
+                  <MenuItem as={RouterLink} to="/profile">
+                    Profile
+                  </MenuItem>
+                  <MenuItem as={RouterLink} to="/settings">
+                    Settings
+                  </MenuItem>
                   <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
                 </MenuList>
               </Menu>
@@ -234,9 +252,11 @@ const Navbar = () => {
         {/* Mobile menu button */}
         <IconButton
           aria-label="Toggle menu"
-          display={{ base: 'flex', md: 'none' }}
+          display={{ base: "flex", md: "none" }}
           onClick={() => (isOpen ? onClose() : onOpen())}
-          icon={isOpen ? <CloseIcon w={5} h={5} /> : <HamburgerIcon w={6} h={6} />}
+          icon={
+            isOpen ? <CloseIcon w={5} h={5} /> : <HamburgerIcon w={6} h={6} />
+          }
           variant="ghost"
           ml={2}
           minW="44px"
@@ -255,7 +275,13 @@ const Navbar = () => {
               {/* Mobile search — keep icon alignment fix here as well */}
               <InputGroup>
                 <InputLeftElement pointerEvents="none">
-                  <Box h="100%" display="flex" alignItems="center" justifyContent="center" pl={2}>
+                  <Box
+                    h="100%"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    pl={2}
+                  >
                     <FiSearch />
                   </Box>
                 </InputLeftElement>
@@ -263,10 +289,12 @@ const Navbar = () => {
                   placeholder="Search guides, tours..."
                   size="sm"
                   variant="filled"
-                  bg={useColorModeValue('gray.50', 'whiteAlpha.50')}
+                  bg={useColorModeValue("gray.50", "whiteAlpha.50")}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const q = (e.currentTarget as HTMLInputElement).value.trim();
+                    if (e.key === "Enter") {
+                      const q = (
+                        e.currentTarget as HTMLInputElement
+                      ).value.trim();
                       if (q) {
                         navigate(`/search?q=${encodeURIComponent(q)}`);
                         onClose();
@@ -276,10 +304,18 @@ const Navbar = () => {
                 />
               </InputGroup>
 
-              <NavLink to="/explore" onClick={onClose}>Explore</NavLink>
-              <NavLink to="/guides" onClick={onClose}>Guides</NavLink>
-              <NavLink to="/tours" onClick={onClose}>Tours</NavLink>
-              <NavLink to="/posts" onClick={onClose}>Posts</NavLink>
+              <NavLink to="/explore" onClick={onClose}>
+                Explore
+              </NavLink>
+              <NavLink to="/guides" onClick={onClose}>
+                Guides
+              </NavLink>
+              <NavLink to="/tours" onClick={onClose}>
+                Tours
+              </NavLink>
+              <NavLink to="/posts" onClick={onClose}>
+                Posts
+              </NavLink>
 
               {user ? (
                 <>
@@ -290,12 +326,17 @@ const Navbar = () => {
                       <Text fontSize="sm" fontWeight="semibold" lineHeight="1">
                         {displayName}
                       </Text>
-                      <Text fontSize="xs" color="gray.500">Member</Text>
+                      <Text fontSize="xs" color="gray.500">
+                        Member
+                      </Text>
                     </Box>
                   </HStack>
 
                   <Button
-                    onClick={() => { navigate('/dashboard'); onClose(); }}
+                    onClick={() => {
+                      navigate("/dashboard");
+                      onClose();
+                    }}
                     variant="ghost"
                     justifyContent="flex-start"
                     w="full"
@@ -321,7 +362,9 @@ const Navbar = () => {
                 </>
               ) : (
                 <Button
-                  onClick={() => { handleGetStarted(); }}
+                  onClick={() => {
+                    handleGetStarted();
+                  }}
                   variant="solid"
                   colorScheme="primary"
                   w="full"
