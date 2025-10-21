@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -6,331 +7,299 @@ import {
   Button,
   Stack,
   IconButton,
-  Collapse,
   Link,
-  useDisclosure,
   HStack,
+  VStack,
+  Avatar,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerCloseButton,
+  useDisclosure,
+  useBreakpointValue,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Spacer,
+  chakra,
 } from '@chakra-ui/react';
-import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
+
+import {
+  HamburgerIcon,
+  CloseIcon,
+  SearchIcon,
+  BellIcon,
+} from '@chakra-ui/icons';
+
 import { useAuth } from '../contexts/AuthProvider';
 import { useModal } from '../contexts/ModalContext';
 import NotificationBadge from './NotificationBadge';
+
+// A compact, touch-friendly, accessible responsive navbar.
+// Key improvements vs. original:
+// - Drawer-based mobile navigation (bigger tap targets, full-height scrollable menu)
+// - Subtle glass/blur header for modern look
+// - Compact search on desktop, search input inside drawer for mobile
+// - Clear visual grouping & consistent touch sizes
+// - Avatar + menu for user actions and notifications
+
+const NavLink = ({ to, children, onClick }) => (
+  <Link
+    as={RouterLink}
+    to={to}
+    onClick={onClick}
+    px={{ base: 3, md: 4 }}
+    py={{ base: 3, md: 2 }}
+    borderRadius="md"
+    fontWeight="600"
+    color="gray.700"
+    _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }}
+    transition="all 0.18s"
+    display="block"
+    fontSize={{ base: 'md', md: 'sm' }}
+  >
+    {children}
+  </Link>
+);
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
   const { openAuthModal } = useModal();
   const navigate = useNavigate();
-  const { isOpen, onToggle, onClose } = useDisclosure();
+
+  // Use a drawer on mobile for nicer UX
+  const {
+    isOpen: isDrawerOpen,
+    onOpen: onDrawerOpen,
+    onClose: onDrawerClose,
+  } = useDisclosure();
+
+  const showSearchInline = useBreakpointValue({ base: false, md: true });
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/explore');
-    onClose();
+    onDrawerClose();
   };
 
-  const handleLinkClick = () => {
-    onClose();
+  const handleGetStarted = () => {
+    openAuthModal();
+    onDrawerClose();
   };
 
   return (
     <Box
       as="nav"
-      bg="white"
-      boxShadow="md"
       position="fixed"
-      top="0"
-      w="100%"
+      top={0}
+      left={0}
+      right={0}
       zIndex={1000}
-      borderBottom="1px"
-      borderColor="gray.200"
+      px={{ base: 3, md: 6 }}
+      py={{ base: 2, md: 3 }}
+      backdropFilter="saturate(120%) blur(6px)"
+      bg={{ base: 'rgba(255,255,255,0.86)', md: 'rgba(255,255,255,0.75)' }}
+      borderBottomWidth="1px"
+      borderColor="gray.100"
+      boxShadow="sm"
     >
       <Flex
-        h={{ base: "16", md: "20" }}
-        alignItems="center"
-        justifyContent="space-between"
+        align="center"
         maxW="container.xl"
         mx="auto"
-        px={{ base: 4, md: 6 }}
+        gap={3}
       >
-        <Flex align="center">
+        {/* Left: Brand */}
+        <HStack spacing={3} align="center">
           <Link as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
-            <Text 
-              fontSize={{ base: "lg", md: "2xl" }} 
-              fontWeight="black" 
-              color="primary.600" 
-              letterSpacing="tight"
-            >
-              TourGuideHub
-            </Text>
-          </Link>
-        </Flex>
-
-        {/* Desktop nav */}
-        <Stack
-          direction="row"
-          spacing={2}
-          display={{ base: "none", md: "flex" }}
-          alignItems="center"
-        >
-          <Link 
-            as={RouterLink} 
-            to="/explore" 
-            px={4} 
-            py={2} 
-            borderRadius="lg" 
-            fontWeight="semibold" 
-            color="gray.700" 
-            _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} 
-            transition="all 0.2s"
-            fontSize="sm"
-          >
-            Explore
-          </Link>
-          <Link 
-            as={RouterLink} 
-            to="/guides" 
-            px={4} 
-            py={2} 
-            borderRadius="lg" 
-            fontWeight="semibold" 
-            color="gray.700" 
-            _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} 
-            transition="all 0.2s"
-            fontSize="sm"
-          >
-            Guides
-          </Link>
-          <Link 
-            as={RouterLink} 
-            to="/tours" 
-            px={4} 
-            py={2} 
-            borderRadius="lg" 
-            fontWeight="semibold" 
-            color="gray.700" 
-            _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} 
-            transition="all 0.2s"
-            fontSize="sm"
-          >
-            Tours
-          </Link>
-          <Link 
-            as={RouterLink} 
-            to="/posts" 
-            px={4} 
-            py={2} 
-            borderRadius="lg" 
-            fontWeight="semibold" 
-            color="gray.700" 
-            _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} 
-            transition="all 0.2s"
-            fontSize="sm"
-          >
-            Posts
-          </Link>
-
-          {user ? (
-            <HStack spacing={2}>
-              <NotificationBadge />
-              <Link 
-                as={RouterLink} 
-                to="/dashboard" 
-                px={4} 
-                py={2} 
-                borderRadius="lg" 
-                fontWeight="semibold" 
-                color="gray.700" 
-                _hover={{ bg: 'primary.50', color: 'primary.700', transform: 'translateY(-1px)' }} 
-                transition="all 0.2s"
-                fontSize="sm"
+            <HStack spacing={2} align="center">
+              <Box
+                aria-hidden
+                w={{ base: 8, md: 10 }}
+                h={{ base: 8, md: 10 }}
+                borderRadius="lg"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bgGradient="linear(to-br, primary.500, primary.600)"
+                color="white"
+                fontWeight="700"
+                boxShadow="md"
               >
-                Dashboard
-              </Link>
-              <Button
-                ml={4}
-                onClick={handleSignOut}
-                colorScheme="primary"
-                size="md"
-                borderRadius="full"
-                px={6}
-                _hover={{ transform: 'translateY(-1px)', boxShadow: 'lg' }}
-                transition="all 0.2s"
-                fontSize="sm"
+                TG
+              </Box>
+              <Text
+                fontSize={{ base: 'lg', md: '2xl' }}
+                fontWeight="extrabold"
+                color="primary.600"
+                letterSpacing="tight"
+                display={{ base: 'none', md: 'block' }}
               >
-                Sign Out
-              </Button>
+                TourGuideHub
+              </Text>
             </HStack>
-          ) : (
-            <Button
-              ml={4}
-              onClick={openAuthModal}
-              colorScheme="primary"
-              size="md"
-              borderRadius="full"
-              px={6}
-              _hover={{ transform: 'translateY(-1px)', boxShadow: 'lg' }}
-              transition="all 0.2s"
-              fontSize="sm"
-            >
-              Get Started
-            </Button>
+          </Link>
+        </HStack>
+
+        {/* Center: Desktop nav + search */}
+        <Flex align="center" flex={1} display={{ base: 'none', md: 'flex' }}>
+          <HStack spacing={1} ml={6}>
+            <NavLink to="/explore">Explore</NavLink>
+            <NavLink to="/guides">Guides</NavLink>
+            <NavLink to="/tours">Tours</NavLink>
+            <NavLink to="/posts">Posts</NavLink>
+          </HStack>
+
+          <Spacer />
+
+          {showSearchInline && (
+            <InputGroup maxW="360px" mr={4}>
+              <InputLeftElement pointerEvents="none">
+                <SearchIcon color="gray.400" />
+              </InputLeftElement>
+              <Input
+                placeholder="Search places, guides..."
+                size="sm"
+                bg="gray.50"
+                borderRadius="md"
+                _placeholder={{ color: 'gray.400' }}
+              />
+            </InputGroup>
           )}
-        </Stack>
 
-        {/* Mobile menu button */}
-        <IconButton
-          display={{ base: 'flex', md: 'none' }}
-          onClick={onToggle}
-          icon={isOpen ? <CloseIcon w={5} h={5} /> : <HamburgerIcon w={6} h={6} />}
-          variant="ghost"
-          aria-label="Toggle Navigation"
-          aria-expanded={isOpen}
-          minH="48px"
-          minW="48px"
-          size="lg"
-          _hover={{ bg: 'gray.100' }}
-        />
-      </Flex>
+          <HStack spacing={3}>
+            <NotificationBadge />
 
-      {/* Mobile menu */}
-      <Collapse in={isOpen} animateOpacity>
-        <Box 
-          pb={6} 
-          px={4} 
-          display={{ md: 'none' }} 
-          bg="white" 
-          borderTop="1px" 
-          borderColor="gray.100"
-          position="relative"
-          zIndex={999}
-        >
-          <Stack spacing={2} pt={4}>
-            <Link 
-              as={RouterLink} 
-              to="/explore" 
-              onClick={handleLinkClick} 
-              px={4} 
-              py={4} 
-              _hover={{ bg: 'primary.50', borderRadius: 'lg' }} 
-              display="block" 
-              fontWeight="semibold" 
-              transition="all 0.2s" 
-              minH="48px"
-              borderRadius="lg"
-              fontSize="md"
-            >
-              Explore
-            </Link>
-            <Link 
-              as={RouterLink} 
-              to="/guides" 
-              onClick={handleLinkClick} 
-              px={4} 
-              py={4} 
-              _hover={{ bg: 'primary.50', borderRadius: 'lg' }} 
-              display="block" 
-              fontWeight="semibold" 
-              transition="all 0.2s" 
-              minH="48px"
-              borderRadius="lg"
-              fontSize="md"
-            >
-              Guides
-            </Link>
-            <Link 
-              as={RouterLink} 
-              to="/tours" 
-              onClick={handleLinkClick} 
-              px={4} 
-              py={4} 
-              _hover={{ bg: 'primary.50', borderRadius: 'lg' }} 
-              display="block" 
-              fontWeight="semibold" 
-              transition="all 0.2s" 
-              minH="48px"
-              borderRadius="lg"
-              fontSize="md"
-            >
-              Tours
-            </Link>
-            <Link 
-              as={RouterLink} 
-              to="/posts" 
-              onClick={handleLinkClick} 
-              px={4} 
-              py={4} 
-              _hover={{ bg: 'primary.50', borderRadius: 'lg' }} 
-              display="block" 
-              fontWeight="semibold" 
-              transition="all 0.2s" 
-              minH="48px"
-              borderRadius="lg"
-              fontSize="md"
-            >
-              Posts
-            </Link>
-            
             {user ? (
-              <>
-                <Link 
-                  as={RouterLink} 
-                  to="/dashboard" 
-                  onClick={handleLinkClick} 
-                  px={4} 
-                  py={4} 
-                  _hover={{ bg: 'primary.50', borderRadius: 'lg' }} 
-                  display="block" 
-                  fontWeight="semibold" 
-                  transition="all 0.2s" 
-                  minH="48px"
-                  borderRadius="lg"
-                  fontSize="md"
-                >
-                  Dashboard
-                </Link>
-                <Button
-                  onClick={handleSignOut}
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  w="full"
-                  px={4}
-                  py={4}
-                  fontWeight="semibold"
-                  color="primary.600"
-                  _hover={{ bg: 'primary.50', borderRadius: 'lg' }}
-                  transition="all 0.2s"
-                  minH="48px"
-                  fontSize="md"
-                  borderRadius="lg"
-                >
-                  Sign Out
-                </Button>
-              </>
+              <Menu>
+                <MenuButton as={Button} variant="ghost" px={0} minW={0}>
+                  <HStack spacing={3} align="center">
+                    <Avatar size="sm" name={user.displayName || user.email} src={user.photoURL} />
+                    <chakra.span display={{ base: 'none', md: 'block' }} fontWeight={600} color="gray.700">
+                      {user.displayName ? user.displayName.split(' ')[0] : 'Me'}
+                    </chakra.span>
+                  </HStack>
+                </MenuButton>
+                <MenuList>
+                  <MenuItem as={RouterLink} to="/dashboard">Dashboard</MenuItem>
+                  <MenuItem onClick={() => navigate('/profile')}>Profile</MenuItem>
+                  <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+                </MenuList>
+              </Menu>
             ) : (
               <Button
-                onClick={() => {
-                  openAuthModal();
-                  onClose();
-                }}
-                variant="ghost"
-                justifyContent="flex-start"
-                w="full"
-                px={4}
-                py={4}
-                fontWeight="semibold"
-                color="primary.600"
-                _hover={{ bg: 'primary.50', borderRadius: 'lg' }}
-                transition="all 0.2s"
-                minH="48px"
-                fontSize="md"
-                borderRadius="lg"
+                onClick={openAuthModal}
+                colorScheme="primary"
+                size="sm"
+                borderRadius="full"
+                px={5}
               >
                 Get Started
               </Button>
             )}
-          </Stack>
-        </Box>
-      </Collapse>
+          </HStack>
+        </Flex>
+
+        {/* Mobile actions */}
+        <HStack spacing={2} display={{ base: 'flex', md: 'none' }} ml="auto">
+          <IconButton
+            aria-label="Search"
+            icon={<SearchIcon />}
+            variant="ghost"
+            onClick={onDrawerOpen}
+            size="md"
+            minW="44px"
+          />
+
+          <IconButton
+            aria-label="Open menu"
+            icon={<HamburgerIcon w={6} h={6} />}
+            variant="ghost"
+            onClick={onDrawerOpen}
+            size="md"
+            minW="44px"
+          />
+        </HStack>
+      </Flex>
+
+      {/* Mobile Drawer */}
+      <Drawer placement="right" onClose={onDrawerClose} isOpen={isDrawerOpen} size="xs">
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth="1px">Menu</DrawerHeader>
+          <DrawerBody p={0}>
+            <VStack spacing={0} align="stretch">
+              {/* Optional search at top on mobile */}
+              <Box px={4} py={3} borderBottomWidth="1px">
+                <InputGroup>
+                  <InputLeftElement pointerEvents="none">
+                    <SearchIcon color="gray.400" />
+                  </InputLeftElement>
+                  <Input placeholder="Search places, guides..." size="md" />
+                </InputGroup>
+              </Box>
+
+              <Stack spacing={0} pt={2}>
+                <NavLink to="/explore" onClick={onDrawerClose}>Explore</NavLink>
+                <NavLink to="/guides" onClick={onDrawerClose}>Guides</NavLink>
+                <NavLink to="/tours" onClick={onDrawerClose}>Tours</NavLink>
+                <NavLink to="/posts" onClick={onDrawerClose}>Posts</NavLink>
+              </Stack>
+
+              <Box borderTopWidth="1px" pt={3} px={4}>
+                {user ? (
+                  <VStack align="stretch" spacing={3}>
+                    <HStack justify="space-between">
+                      <HStack spacing={3}>
+                        <Avatar size="md" name={user.displayName || user.email} src={user.photoURL} />
+                        <VStack spacing={0} align="start">
+                          <Text fontWeight={700}>{user.displayName || (user.email || 'User')}</Text>
+                          <Text fontSize="sm" color="gray.500">Member</Text>
+                        </VStack>
+                      </HStack>
+                      <NotificationBadge />
+                    </HStack>
+
+                    <Button as={RouterLink} to="/dashboard" onClick={onDrawerClose} variant="ghost" justifyContent="flex-start">
+                      Dashboard
+                    </Button>
+
+                    <Button onClick={handleSignOut} colorScheme="primary" width="full">
+                      Sign Out
+                    </Button>
+                  </VStack>
+                ) : (
+                  <VStack spacing={3} align="stretch">
+                    <Button onClick={handleGetStarted} colorScheme="primary" width="full">
+                      Get Started
+                    </Button>
+                    <Button as={RouterLink} to="/explore" onClick={onDrawerClose} variant="ghost" justifyContent="flex-start">
+                      Continue as guest
+                    </Button>
+                  </VStack>
+                )}
+              </Box>
+
+              <Box py={4} px={4} borderTopWidth="1px">
+                <HStack justify="space-between">
+                  <Text fontSize="sm" color="gray.500">© {new Date().getFullYear()} TourGuideHub</Text>
+                  <HStack spacing={3}>
+                    <Link as={RouterLink} to="/about" onClick={onDrawerClose} fontSize="sm">About</Link>
+                    <Link as={RouterLink} to="/help" onClick={onDrawerClose} fontSize="sm">Help</Link>
+                  </HStack>
+                </HStack>
+              </Box>
+            </VStack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
     </Box>
   );
 };
