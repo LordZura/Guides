@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+import { ChakraProvider, extendTheme, ColorModeScript } from "@chakra-ui/react";
 import App from "./App";
 import ErrorBoundary from "./ErrorBoundary";
 import { AuthProvider } from "./contexts/AuthProvider";
@@ -13,6 +13,10 @@ import "./index.css";
 
 // Define theme with primary colors and mobile-first responsive settings
 const theme = extendTheme({
+  config: {
+    initialColorMode: 'light',
+    useSystemColorMode: false,
+  },
   colors: {
     primary: {
       50: "#e6f6ff",
@@ -121,6 +125,7 @@ const theme = extendTheme({
 // Mount the React app into #root
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
+    <ColorModeScript initialColorMode={theme.config.initialColorMode} />
     <ErrorBoundary>
       <ChakraProvider theme={theme}>
         <BrowserRouter basename="/Guides">
