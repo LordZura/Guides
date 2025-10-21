@@ -386,8 +386,8 @@ const Dashboard = () => {
                       >
                         <Tab
                           fontWeight="semibold"
-                          py={{ base: 3, md: 3 }}
-                          px={{ base: 4, md: 4 }}
+                          py={{ base: 1, md: 3 }}
+                          px={{ base: 2, md: 4 }}
                           _selected={{
                             color: "primary.600",
                             borderBottomColor: "primary.500",
