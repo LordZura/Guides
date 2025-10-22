@@ -1,5 +1,5 @@
 // src/pages/Dashboard.tsx
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Container,
@@ -31,8 +31,16 @@ import {
   Link,
   useToast,
   useBreakpointValue,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerCloseButton,
+  IconButton,
+  VStack,
 } from "@chakra-ui/react";
-import { AddIcon, EditIcon } from "@chakra-ui/icons";
+import { AddIcon, EditIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { MdLanguage, MdLocationOn, MdPerson } from "react-icons/md";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthProvider";
@@ -48,12 +56,12 @@ import PaymentTracker from "../components/PaymentTracker";
 
 /**
  * Dashboard (responsive)
- *
- * Notes:
- * - Keeps Grid/Flex children shrinkable (minW={0}) so mobile won't overflow.
- * - Uses responsive sizes for fonts/paddings.
- * - Includes a small helper component `TourCardTitle` (defined at bottom) to handle long titles.
+ * - Adds right-side Drawer (navbar) that opens on right-to-left swipe
+ * - Adds a mobile hamburger button to open the right drawer
+ * - Keeps Grid/Flex children shrinkable (minW={0})
  */
+
+const SWIPE_THRESHOLD = 60; // px
 
 const Dashboard: React.FC = () => {
   const { profile } = useAuth();
@@ -63,11 +71,72 @@ const Dashboard: React.FC = () => {
     onOpen: onCreateOpen,
     onClose: onCreateClose,
   } = useDisclosure();
+  const {
+    isOpen: isNavOpen,
+    onOpen: onNavOpen,
+    onClose: onNavClose,
+  } = useDisclosure();
   const cardBg = useColorModeValue("white", "gray.700");
   const toast = useToast();
 
   // Track active tab index to optimize rendering
   const [activeTabIndex, setActiveTabIndex] = useState(0);
+
+  // Touch handling for swipe gestures
+  const touchStartX = useRef<number | null>(null);
+  const lastTouchX = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartX.current = e.touches[0].clientX;
+        lastTouchX.current = e.touches[0].clientX;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches && e.touches.length > 0) {
+        lastTouchX.current = e.touches[0].clientX;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (touchStartX.current == null || lastTouchX.current == null) {
+        touchStartX.current = null;
+        lastTouchX.current = null;
+        return;
+      }
+
+      const delta = (touchStartX.current ?? 0) - (lastTouchX.current ?? 0);
+
+      // If nav is closed and user swiped RIGHT -> LEFT (delta > threshold) -> OPEN nav
+      if (!isNavOpen && delta > SWIPE_THRESHOLD) {
+        onNavOpen();
+      }
+
+      // If nav is open and user swiped LEFT -> RIGHT (delta < -threshold) -> CLOSE nav
+      if (isNavOpen && delta < -SWIPE_THRESHOLD) {
+        onNavClose();
+      }
+
+      touchStartX.current = null;
+      lastTouchX.current = null;
+    };
+
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchmove", handleTouchMove, { passive: true });
+    el.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchmove", handleTouchMove);
+      el.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isNavOpen, onNavOpen, onNavClose]);
 
   if (!profile) {
     return (
@@ -109,14 +178,19 @@ const Dashboard: React.FC = () => {
     setActiveTabIndex(index);
   };
 
+  // responsive indicator: show hamburger on mobile
+  const showHamburger = useBreakpointValue({ base: true, md: false });
+
   return (
     <ToursProvider>
       <BookingProvider>
         <PaymentStatsProvider>
+          {/* containerRef used for listening to swipe gestures on the main area */}
           <Container
             maxW="container.xl"
             p={{ base: 3, md: 6 }}
             boxSizing="border-box"
+            ref={containerRef as any}
           >
             <Grid
               templateColumns={{
@@ -304,21 +378,33 @@ const Dashboard: React.FC = () => {
                         {profile.role === "guide" ? "Guide Dashboard" : "Tourist Dashboard"}
                       </Heading>
 
-                      <Button
-                        leftIcon={<AddIcon />}
-                        colorScheme="primary"
-                        onClick={onCreateOpen}
-                        size={{ base: "md", md: "md" }}
-                        borderRadius="full"
-                        px={{ base: 6, md: 6 }}
-                        minH="44px"
-                        _hover={{ transform: "translateY(-1px)", boxShadow: "lg" }}
-                        transition="all 0.15s"
-                        fontSize={{ base: "md", md: "sm" }}
-                        w={{ base: "100%", sm: "auto" }}
-                      >
-                        {profile.role === "guide" ? "Create Tour" : "Post Tour Request"}
-                      </Button>
+                      <Flex align="center" gap={3}>
+                        {showHamburger && (
+                          <IconButton
+                            aria-label="Open navigation"
+                            icon={<HamburgerIcon />}
+                            onClick={onNavOpen}
+                            variant="ghost"
+                            size="md"
+                          />
+                        )}
+
+                        <Button
+                          leftIcon={<AddIcon />}
+                          colorScheme="primary"
+                          onClick={onCreateOpen}
+                          size={{ base: "md", md: "md" }}
+                          borderRadius="full"
+                          px={{ base: 6, md: 6 }}
+                          minH="44px"
+                          _hover={{ transform: "translateY(-1px)", boxShadow: "lg" }}
+                          transition="all 0.15s"
+                          fontSize={{ base: "md", md: "sm" }}
+                          w={{ base: "100%", sm: "auto" }}
+                        >
+                          {profile.role === "guide" ? "Create Tour" : "Post Tour Request"}
+                        </Button>
+                      </Flex>
                     </Flex>
 
                     <Tabs
@@ -456,6 +542,31 @@ const Dashboard: React.FC = () => {
               </ModalBody>
             </ModalContent>
           </Modal>
+
+          {/* Right-side Drawer (Navbar) */}
+          <Drawer isOpen={isNavOpen} placement="right" onClose={onNavClose} size="xs">
+            <DrawerOverlay />
+            <DrawerContent>
+              <DrawerCloseButton />
+              <DrawerHeader>Navigation</DrawerHeader>
+              <DrawerBody>
+                <VStack align="stretch" spacing={3}>
+                  <Button as={RouterLink} to="/explore" variant="ghost" justifyContent="flex-start" onClick={onNavClose}>
+                    Explore
+                  </Button>
+                  <Button as={RouterLink} to="/dashboard" variant="ghost" justifyContent="flex-start" onClick={onNavClose}>
+                    My Dashboard
+                  </Button>
+                  <Button as={RouterLink} to="/bookings" variant="ghost" justifyContent="flex-start" onClick={onNavClose}>
+                    Bookings
+                  </Button>
+                  <Button as={RouterLink} to="/settings" variant="ghost" justifyContent="flex-start" onClick={onNavClose}>
+                    Settings
+                  </Button>
+                </VStack>
+              </DrawerBody>
+            </DrawerContent>
+          </Drawer>
         </PaymentStatsProvider>
       </BookingProvider>
     </ToursProvider>
@@ -463,30 +574,3 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
-
-/* ---------------------------
-   Small reusable title component
-   Use this inside TourCard / ToursList for safe wrapping & responsive lines
-   --------------------------- */
-
-export const TourCardTitle: React.FC<{ title: string }> = ({ title }) => {
-  const fontSize = useBreakpointValue({ base: "lg", md: "xl", lg: "2xl" });
-  const lines = useBreakpointValue({ base: 2, md: 2, lg: 2 });
-
-  return (
-    <Box minW={0} w="100%">
-      <Heading
-        as="h3"
-        className="tour-card-title"
-        fontSize={fontSize}
-        noOfLines={typeof lines === "number" ? lines : 2}
-        wordBreak="break-word"
-        overflowWrap="anywhere"
-        whiteSpace="normal"
-        lineHeight="1.12"
-      >
-        {title}
-      </Heading>
-    </Box>
-  );
-};
