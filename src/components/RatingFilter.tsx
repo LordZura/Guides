@@ -4,7 +4,6 @@ import {
   Text,
   HStack,
   Button,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import StarRating from './StarRating';
 
@@ -21,7 +20,7 @@ const RatingFilter: React.FC<RatingFilterProps> = ({
   label = 'Rating',
   showClear = false,
 }) => {
-  const highlightColor = useColorModeValue('primary.500', 'primary.300');
+  const highlightColor = 'primary.500';
   
   const handleRatingChange = (rating: number) => {
     // If user clicks on already selected rating, clear it

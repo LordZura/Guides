@@ -26,10 +26,6 @@ import {
   Card,
   CardHeader,
   CardBody,
-  useColorModeValue,
-  Icon,
-  Link,
-  useToast,
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { AddIcon, EditIcon } from "@chakra-ui/icons";
@@ -63,7 +59,6 @@ const Dashboard: React.FC = () => {
     onOpen: onCreateOpen,
     onClose: onCreateClose,
   } = useDisclosure();
-  const cardBg = useColorModeValue("white", "primary.600");
   const toast = useToast();
 
   // Track active tab index to optimize rendering
@@ -130,7 +125,7 @@ const Dashboard: React.FC = () => {
               {/* Profile Sidebar */}
               <GridItem minW={0} w="100%" boxSizing="border-box">
                 <Card
-                  bg={cardBg}
+                  bg="white"
                   boxShadow="xl"
                   borderRadius="xl"
                   borderWidth="1px"

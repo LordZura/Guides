@@ -8,7 +8,6 @@ import {
   Avatar,
   Stack,
   Badge,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import StarRating from './StarRating';
 import { formatDistanceToNow } from 'date-fns';
@@ -33,8 +32,8 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
   tour_name,
   showTour = false,
 }) => {
-  const bg = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const bg = 'white';
+  const borderColor = 'gray.200';
   
   return (
     <Box

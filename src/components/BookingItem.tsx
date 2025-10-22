@@ -8,7 +8,6 @@ import {
   Avatar,
   HStack,
   Icon,
-  useColorModeValue,
   Tooltip,
   Stack,
 } from '@chakra-ui/react';
@@ -54,8 +53,8 @@ const BookingItem: React.FC<BookingItemProps> = ({
   onReview,
   isProcessing = false
 }) => {
-  const bg = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const bg = 'white';
+  const borderColor = 'gray.200';
 
   // Format date
   const formatDate = (dateString: string) => {

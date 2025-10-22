@@ -10,7 +10,6 @@ import {
   StatHelpText,
   VStack,
   HStack,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import StarRating from './StarRating';
 
@@ -28,8 +27,8 @@ const ReviewsSummary: React.FC<ReviewsSummaryProps> = ({
   totalReviews,
   ratingCounts = {},
 }) => {
-  const bgColor = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const bgColor = 'white';
+  const borderColor = 'gray.200';
   
   // Rating levels from 5 to 1 stars
   const ratingLevels = [5, 4, 3, 2, 1];

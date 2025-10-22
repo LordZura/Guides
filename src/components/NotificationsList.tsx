@@ -13,7 +13,6 @@ import {
   Divider,
   IconButton,
   Tooltip,
-  useColorModeValue,
   Flex,
   Link,
   Center,
@@ -30,15 +29,8 @@ interface NotificationItemProps {
 }
 
 const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps) => {
-  const bgColor = useColorModeValue(
-    notification.is_read ? 'gray.50' : 'blue.50',
-    notification.is_read ? 'gray.700' : 'blue.900'
-  );
-  
-  const borderColor = useColorModeValue(
-    notification.is_read ? 'gray.200' : 'blue.200',
-    notification.is_read ? 'gray.600' : 'blue.600'
-  );
+  const bgColor = notification.is_read ? 'gray.50' : 'blue.50';
+  const borderColor = notification.is_read ? 'gray.200' : 'blue.200';
 
   const handleClick = () => {
     // Mark as read when clicking the notification
@@ -56,7 +48,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
       borderRadius="md"
       cursor={notification.action_url ? 'pointer' : 'default'}
       onClick={notification.action_url ? undefined : handleClick}
-      _hover={notification.action_url ? { bg: useColorModeValue('gray.100', 'gray.600') } : {}}
+      _hover={notification.action_url ? { bg: 'gray.100' } : {}}
       transition="background-color 0.2s"
     >
       <HStack align="start" spacing={3}>
