@@ -28,7 +28,10 @@ interface GuideCardProps {
 }
 
 const GuideCard = ({ guide }: GuideCardProps) => {
-  const cardBg = useColorModeValue('white', 'gray.700');
+  const cardBg = useColorModeValue('white', 'primary.600');
+  const textColor = useColorModeValue('gray.800', 'highlight.50');
+  const mutedColor = useColorModeValue('gray.600', 'highlight.200');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
   
   // Use the custom hook for rating management, passing initial data from guide object
   const { averageRating, reviewCount } = useGuideRating(guide.id, {
@@ -46,9 +49,9 @@ const GuideCard = ({ guide }: GuideCardProps) => {
       transition="all 0.3s ease"
       _hover={{ 
         boxShadow: '2xl',
-        borderColor: 'primary.200'
+        borderColor: 'secondary.200'
       }}
-      borderColor="gray.200"
+      borderColor={borderColor}
       position="relative"
     >
       <Box position="relative" height={{ base: "200px", sm: "220px", md: "240px" }} overflow="hidden">
@@ -96,7 +99,7 @@ const GuideCard = ({ guide }: GuideCardProps) => {
           </Flex>
           
           {guide.bio && (
-            <Text fontSize="sm" noOfLines={2} color="gray.600" lineHeight="1.5">
+            <Text fontSize="sm" noOfLines={2} color={mutedColor} lineHeight="1.5">
               {guide.bio}
             </Text>
           )}
@@ -104,7 +107,7 @@ const GuideCard = ({ guide }: GuideCardProps) => {
           {guide.languages && guide.languages.length > 0 && (
             <HStack flexWrap="wrap" spacing={2}>
               {guide.languages.map((lang: string, index: number) => (
-                <Badge key={index} colorScheme="primary" fontSize="xs" borderRadius="full" px={3} py={1}>
+                <Badge key={index} colorScheme="secondary" fontSize="xs" borderRadius="full" px={3} py={1}>
                   {lang}
                 </Badge>
               ))}
@@ -113,22 +116,22 @@ const GuideCard = ({ guide }: GuideCardProps) => {
           
           {guide.location && (
             <Flex align="center">
-              <Icon as={MdLocationOn} color="primary.500" mr={2} boxSize="4" />
-              <Text fontSize="sm" color="gray.700" fontWeight="medium">{guide.location}</Text>
+              <Icon as={MdLocationOn} color="secondary.500" mr={2} boxSize="4" />
+              <Text fontSize="sm" color={textColor} fontWeight="medium">{guide.location}</Text>
             </Flex>
           )}
           
           {guide.specialties && (
             <Box>
-              <Text fontSize="sm" color="gray.700" fontWeight="semibold" mb={1}>Specialties:</Text>
-              <Text fontSize="sm" color="gray.600">{guide.specialties}</Text>
+              <Text fontSize="sm" color={textColor} fontWeight="semibold" mb={1}>Specialties:</Text>
+              <Text fontSize="sm" color={mutedColor}>{guide.specialties}</Text>
             </Box>
           )}
           
           <Button
             as={RouterLink}
             to={`/profile/${guide.id}`}
-            colorScheme="primary"
+            colorScheme="secondary"
             size={{ base: "sm", md: "md" }}
             width="100%"
             borderRadius="full"

@@ -63,7 +63,7 @@ const Dashboard: React.FC = () => {
     onOpen: onCreateOpen,
     onClose: onCreateClose,
   } = useDisclosure();
-  const cardBg = useColorModeValue("white", "gray.700");
+  const cardBg = useColorModeValue("white", "primary.600");
   const toast = useToast();
 
   // Track active tab index to optimize rendering

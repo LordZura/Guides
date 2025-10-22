@@ -59,7 +59,10 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [averageRating, setAverageRating] = useState<number>(0);
   const [reviewCount, setReviewCount] = useState<number>(0);
-  const cardBg = useColorModeValue("white", "gray.700");
+  const cardBg = useColorModeValue("white", "primary.600");
+  const textColor = useColorModeValue("gray.800", "highlight.50");
+  const mutedColor = useColorModeValue("gray.600", "highlight.200");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
   const toast = useToast();
 
   useEffect(() => {
@@ -206,9 +209,9 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
       transition="all 0.3s ease"
       _hover={{
         boxShadow: "2xl",
-        borderColor: "primary.200",
+        borderColor: "secondary.200",
       }}
-      borderColor="gray.200"
+      borderColor={borderColor}
       position="relative"
       minW={0}
       maxW="100%"
@@ -220,7 +223,7 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
           as="h3"
           size={{ base: "md", md: "lg" }}
           mb={3}
-          color="gray.800"
+          color={textColor}
           lineHeight="1.3"
           // allow multi-line paragraph-like title
           wordBreak="break-word"
@@ -238,13 +241,13 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
             name={tour.creator_name}
             mr={3}
             border="2px"
-            borderColor="primary.100"
+            borderColor={useColorModeValue("secondary.100", "secondary.700")}
           />
           <Box minW={0}>
             <Text
               fontSize="sm"
               fontWeight="semibold"
-              color="gray.700"
+              color={textColor}
               noOfLines={1}
               overflow="hidden"
               textOverflow="ellipsis"
@@ -266,7 +269,7 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
         <Text
           fontSize="sm"
           mb={6}
-          color="gray.600"
+          color={mutedColor}
           lineHeight="1.5"
           wordBreak="break-word"
           overflowWrap="anywhere"
@@ -278,11 +281,11 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
         {/* Details */}
         <VStack spacing={3} align="start" mb={6}>
           <Flex align="center" minW={0}>
-            <Icon as={MdLocationOn} color="primary.500" mr={3} boxSize="4" />
+            <Icon as={MdLocationOn} color="secondary.500" mr={3} boxSize="4" />
             <Text
               fontSize="sm"
               fontWeight="medium"
-              color="gray.700"
+              color={textColor}
               noOfLines={1}
               overflow="hidden"
               textOverflow="ellipsis"
@@ -294,26 +297,26 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
           </Flex>
 
           <Flex align="center">
-            <Icon as={MdAccessTime} color="primary.500" mr={3} boxSize="4" />
-            <Text fontSize="sm" fontWeight="medium" color="gray.700">
+            <Icon as={MdAccessTime} color="secondary.500" mr={3} boxSize="4" />
+            <Text fontSize="sm" fontWeight="medium" color={textColor}>
               {tour.duration} hour{tour.duration !== 1 ? "s" : ""}
             </Text>
           </Flex>
 
           <Flex align="center">
-            <Icon as={MdGroup} color="primary.500" mr={3} boxSize="4" />
-            <Text fontSize="sm" fontWeight="medium" color="gray.700">
+            <Icon as={MdGroup} color="secondary.500" mr={3} boxSize="4" />
+            <Text fontSize="sm" fontWeight="medium" color={textColor}>
               Up to {tour.capacity} people
             </Text>
           </Flex>
 
           <Flex align="center">
-            <Icon as={MdCalendarToday} color="primary.500" mr={3} boxSize="4" />
+            <Icon as={MdCalendarToday} color="secondary.500" mr={3} boxSize="4" />
             <Text
               fontSize="sm"
               noOfLines={1}
               fontWeight="medium"
-              color="gray.700"
+              color={textColor}
             >
               Available: {availableDays}
             </Text>
@@ -322,14 +325,14 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
 
         {tour.languages && tour.languages.length > 0 && (
           <Box mb={6}>
-            <Text fontSize="sm" fontWeight="semibold" mb={2} color="gray.700">
+            <Text fontSize="sm" fontWeight="semibold" mb={2} color={textColor}>
               Languages:
             </Text>
             <HStack spacing={2} flexWrap="wrap">
               {tour.languages.map((lang, index) => (
                 <Badge
                   key={index}
-                  colorScheme="primary"
+                  colorScheme="secondary"
                   fontSize="xs"
                   borderRadius="full"
                   px={3}
@@ -348,7 +351,7 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
           align={{ base: "start", sm: "center" }}
           pt={2}
           borderTop="1px"
-          borderColor="gray.100"
+          borderColor={borderColor}
           direction={{ base: "column", sm: "row" }}
           gap={{ base: 3, sm: 0 }}
           minW={0}
@@ -398,7 +401,7 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
             <Button
               as={RouterLink}
               to={`/tours/${tour.id}`}
-              colorScheme="primary"
+              colorScheme="secondary"
               size="md"
               borderRadius="full"
               px={6}
