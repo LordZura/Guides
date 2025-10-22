@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@chakra-ui/react';
 import { useAuth } from './contexts/AuthProvider';
 import { useModal } from './contexts/ModalContext';
+import { useCSSVariables } from './theme/cssVars';
 import Navbar from './components/NavBar';
 import Dashboard from './pages/Dashboard';
 import Explore from './pages/Explore';
@@ -36,6 +37,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   const { isAuthModalOpen, closeAuthModal } = useModal();
+  
+  // Sync CSS variables with Chakra color mode
+  useCSSVariables();
   
   return (
     <Box minH="100vh" bg="transparent">
