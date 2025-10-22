@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// src/components/NotificationsList.tsx
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -16,27 +17,59 @@ import {
   Flex,
   Link,
   Center,
-} from '@chakra-ui/react';
-import { BellIcon, CheckIcon } from '@chakra-ui/icons';
-import { Link as RouterLink } from 'react-router-dom';
-import { useNotifications, Notification } from '../contexts/NotificationContext';
-import { DEFAULT_AVATAR_URL } from '../lib/supabaseClient';
-import { formatDistanceToNow } from 'date-fns';
+} from "@chakra-ui/react";
+import { BellIcon, CheckIcon } from "@chakra-ui/icons";
+import { Link as RouterLink } from "react-router-dom";
+import {
+  useNotifications,
+  Notification,
+} from "../contexts/NotificationContext";
+import { DEFAULT_AVATAR_URL } from "../lib/supabaseClient";
+import { formatDistanceToNow } from "date-fns";
 
-interface NotificationItemProps {
-  notification: Notification;
-  onMarkAsRead: (_id: string) => void;
+interface NotificationsListProps {
+  onClose?: () => void;
 }
 
-const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps) => {
-  const bgColor = notification.is_read ? 'gray.50' : 'blue.50';
-  const borderColor = notification.is_read ? 'gray.200' : 'blue.200';
+// Accept functions that return void or Promise<void|boolean> (your implementation returns Promise<boolean>)
+interface NotificationItemProps {
+  notification: Notification;
+  onMarkAsRead: (_id: string) => void | Promise<void | boolean>;
+  onClose?: () => void;
+}
 
-  const handleClick = () => {
-    // Mark as read when clicking the notification
+const NotificationItem = ({
+  notification,
+  onMarkAsRead,
+  onClose,
+}: NotificationItemProps) => {
+  const bgColor = notification.is_read ? "gray.50" : "blue.50";
+  const borderColor = notification.is_read ? "gray.200" : "blue.200";
+
+  // Clicking non-linked notification should mark it read then optionally close parent UI
+  const handleNonLinkClick = async () => {
     if (!notification.is_read) {
-      onMarkAsRead(notification.id);
+      try {
+        await onMarkAsRead(notification.id);
+      } catch {
+        // ignore errors here; upstream should surface them if needed
+      }
     }
+    if (onClose) onClose();
+  };
+
+  // Clicking a RouterLink (navigation) should mark as read, then allow navigation to proceed.
+  // We don't need the event param here — removing it avoids unused-var warnings.
+  const handleLinkClick = async () => {
+    if (!notification.is_read) {
+      try {
+        await onMarkAsRead(notification.id);
+      } catch {
+        // ignore
+      }
+    }
+    if (onClose) onClose();
+    // RouterLink will handle the actual navigation
   };
 
   const content = (
@@ -46,28 +79,30 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
       border="1px solid"
       borderColor={borderColor}
       borderRadius="md"
-      cursor={notification.action_url ? 'pointer' : 'default'}
-      onClick={notification.action_url ? undefined : handleClick}
-      _hover={notification.action_url ? { bg: 'gray.100' } : {}}
+      cursor={notification.action_url ? "pointer" : "default"}
+      onClick={notification.action_url ? undefined : handleNonLinkClick}
+      _hover={notification.action_url ? { bg: "gray.100" } : {}}
       transition="background-color 0.2s"
     >
       <HStack align="start" spacing={3}>
         <Avatar
           size="sm"
-          name={notification.actor?.name || 'Unknown'}
+          name={notification.actor?.name || "Unknown"}
           src={notification.actor?.avatar || DEFAULT_AVATAR_URL}
         />
-        
+
         <VStack align="start" spacing={1} flex="1">
           <Text fontSize="sm" lineHeight="short">
             {notification.message}
           </Text>
-          
+
           <HStack spacing={2}>
             <Text fontSize="xs" color="gray.500">
-              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+              {formatDistanceToNow(new Date(notification.created_at), {
+                addSuffix: true,
+              })}
             </Text>
-            
+
             {!notification.is_read && (
               <Badge colorScheme="blue" size="sm">
                 New
@@ -75,7 +110,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
             )}
           </HStack>
         </VStack>
-        
+
         {!notification.is_read && (
           <Tooltip label="Mark as read">
             <IconButton
@@ -84,9 +119,16 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
               size="sm"
               variant="ghost"
               colorScheme="blue"
-              onClick={(e) => {
+              onClick={async (e) => {
+                // stop click bubbling to parent containers
                 e.stopPropagation();
-                onMarkAsRead(notification.id);
+                e.preventDefault();
+                try {
+                  await onMarkAsRead(notification.id);
+                } catch {
+                  // ignore
+                }
+                if (onClose) onClose();
               }}
             />
           </Tooltip>
@@ -96,13 +138,13 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
   );
 
   // If there's an action URL and notification type is not 'tour_rated', wrap in a Link
-  if (notification.action_url && notification.type !== 'tour_rated') {
+  if (notification.action_url && notification.type !== "tour_rated") {
     return (
-      <Link 
-        as={RouterLink} 
-        to={notification.action_url} 
+      <Link
+        as={RouterLink}
+        to={notification.action_url}
         textDecoration="none"
-        onClick={handleClick}
+        onClick={handleLinkClick}
       >
         {content}
       </Link>
@@ -112,14 +154,25 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
   return content;
 };
 
-const NotificationsList = () => {
-  const { notifications, unreadCount, isLoading, error, markAsRead, markAllAsRead } = useNotifications();
+export default function NotificationsList({ onClose }: NotificationsListProps) {
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    error,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
 
   const handleMarkAllAsRead = async () => {
     setIsMarkingAllRead(true);
-    await markAllAsRead();
-    setIsMarkingAllRead(false);
+    try {
+      await markAllAsRead();
+    } finally {
+      setIsMarkingAllRead(false);
+      if (onClose) onClose();
+    }
   };
 
   if (isLoading) {
@@ -171,7 +224,7 @@ const NotificationsList = () => {
       {unreadCount > 0 && (
         <Flex justify="space-between" align="center">
           <Text fontSize="sm" color="gray.600">
-            {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+            {unreadCount} unread notification{unreadCount !== 1 ? "s" : ""}
           </Text>
           <Button
             size="sm"
@@ -195,6 +248,7 @@ const NotificationsList = () => {
             key={notification.id}
             notification={notification}
             onMarkAsRead={markAsRead}
+            onClose={onClose}
           />
         ))}
       </VStack>
@@ -209,6 +263,4 @@ const NotificationsList = () => {
       )}
     </VStack>
   );
-};
-
-export default NotificationsList;
+}
