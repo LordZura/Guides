@@ -97,9 +97,6 @@ npm run lint     # ESLint (currently 101 warnings)
 │   │   ├── BookingContext.tsx  # Booking logic
 │   │   ├── ToursContext.tsx    # Tour data management
 │   │   └── ...
-│   ├── theme/               # Dark mode theming system
-│   │   ├── index.ts         # Three-token theme configuration
-│   │   └── cssVars.ts       # CSS variable synchronization
 │   ├── db/migrations/       # 22 SQL files (see SQL_REFERENCE.md)
 │   ├── lib/                 # Core utilities
 │   │   ├── supabaseClient.ts  # Supabase configuration
