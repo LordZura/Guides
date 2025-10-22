@@ -11,15 +11,17 @@ import {
   PopoverCloseButton,
   useDisclosure,
   Heading,
-  Portal, // <- import Portal
+  Portal,
 } from "@chakra-ui/react";
 import { BellIcon } from "@chakra-ui/icons";
 import { useNotifications } from "../contexts/NotificationContext";
 import NotificationsList from "./NotificationsList";
+import { useRef } from "react";
 
 const NotificationBadge = () => {
   const { unreadCount = 0 } = useNotifications();
   const { isOpen, onToggle, onClose } = useDisclosure();
+  const buttonRef = useRef<HTMLButtonElement>(null); // Focus goes here
 
   const displayCount = unreadCount > 99 ? "99+" : String(unreadCount);
 
@@ -30,11 +32,15 @@ const NotificationBadge = () => {
       placement="bottom-end"
       closeOnBlur
       closeOnEsc
+      initialFocusRef={buttonRef} // <- ensures focus is safe for screen readers
     >
       <PopoverTrigger>
         <Box position="relative" display="inline-block">
           <IconButton
-            aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ""}`}
+            ref={buttonRef} // <- this button gets initial focus
+            aria-label={`Notifications ${
+              unreadCount > 0 ? `(${unreadCount} unread)` : ""
+            }`}
             aria-haspopup="dialog"
             aria-expanded={isOpen}
             icon={<BellIcon />}
@@ -66,7 +72,6 @@ const NotificationBadge = () => {
         </Box>
       </PopoverTrigger>
 
-      {/* Wrap PopoverContent in Portal for v2 */}
       <Portal>
         <PopoverContent
           w={{ base: "calc(100vw - 32px)", sm: "380px", md: "400px" }}
@@ -87,7 +92,6 @@ const NotificationBadge = () => {
         </PopoverContent>
       </Portal>
     </Popover>
-
   );
 };
 
