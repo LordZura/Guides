@@ -9,13 +9,14 @@ import { ModalProvider } from "./contexts/ModalContext";
 import { ReviewsProvider } from "./contexts/ReviewsContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { TourTemplateProvider } from "./contexts/TourTemplateContext";
+import theme from "./theme";
 import "./index.css";
 
 // Mount the React app into #root
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ChakraProvider>
+      <ChakraProvider theme={theme}>
         <BrowserRouter basename="/Guides">
           <AuthProvider>
             <ModalProvider>
