@@ -8,7 +8,6 @@ import {
   Flex,
   Icon,
   Skeleton,
-  useColorModeValue,
   HStack,
   VStack,
   useToast,
@@ -59,10 +58,10 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [averageRating, setAverageRating] = useState<number>(0);
   const [reviewCount, setReviewCount] = useState<number>(0);
-  const cardBg = useColorModeValue("white", "primary.600");
-  const textColor = useColorModeValue("gray.800", "highlight.50");
-  const mutedColor = useColorModeValue("gray.600", "highlight.200");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const cardBg = "white";
+  const textColor = "gray.800";
+  const mutedColor = "gray.600";
+  const borderColor = "gray.200";
   const toast = useToast();
 
   useEffect(() => {
@@ -241,7 +240,7 @@ const TourCard: React.FC<TourCardProps> = ({ tourId }) => {
             name={tour.creator_name}
             mr={3}
             border="2px"
-            borderColor={useColorModeValue("secondary.100", "secondary.700")}
+            borderColor="secondary.100"
           />
           <Box minW={0}>
             <Text

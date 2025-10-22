@@ -12,7 +12,6 @@ import {
   Select,
   Flex,
   Icon,
-  useColorModeValue,
   Alert,
   AlertIcon,
   Modal,
@@ -50,8 +49,8 @@ const TourTemplatePicker = ({ onSelectTemplate, onSkip }: TourTemplatePickerProp
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   
-  const cardBg = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const cardBg = 'white';
+  const borderColor = 'gray.200';
 
   const handleSelectTemplate = async (templateId: string) => {
     setSelectedTemplateId(templateId);

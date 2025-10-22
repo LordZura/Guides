@@ -5,7 +5,6 @@ import {
   FormLabel,
   FormErrorMessage,
   FormHelperText,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import Select, { StylesConfig } from 'react-select';
 
@@ -94,10 +93,10 @@ const SearchableLanguageSelector = ({
   placeholder = 'Search and select languages...',
   isDisabled = false,
 }: SearchableLanguageSelectorProps) => {
-  const selectBorderColor = useColorModeValue('gray.200', 'whiteAlpha.300');
-  const selectBackgroundColor = useColorModeValue('white', 'primary.600');
-  const selectTextColor = useColorModeValue('gray.800', 'highlight.50');
-  const errorColor = useColorModeValue('#E53E3E', '#FC8181');
+  const selectBorderColor = 'gray.200';
+  const selectBackgroundColor = 'white';
+  const selectTextColor = 'gray.800';
+  const errorColor = '#E53E3E';
 
   // Convert selectedLanguages to options
   const selectedOptions = useMemo(() => {
@@ -165,7 +164,7 @@ const SearchableLanguageSelector = ({
     }),
     placeholder: (provided) => ({
       ...provided,
-      color: useColorModeValue('#A0AEC0', 'var(--chakra-colors-whiteAlpha-500)'),
+      color: '#A0AEC0',
     }),
     input: (provided) => ({
       ...provided,

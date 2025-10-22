@@ -16,15 +16,14 @@ import {
   Spinner,
   Alert,
   AlertIcon,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import { MdAccountBalanceWallet, MdPending, MdCheckCircle, MdTrendingUp } from 'react-icons/md';
 import { usePaymentStats } from '../contexts/PaymentStatsContext';
 
 const PaymentTracker: React.FC = () => {
   const { paymentStats, isLoading, error } = usePaymentStats();
-  const cardBg = useColorModeValue('white', 'gray.700');
-  const statBg = useColorModeValue('gray.50', 'gray.600');
+  const cardBg = 'white';
+  const statBg = 'gray.50';
 
   if (isLoading) {
     return (

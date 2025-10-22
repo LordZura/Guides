@@ -9,7 +9,6 @@ import {
   Button,
   Flex,
   Icon,
-  useColorModeValue,
   HStack,
 } from '@chakra-ui/react';
 import { MdLocationOn, MdStar } from 'react-icons/md';
@@ -28,10 +27,10 @@ interface GuideCardProps {
 }
 
 const GuideCard = ({ guide }: GuideCardProps) => {
-  const cardBg = useColorModeValue('white', 'primary.600');
-  const textColor = useColorModeValue('gray.800', 'highlight.50');
-  const mutedColor = useColorModeValue('gray.600', 'highlight.200');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const cardBg = 'white';
+  const textColor = 'gray.800';
+  const mutedColor = 'gray.600';
+  const borderColor = 'gray.200';
   
   // Use the custom hook for rating management, passing initial data from guide object
   const { averageRating, reviewCount } = useGuideRating(guide.id, {

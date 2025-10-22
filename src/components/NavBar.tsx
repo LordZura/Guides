@@ -20,7 +20,6 @@ import {
   InputGroup,
   InputLeftElement,
   Input,
-  useColorModeValue,
   VisuallyHidden,
   type LinkProps,
   Drawer,
@@ -59,7 +58,7 @@ const NavLink = ({ to, children, onClick, ...rest }: NavLinkProps) => (
     }}
     transition="all 0.15s ease"
     fontSize={{ base: "md", md: "sm" }}
-    color={useColorModeValue("gray.700", "highlight.100")}
+    color="gray.700"
     {...rest}
   >
     {children}
@@ -79,8 +78,8 @@ const Navbar = () => {
   const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onClose: onSettingsClose } = useDisclosure();
   const [searchValue, setSearchValue] = useState('');
 
-  const bg = useColorModeValue("rgba(255,255,255,0.92)", "rgba(11,11,11,0.92)");
-  const border = useColorModeValue("gray.200", "gray.700");
+  const bg = "rgba(255,255,255,0.92)";
+  const border = "gray.200";
 
   const handleSignOut = async () => {
     try {
@@ -123,8 +122,8 @@ const Navbar = () => {
     (user as any)?.email ||
     "User";
 
-  const inputBg = useColorModeValue("white", "primary.600");
-  const inputBorder = useColorModeValue("gray.200", "gray.700");
+  const inputBg = "white";
+  const inputBorder = "gray.200";
 
   /* ---------- swipe handling (open/close drawer) ---------- */
   const isOpenRef = useRef(isOpen);
@@ -221,7 +220,7 @@ const Navbar = () => {
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                color={useColorModeValue("white", "highlight.50")}
+                color="white"
                 fontWeight="bold"
                 boxShadow="md"
               >
@@ -231,7 +230,7 @@ const Navbar = () => {
                 <Text
                   fontSize={{ base: "lg", md: "2xl" }}
                   fontWeight="black"
-                  color={useColorModeValue("secondary.600", "secondary.400")}
+                  color="secondary.600"
                   letterSpacing="tight"
                   isTruncated
                 >

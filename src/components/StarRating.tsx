@@ -1,5 +1,5 @@
 import React from 'react';
-import { HStack, Icon, useColorModeValue, Box, Tooltip, useBreakpointValue } from '@chakra-ui/react';
+import { HStack, Icon, Box, Tooltip, useBreakpointValue } from '@chakra-ui/react';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 
 export interface StarRatingProps {
@@ -23,7 +23,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   showTooltip = false,
   onChange
 }) => {
-  const starColor = useColorModeValue(color || 'yellow.400', color || 'yellow.300');
+  const starColor = color || 'yellow.400';
   
   // Handle responsive size
   const responsiveSize = useBreakpointValue(
