@@ -59,7 +59,7 @@ const NavLink = ({ to, children, onClick, ...rest }: NavLinkProps) => (
     }}
     transition="all 0.15s ease"
     fontSize={{ base: "md", md: "sm" }}
-    color="gray.700"
+    color={useColorModeValue("gray.700", "highlight.100")}
     {...rest}
   >
     {children}
@@ -79,7 +79,7 @@ const Navbar = () => {
   const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onClose: onSettingsClose } = useDisclosure();
   const [searchValue, setSearchValue] = useState('');
 
-  const bg = useColorModeValue("rgba(255,255,255,0.92)", "rgba(26,32,44,0.92)");
+  const bg = useColorModeValue("rgba(255,255,255,0.92)", "rgba(11,11,11,0.92)");
   const border = useColorModeValue("gray.200", "gray.700");
 
   const handleSignOut = async () => {
@@ -123,7 +123,7 @@ const Navbar = () => {
     (user as any)?.email ||
     "User";
 
-  const inputBg = useColorModeValue("white", "gray.800");
+  const inputBg = useColorModeValue("white", "primary.600");
   const inputBorder = useColorModeValue("gray.200", "gray.700");
 
   /* ---------- swipe handling (open/close drawer) ---------- */
@@ -217,11 +217,11 @@ const Navbar = () => {
                 w={{ base: 8, md: 10 }}
                 h={{ base: 8, md: 10 }}
                 borderRadius="md"
-                bgGradient="linear(to-b, primary.400, primary.600)"
+                bgGradient="linear(to-b, secondary.400, secondary.600)"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                color="white"
+                color={useColorModeValue("white", "highlight.50")}
                 fontWeight="bold"
                 boxShadow="md"
               >
@@ -231,7 +231,7 @@ const Navbar = () => {
                 <Text
                   fontSize={{ base: "lg", md: "2xl" }}
                   fontWeight="black"
-                  color="primary.600"
+                  color={useColorModeValue("secondary.600", "secondary.400")}
                   letterSpacing="tight"
                   isTruncated
                 >
@@ -284,13 +284,13 @@ const Navbar = () => {
               transition="box-shadow 0.15s, border-color 0.15s, background 0.15s"
               _hover={{ boxShadow: "sm" }}
               _focus={{
-                boxShadow: "0 0 0 3px rgba(99,102,241,0.12)", // subtle focus ring
-                borderColor: "primary.400",
+                boxShadow: "0 0 0 3px rgba(33,149,235,0.12)", // subtle focus ring
+                borderColor: "secondary.400",
                 bg: inputBg,
               }}
               _focusVisible={{
-                boxShadow: "0 0 0 3px rgba(99,102,241,0.12)",
-                borderColor: "primary.400",
+                boxShadow: "0 0 0 3px rgba(33,149,235,0.12)",
+                borderColor: "secondary.400",
               }}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
@@ -353,7 +353,7 @@ const Navbar = () => {
           ) : (
             <Button
               onClick={handleGetStarted}
-              colorScheme="primary"
+              colorScheme="secondary"
               variant="solid"
               size="sm"
               borderRadius="full"
@@ -422,8 +422,8 @@ const Navbar = () => {
                   pr="3"
                   height="44px"
                   _focus={{
-                    boxShadow: "0 0 0 3px rgba(99,102,241,0.12)",
-                    borderColor: "primary.400",
+                    boxShadow: "0 0 0 3px rgba(33,149,235,0.12)",
+                    borderColor: "secondary.400",
                     bg: inputBg,
                   }}
                   onKeyDown={(e) => {
@@ -489,7 +489,7 @@ const Navbar = () => {
                     px={3}
                     py={3}
                     borderRadius="md"
-                    colorScheme="primary"
+                    colorScheme="secondary"
                   >
                     Sign Out
                   </Button>
@@ -500,7 +500,7 @@ const Navbar = () => {
                     handleGetStarted();
                   }}
                   variant="solid"
-                  colorScheme="primary"
+                  colorScheme="secondary"
                   w="full"
                   px={3}
                   py={3}

@@ -539,7 +539,7 @@ const Explore = () => {
   return (
     <Container maxW="container.xl" px={{ base: 3, sm: 4, md: 6 }} py={{ base: 4, md: 8 }}>
       <Box bg="white" borderRadius="xl" overflow="hidden" boxShadow="xl" border="1px" borderColor="gray.100">
-        <Box p={{ base: 5, sm: 6, md: 8 }} bgGradient="linear(135deg, primary.500, primary.700)" color="white" position="relative">
+        <Box p={{ base: 5, sm: 6, md: 8 }} bgGradient="linear(135deg, primary.500, primary.700)" color="highlight.50" position="relative">
           <Box position="absolute" top="0" left="0" w="full" h="full" bgGradient="linear(135deg, primary.500, transparent)" opacity="0.1" />
           <Box position="relative" zIndex="1">
             <Heading 
