@@ -12,16 +12,16 @@ import {
   useDisclosure,
   Heading,
   Portal, // <- import Portal
-} from '@chakra-ui/react';
-import { BellIcon } from '@chakra-ui/icons';
-import { useNotifications } from '../contexts/NotificationContext';
-import NotificationsList from './NotificationsList';
+} from "@chakra-ui/react";
+import { BellIcon } from "@chakra-ui/icons";
+import { useNotifications } from "../contexts/NotificationContext";
+import NotificationsList from "./NotificationsList";
 
 const NotificationBadge = () => {
   const { unreadCount = 0 } = useNotifications();
   const { isOpen, onToggle, onClose } = useDisclosure();
 
-  const displayCount = unreadCount > 99 ? '99+' : String(unreadCount);
+  const displayCount = unreadCount > 99 ? "99+" : String(unreadCount);
 
   return (
     <Popover
@@ -30,12 +30,15 @@ const NotificationBadge = () => {
       placement="bottom-end"
       closeOnBlur
       closeOnEsc
+      appendToParentPortal={true}
       // NOTE: do NOT pass `usePortal` here if your Chakra type defs don't include it.
     >
       <PopoverTrigger>
         <Box position="relative" display="inline-block">
           <IconButton
-            aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
+            aria-label={`Notifications ${
+              unreadCount > 0 ? `(${unreadCount} unread)` : ""
+            }`}
             aria-haspopup="dialog"
             aria-expanded={isOpen}
             icon={<BellIcon />}
@@ -70,7 +73,7 @@ const NotificationBadge = () => {
       {/* Use Portal component to render PopoverContent in document body (avoids clipping). */}
       <Portal>
         <PopoverContent
-          w={{ base: 'calc(100vw - 32px)', sm: '380px', md: '400px' }}
+          w={{ base: "calc(100vw - 32px)", sm: "380px", md: "400px" }}
           maxW="400px"
           maxH="500px"
           overflow="hidden"
