@@ -67,7 +67,7 @@ const NavLink = ({ to, children, onClick, ...rest }: NavLinkProps) => (
 );
 
 const SWIPE_THRESHOLD = 50; // minimum px for a swipe to register
-const EDGE_ZONE = 40; // px from left edge to allow opening swipe
+const EDGE_ZONE = 40; // px from right edge to allow opening swipe
 const HORIZ_RATIO = 1.5; // must be this times larger than vertical movement
 
 const Navbar = () => {
@@ -160,12 +160,13 @@ const Navbar = () => {
         Math.abs(dx) > SWIPE_THRESHOLD &&
         Math.abs(dx) > Math.abs(dy) * HORIZ_RATIO
       ) {
-        // open if swipe right from left edge and drawer closed
-        if (!isOpenRef.current && dx > 0 && touchStartX.current <= EDGE_ZONE) {
+        // open if swipe left from right edge and drawer closed
+        const screenWidth = window.innerWidth;
+        if (!isOpenRef.current && dx < 0 && touchStartX.current >= screenWidth - EDGE_ZONE) {
           onOpen();
         }
-        // close if swipe left when drawer open
-        else if (isOpenRef.current && dx < 0) {
+        // close if swipe right when drawer open
+        else if (isOpenRef.current && dx > 0) {
           onClose();
         }
       }
@@ -376,14 +377,15 @@ const Navbar = () => {
             )
           }
           variant="ghost"
-          ml={2}
+          ml="auto"
+          mr={{ base: -4, md: 0 }}
           minW="44px"
           minH="44px"
         />
       </Flex>
 
-      {/* Mobile Drawer (slides in from the left) */}
-      <Drawer placement="left" onClose={onClose} isOpen={isOpen} size="xs">
+      {/* Mobile Drawer (slides in from the right) */}
+      <Drawer placement="right" onClose={onClose} isOpen={isOpen} size="xs">
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
