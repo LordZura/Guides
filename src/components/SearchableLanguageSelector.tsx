@@ -94,9 +94,10 @@ const SearchableLanguageSelector = ({
   placeholder = 'Search and select languages...',
   isDisabled = false,
 }: SearchableLanguageSelectorProps) => {
-  const selectBorderColor = useColorModeValue('#E2E8F0', '#4A5568');
-  const selectBackgroundColor = useColorModeValue('#FFFFFF', '#2D3748');
-  const selectTextColor = useColorModeValue('#1A202C', '#F7FAFC');
+  const selectBorderColor = useColorModeValue('gray.200', 'whiteAlpha.300');
+  const selectBackgroundColor = useColorModeValue('white', 'primary.600');
+  const selectTextColor = useColorModeValue('gray.800', 'highlight.50');
+  const errorColor = useColorModeValue('#E53E3E', '#FC8181');
 
   // Convert selectedLanguages to options
   const selectedOptions = useMemo(() => {
@@ -113,45 +114,46 @@ const SearchableLanguageSelector = ({
   };
 
   // Custom styles for react-select to match Chakra UI theme
+  // Using CSS variables for dynamic theming
   const selectStyles: StylesConfig<LanguageOption, true> = {
     control: (provided, state) => ({
       ...provided,
       backgroundColor: selectBackgroundColor,
-      borderColor: isInvalid ? '#E53E3E' : (state.isFocused ? '#3182CE' : selectBorderColor),
+      borderColor: isInvalid ? errorColor : (state.isFocused ? 'var(--color-secondary)' : selectBorderColor),
       borderWidth: '1px',
       borderRadius: '6px',
-      boxShadow: state.isFocused ? `0 0 0 1px #3182CE` : 'none',
+      boxShadow: state.isFocused ? `0 0 0 1px var(--color-secondary)` : 'none',
       '&:hover': {
-        borderColor: isInvalid ? '#E53E3E' : '#3182CE',
+        borderColor: isInvalid ? errorColor : 'var(--color-secondary)',
       },
       minHeight: '40px',
       fontSize: '16px',
     }),
     multiValue: (provided) => ({
       ...provided,
-      backgroundColor: '#EBF8FF',
+      backgroundColor: 'var(--chakra-colors-secondary-50)',
       borderRadius: '6px',
     }),
     multiValueLabel: (provided) => ({
       ...provided,
-      color: '#2B6CB0',
+      color: 'var(--color-secondary)',
       fontSize: '14px',
     }),
     multiValueRemove: (provided) => ({
       ...provided,
-      color: '#2B6CB0',
+      color: 'var(--color-secondary)',
       '&:hover': {
-        backgroundColor: '#BEE3F8',
-        color: '#1A365D',
+        backgroundColor: 'var(--chakra-colors-secondary-100)',
+        color: 'var(--chakra-colors-secondary-700)',
       },
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? '#3182CE' : (state.isFocused ? '#EBF8FF' : selectBackgroundColor),
-      color: state.isSelected ? '#FFFFFF' : selectTextColor,
+      backgroundColor: state.isSelected ? 'var(--color-secondary)' : (state.isFocused ? 'var(--chakra-colors-secondary-50)' : selectBackgroundColor),
+      color: state.isSelected ? 'var(--color-highlight)' : selectTextColor,
       '&:hover': {
-        backgroundColor: state.isSelected ? '#3182CE' : '#EBF8FF',
-        color: state.isSelected ? '#FFFFFF' : '#2B6CB0',
+        backgroundColor: state.isSelected ? 'var(--color-secondary)' : 'var(--chakra-colors-secondary-50)',
+        color: state.isSelected ? 'var(--color-highlight)' : 'var(--color-secondary)',
       },
     }),
     menu: (provided) => ({
@@ -163,7 +165,7 @@ const SearchableLanguageSelector = ({
     }),
     placeholder: (provided) => ({
       ...provided,
-      color: '#A0AEC0',
+      color: useColorModeValue('#A0AEC0', 'var(--chakra-colors-whiteAlpha-500)'),
     }),
     input: (provided) => ({
       ...provided,

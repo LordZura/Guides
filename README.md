@@ -60,6 +60,12 @@ npm run lint     # ESLint (currently 101 warnings)
 - **Review System**: Ratings with complex aggregation functions
 - **Real-time**: Live notifications via Supabase subscriptions
 - **Responsive UI**: Mobile-first with Chakra UI
+- **Dark Mode**: Three-token theming system with instant switching
+  - Primary (#0b0b0b), Secondary (#2195eb), Highlight (#ffffff)
+  - CSS variables for non-Chakra code compatibility
+  - WCAG AA accessibility compliance
+  - Reduced motion support
+  - See [DARK_MODE_GUIDE.md](./DARK_MODE_GUIDE.md) for details
 
 ### ⚠️ Known Issues
 - **Linting**: 52 warnings (reduced from 160 - remaining in test helpers and contexts)
@@ -68,6 +74,11 @@ npm run lint     # ESLint (currently 101 warnings)
 - **Security Warnings**: 2 moderate npm audit issues
 
 ### 🔄 Recent Changes
+- **Dark Mode Rework**: Complete theme system using three global tokens
+  - All components migrated to use theme tokens
+  - CSS variables for charts and third-party widgets
+  - Settings modal with instant theme toggle
+  - Migration guide in [COLOR_MIGRATION.md](./COLOR_MIGRATION.md)
 - **Code Cleanup**: Removed 160+ ESLint warnings, cleaned up console.log statements and TypeScript 'any' types
 - **Documentation**: Consolidated from 15+ markdown files to 4 core documentation files
 - **Removed Files**: Deleted obsolete diagnostic scripts and components
@@ -85,6 +96,7 @@ npm run lint     # ESLint (currently 101 warnings)
 │   │   ├── BookingForm.tsx   # Booking creation/management  
 │   │   ├── TourCard.tsx      # Tour display with reviews
 │   │   ├── ReviewForm.tsx    # Review submission
+│   │   ├── SettingsModal.tsx # Theme toggle & preferences
 │   │   └── ...
 │   ├── pages/               # 5 main pages
 │   │   ├── Dashboard.tsx    # Role-specific dashboards
@@ -96,13 +108,20 @@ npm run lint     # ESLint (currently 101 warnings)
 │   │   ├── BookingContext.tsx  # Booking logic
 │   │   ├── ToursContext.tsx    # Tour data management
 │   │   └── ...
+│   ├── theme/               # Dark mode theming system
+│   │   ├── index.ts         # Three-token theme configuration
+│   │   └── cssVars.ts       # CSS variable synchronization
 │   ├── db/migrations/       # 22 SQL files (see SQL_REFERENCE.md)
 │   ├── lib/                 # Core utilities
 │   │   ├── supabaseClient.ts  # Supabase configuration
 │   │   ├── api.ts           # API helper functions
 │   │   └── types.ts         # TypeScript definitions
 │   └── hooks/               # Custom React hooks
+├── scripts/
+│   └── scan-colors.sh       # Dark mode color token scanner
 ├── SQL_REFERENCE.md         # 📖 COMPREHENSIVE SQL GUIDE
+├── DARK_MODE_GUIDE.md       # 🎨 Dark mode implementation guide
+├── COLOR_MIGRATION.md       # 🔄 Color token migration reference
 ├── CONTRIBUTING.md          # Development guidelines
 └── package.json            # Dependencies and scripts
 ```

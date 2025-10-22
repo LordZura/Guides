@@ -75,7 +75,7 @@ const GuideCard = ({ guide }: GuideCardProps) => {
           right="0"
           bgGradient="linear(to-t, blackAlpha.800, transparent)"
           p={4}
-          color="white"
+          color="highlight.50"
         >
           <Heading size="md" noOfLines={1} fontWeight="bold">{guide.full_name}</Heading>
           
