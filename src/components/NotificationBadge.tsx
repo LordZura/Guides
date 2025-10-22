@@ -62,7 +62,12 @@ const NotificationBadge = () => {
         </Box>
       </PopoverTrigger>
       
-      <PopoverContent w="400px" maxH="500px" overflow="hidden">
+      <PopoverContent 
+        w={{ base: "calc(100vw - 32px)", sm: "380px", md: "400px" }} 
+        maxW="400px"
+        maxH="500px" 
+        overflow="hidden"
+      >
         <PopoverHeader>
           <Heading size="sm">Notifications</Heading>
         </PopoverHeader>
