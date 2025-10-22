@@ -30,15 +30,11 @@ const NotificationBadge = () => {
       placement="bottom-end"
       closeOnBlur
       closeOnEsc
-      appendToParentPortal={true}
-      // NOTE: do NOT pass `usePortal` here if your Chakra type defs don't include it.
     >
       <PopoverTrigger>
         <Box position="relative" display="inline-block">
           <IconButton
-            aria-label={`Notifications ${
-              unreadCount > 0 ? `(${unreadCount} unread)` : ""
-            }`}
+            aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ""}`}
             aria-haspopup="dialog"
             aria-expanded={isOpen}
             icon={<BellIcon />}
@@ -70,7 +66,7 @@ const NotificationBadge = () => {
         </Box>
       </PopoverTrigger>
 
-      {/* Use Portal component to render PopoverContent in document body (avoids clipping). */}
+      {/* Wrap PopoverContent in Portal for v2 */}
       <Portal>
         <PopoverContent
           w={{ base: "calc(100vw - 32px)", sm: "380px", md: "400px" }}
@@ -85,13 +81,13 @@ const NotificationBadge = () => {
           <PopoverCloseButton />
           <PopoverBody p={0} maxH="450px" overflowY="auto">
             <Box p={4}>
-              {/* Pass onClose so NotificationsList can close the popover after navigation */}
               <NotificationsList onClose={onClose} />
             </Box>
           </PopoverBody>
         </PopoverContent>
       </Portal>
     </Popover>
+
   );
 };
 
