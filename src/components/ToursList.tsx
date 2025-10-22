@@ -1,4 +1,3 @@
-// src/components/ToursList.tsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -40,11 +39,14 @@ import {
 import { useTours, Tour } from '../contexts/ToursContext';
 import { useAuth } from '../contexts/AuthProvider';
 import TourForm from './TourForm';
+import TourDetailsModal from './TourDetailsModal';
 
 /**
- * ToursList (updated - Menu alignment)
- * - Menu is wrapped in a non-shrinkable Box and Menu has placement="bottom-end"
- * - This keeps the menu visually anchored to the top-right corner of the card on mobile
+ * ToursList (updated)
+ * - Title wraps to multiple lines (no single-line collision with price)
+ * - Price moved to bottom-right (footer)
+ * - Badges use Wrap/WrapItem so they flow to next line on small screens
+ * - Defensive layout: minW={0}, maxW="100%", wordBreak/overflowWrap applied
  */
 
 const ToursList: React.FC = () => {
@@ -65,6 +67,17 @@ const ToursList: React.FC = () => {
     onClose: onEditClose,
   } = useDisclosure();
 
+  const {
+    isOpen: isDetailsOpen,
+    onOpen: onDetailsOpen,
+    onClose: onDetailsClose,
+  } = useDisclosure();
+
+  const handleViewDetailsClick = (tour: Tour) => {
+    setSelectedTour(tour);
+    onDetailsOpen();
+  };
+
   const handleEditClick = (tour: Tour) => {
     setSelectedTour(tour);
     onEditOpen();
@@ -78,7 +91,7 @@ const ToursList: React.FC = () => {
   const handleStatusToggle = async (tour: Tour) => {
     try {
       await updateTourStatus(tour.id, !tour.is_active);
-    } catch (err) {
+    } catch {
       toast({ title: 'Status update failed', status: 'error' });
     }
   };
@@ -153,10 +166,11 @@ const ToursList: React.FC = () => {
           >
             <CardHeader pb={0} px={{ base: 3, md: 4 }}>
               <Flex align="flex-start" minW={0} w="100%">
-                <Box minW={0} flex="1 1 auto" pr={2}>
+                <Box minW={0} flex="1 1 auto">
                   <Heading
                     as="h3"
                     size="md"
+                    // allow multi-line wrapping
                     wordBreak="break-word"
                     overflowWrap="anywhere"
                     whiteSpace="normal"
@@ -166,48 +180,36 @@ const ToursList: React.FC = () => {
                   </Heading>
                 </Box>
 
-                {/* Wrap Menu in a non-shrinkable box so it stays at the right edge */}
-                <Box ml={3} flexShrink={0}>
-                  <Menu placement="bottom-end" gutter={8}>
-                    <MenuButton
-                      as={IconButton}
-                      icon={<ChevronDownIcon />}
-                      variant="ghost"
-                      size="sm"
-                      aria-label="Actions"
-                    />
-                    <MenuList>
-                      <MenuItem
-                        icon={<ViewIcon />}
-                        onClick={() =>
-                          toast({
-                            title: "View details",
-                            description: "This feature will be available soon",
-                            status: "info",
-                            duration: 3000,
-                          })
-                        }
-                      >
-                        View Details
-                      </MenuItem>
-
-                      <MenuItem icon={<EditIcon />} onClick={() => handleEditClick(tour)}>
-                        Edit
-                      </MenuItem>
-
-                      <MenuItem
-                        icon={tour.is_active ? <WarningIcon /> : <CheckIcon />}
-                        onClick={() => handleStatusToggle(tour)}
-                      >
-                        {tour.is_active ? 'Deactivate' : 'Activate'}
-                      </MenuItem>
-
-                      <MenuItem icon={<DeleteIcon />} color="red.500" onClick={() => handleDeleteClick(tour)}>
-                        Delete
-                      </MenuItem>
-                    </MenuList>
-                  </Menu>
-                </Box>
+                <Menu>
+                  <MenuButton
+                    as={IconButton}
+                    icon={<ChevronDownIcon />}
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Actions"
+                    ml={3}
+                  />
+                  <MenuList>
+                    <MenuItem
+                      icon={<ViewIcon />}
+                      onClick={() => handleViewDetailsClick(tour)}
+                    >
+                      View Details
+                    </MenuItem>
+                    <MenuItem icon={<EditIcon />} onClick={() => handleEditClick(tour)}>
+                      Edit
+                    </MenuItem>
+                    <MenuItem
+                      icon={tour.is_active ? <WarningIcon /> : <CheckIcon />}
+                      onClick={() => handleStatusToggle(tour)}
+                    >
+                      {tour.is_active ? 'Deactivate' : 'Activate'}
+                    </MenuItem>
+                    <MenuItem icon={<DeleteIcon />} color="red.500" onClick={() => handleDeleteClick(tour)}>
+                      Delete
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
               </Flex>
             </CardHeader>
 
@@ -217,19 +219,17 @@ const ToursList: React.FC = () => {
                 <WrapItem>
                   <Badge colorScheme={tour.is_active ? 'green' : 'gray'}>{tour.is_active ? 'Active' : 'Inactive'}</Badge>
                 </WrapItem>
-
                 {tour.location && (
                   <WrapItem>
                     <Badge colorScheme="blue">{tour.location}</Badge>
                   </WrapItem>
                 )}
-
                 {typeof tour.price !== 'undefined' && (
                   <WrapItem display={{ base: 'none', md: 'inline-block' }}>
+                    {/* keep a small price badge visible on md+ near top if you like; mobile will show bottom price */}
                     <Badge colorScheme="purple">${tour.price}</Badge>
                   </WrapItem>
                 )}
-
                 {tour.duration && (
                   <WrapItem>
                     <Badge colorScheme="orange">{tour.duration}h</Badge>
@@ -237,12 +237,12 @@ const ToursList: React.FC = () => {
                 )}
               </Wrap>
 
-              {/* Description - allow it to wrap naturally */}
+              {/* Description - allow it to wrap naturally (paragraph-like) */}
               <Text mb={2} wordBreak="break-word" overflowWrap="anywhere" whiteSpace="normal" color="gray.700">
                 {tour.description}
               </Text>
 
-              {/* Footer */}
+              {/* Footer: created date left, price bottom-right */}
               <Flex mt={4} align="center" minW={0}>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
@@ -252,6 +252,7 @@ const ToursList: React.FC = () => {
 
                 <Spacer />
 
+                {/* Price is bottom-right */}
                 <Box textAlign="right" minW={0}>
                   {formattedPrice ? (
                     <Badge colorScheme="purple" px={3} py={1} borderRadius="md" fontWeight="semibold" fontSize={{ base: 'sm', md: 'md' }}>
@@ -301,6 +302,15 @@ const ToursList: React.FC = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      {/* Tour Details Modal */}
+      {selectedTour && (
+        <TourDetailsModal
+          isOpen={isDetailsOpen}
+          onClose={onDetailsClose}
+          tourId={selectedTour.id}
+        />
+      )}
     </Stack>
   );
 };
